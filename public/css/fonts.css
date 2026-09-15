@@ -1,0 +1,34 @@
+@font-face{
+    font-family:'IRANSans';
+    font-size:38px;
+    src:url(fonts/IRANSansFaNum.ttf) format("truetype"),
+    url(fonts/IRANSansFaNum.ttf) format("woff2"),
+    url(fonts/IRANSansFaNum.ttf) format("woff")
+    
+  }
+@font-face{
+    font-family:'vazirmatn';
+    font-size:22px;
+    src:url(fonts/vazirmatn/Vazirmatn-Regular.ttf) format("truetype"),
+    url(fonts/vazirmatn/Vazirmatn-Regular.woff2) format("woff2"),
+    url(fonts/vazirmatn/Vazirmatn-Regular.woff2) format("woff")
+    
+  }
+  @font-face{
+    font-family:'IranNastaliq';
+    font-size: 48px;
+    src:url(fonts/IranNastaliq.ttf);
+    /* format("truetype"),
+    url(fonts/IranNastaliq.ttf) format("woff2"),
+    url(fonts/IranNastaliq.ttf) format("woff"); */
+    
+  }  
+  @font-face{
+    font-family:'BYekan';
+    font-size: 22px;
+    src:url(fonts/Yekan.ttf)format("truetype"),
+    url(fonts/Yekan.woff2) format("woff2"),
+    url(fonts/Yekan.woff) format("woff");
+
+    
+  }

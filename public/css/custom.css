@@ -1,0 +1,163 @@
+ /* base */
+ [dir="rtl"] .rotate-180 {
+    transform: rotate(180deg);
+}
+
+.main-content {
+    margin-right: 0;
+    padding-top: 8.4375rem;
+}
+
+@media (max-width: 1023px) {
+    .main-content {
+        margin-right: 0;
+    }
+}
+
+/* .dark {
+    background-color: rgba(0, 0, 0, 0.438) !important;
+    } */
+ /* end base */
+
+ .tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.custom-loader {
+    display: none;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* استایل برای چاپ */
+@media print {
+
+    header,
+    form,
+    button.print-single-btn,
+    #printBtn,
+    #downloadPdfBtn,
+    .no-print {
+        display: none !important;
+    }
+
+    .credential-card {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+
+    body {
+        background: white !important;
+    }
+}
+
+/* تنظیمات سفارشی برای SweetAlert2 */
+.swal2-popup {
+    font-family: 'Vazir', sans-serif !important;
+    font-size: 1rem !important;
+    direction: rtl !important;
+}
+
+.swal2-title,
+.swal2-content {
+    text-align: right !important;
+}
+
+/* استایل‌های جدید برای نمایش مدارک */
+.credential-card {
+    transition: all 0.3s ease;
+}
+
+.credential-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tabs-container {
+    position: relative;
+}
+
+
+/* datatable custom */
+/* table */
+
+*[dir=rtl] table.dataTable th.dt-type-numeric, *[dir=rtl] table.dataTable th.dt-type-date, *[dir=rtl] table.dataTable td.dt-type-numeric, *[dir=rtl] table.dataTable td.dt-type-date {
+    text-align: center !important;
+}
+*[dir=rtl] table.dataTable thead th, *[dir=rtl] table.dataTable thead td, *[dir=rtl] table.dataTable tfoot th, *[dir=rtl] table.dataTable tfoot td {
+    text-align: center !important;
+}
+
+/* dark */
+/* *[dir=rtl] div.dt-container div.dt-search input {
+    margin: 2px 3px !important;
+    background-color:#ffffff !important;
+    border:1px solid #e4e2e2 !important;
+
+}
+.dt-container div.dt-search label,
+.dt-container div.dt-info{
+    color:rgb(90, 90, 90) !important;
+    margin-bottom: 2px !important;
+}
+
+div.dt-container .dt-search input{
+    color:#4d4d4d !important;
+}
+html.dark  div.dt-container .dt-paging .dt-paging-button.current{
+    color:black !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button {
+ color: #4d4c4c !important;
+} */
+
+/* */
+
+/* select 2 */
+.select2-container .select2-selection--single {
+height: 44px !important;
+margin-top: 2px !important;
+}
+.select2-container--default .select2-selection--multiple {
+    margin: 0 0.1rem;
+  }
+  
+  .select2 {
+    width: 100% !important;
+  
+  }
+  
+  .select2-dropdown {
+    @apply absolute block w-auto box-border bg-white border-solid border-2 border-gray-600 z-50 float-left;
+    color: #000000 !important;
+  }
+  .select2-container--default .select2-search--inline .select2-search__field {
+    padding-bottom: 2rem !important;
+  }
+
+  /*  */
+
+.ltr {
+    direction: ltr;
+}

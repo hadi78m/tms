@@ -6,3 +6,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* تنظیمات RTL Select2 */
+.select2-container {
+  direction: rtl;
+  text-align: right;
+}
+
+/* پس‌زمینه‌های تاریک */
+.dark .bg-gray-800 {
+    background-color: #1f2937;
+}
+
+@layer base {
+    body {
+      font-family: "IRANSans", sans-serif;
+    }
+}
+
+/* تنظیمات RTL DataTables */
+table.dataTable {
+  direction: rtl;
+}
+div.dt-buttons, div.dt-length, div.dt-info {
+  float: left !important;
+  text-align: left !important;
+}
+div.dt-paging, div.dt-search {
+  float: right !important;
+  text-align: left !important;
+}
