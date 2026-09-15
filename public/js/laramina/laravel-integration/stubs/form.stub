@@ -1,0 +1,16 @@
+import FormEngine from '/js/laramina/engines/form-engine.js'
+import Alert from '/js/laramina/adapters/alert-adapter.js'
+import TableEngine from '/js/laramina/engines/table-engine.js'
+
+export default {
+    init() {
+        FormEngine.bind(`#{{ module-slug }}-form`, {
+            submitUrl: `/{{ module-slug }}`,
+            method: 'POST',
+            success: () => {
+                Alert.success('Saved successfully')
+                TableEngine.reload('#{{ module-slug }}-table')
+            }
+        })
+    }
+}

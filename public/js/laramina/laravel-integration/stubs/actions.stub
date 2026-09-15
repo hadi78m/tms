@@ -1,0 +1,13 @@
+import ActionEngine from '/js/laramina/engines/action-engine.js'
+import AjaxAdapter from '/js/laramina/adapters/ajax-adapter.js'
+import Alert from '/js/laramina/adapters/alert-adapter.js'
+
+export default {
+    init() {
+        ActionEngine.register('delete-{{ module-slug }}', async (id) => {
+            if (!confirm('Delete item?')) return
+            await AjaxAdapter.delete(`/{{ module-slug }}/${id}`)
+            Alert.success('Item deleted')
+        })
+    }
+}

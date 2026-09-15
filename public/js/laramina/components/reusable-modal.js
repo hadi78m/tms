@@ -1,0 +1,1 @@
+export function mountModal(id){console.log('modal mounted',id)}

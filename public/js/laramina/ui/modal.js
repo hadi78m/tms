@@ -1,0 +1,1 @@
+export const Modal={open(id){document.getElementById(id)?.classList.remove('hidden')}}

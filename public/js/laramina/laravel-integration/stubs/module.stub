@@ -1,0 +1,12 @@
+import Table from './table.js'
+import Form from './form.js'
+import Actions from './actions.js'
+
+export default {
+    name: '{{ module-slug }}',
+    init() {
+        Table.init()
+        Form.init()
+        Actions.init()
+    }
+}

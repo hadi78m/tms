@@ -1,0 +1,14 @@
+import TableEngine from '/js/laramina/engines/table-engine.js'
+
+export default {
+    init() {
+        TableEngine.create('#{{ module-slug }}-table', {
+            ajax: `/{{ module-slug }}/json`,
+            columns: [
+                { data: 'id', title: 'ID' },
+                { data: 'name', title: 'Name' },
+                { data: 'actions', title: 'Actions', orderable: false, searchable: false }
+            ]
+        })
+    }
+}

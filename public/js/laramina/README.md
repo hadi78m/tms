@@ -1,0 +1,1 @@
+Laramina v1.5.1 - modular admin JS framework with Laravel 12 integration.

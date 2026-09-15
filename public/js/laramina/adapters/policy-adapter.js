@@ -1,0 +1,1 @@
+export const PolicyAdapter={can(p){return true}}

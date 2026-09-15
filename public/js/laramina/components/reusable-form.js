@@ -1,0 +1,1 @@
+export function mountForm(id){console.log('form mounted',id)}

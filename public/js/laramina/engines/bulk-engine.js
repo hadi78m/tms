@@ -1,0 +1,1 @@
+export const BulkEngine={process(items,cb){items.forEach(cb)}}
