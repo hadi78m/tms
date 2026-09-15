@@ -18,3 +18,13 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+use App\Http\Controllers\UserController;
+
+Route::prefix('users')->name('users.')->group(function () {
+    Route::get('/',              [UserController::class, 'index'])->name('index');
+    Route::get('/json',          [UserController::class, 'json'])->name('json');
+    Route::post('/',             [UserController::class, 'store'])->name('store');
+    Route::post('/update/{id}',  [UserController::class, 'update'])->name('update');
+    Route::post('/destroy/{id}', [UserController::class, 'destroy'])->name('destroy');
+});

@@ -8,7 +8,8 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
+        <!-- Scripts -->
+        <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
 
         <!-- Custom Styles -->
         <link rel="stylesheet" href="{{ asset('css/custom.css') }}" />
@@ -24,6 +25,9 @@
     <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased"
         x-data="{ mobileMenuOpen: false, darkMode: false }" :class="{ 'dark': darkMode }">
         
+        <!-- هدر قدیمی -->
+        <x-elements.header />
+
         {{-- loading --}}
         <div id="global-loading"
             class="fixed inset-0 z-[9999] hidden items-center justify-center bg-white/70 backdrop-blur-sm">
@@ -33,23 +37,12 @@
             </div>
         </div>
         {{-- end loading --}}
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
-
-            <!-- Page Content -->
-            <div class="main-content">
-                <div class="mx-auto p-4 bg-white py-6">
-                    {{ $slot }}
-                </div>
+        <!-- Page Content -->
+        <div class="main-content">
+            <div class="mx-auto p-4 bg-white py-6">
+                {{ $slot ?? '' }}
+                @yield('content')
             </div>
         </div>
         
@@ -71,6 +64,9 @@
         <script src="{{ asset('js/custom/ajaxRequest.js') }}"></script>
 
         {{-- Laramina --}}
-        @include('laramina::adminPlatform')
+        @include('laramina::laramina')
+
+        <script src="{{ asset('js/jquery-sortable-min.js') }}"></script>
+        @yield('scripts')
     </body>
 </html>
