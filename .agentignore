@@ -1,0 +1,24 @@
+# Exclude Heavy Dependencies (جلوگیری از اسکن پکیج‌های سنگین)
+/vendor/
+/node_modules/
+/public/build/
+/public/storage/
+
+# Exclude Log & Cache Files
+/storage/logs/
+/storage/framework/
+*.log
+
+# Exclude Binary & Media Assets (فایل‌های تصویری و باینری)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.pdf
+*.zip
+*.tar.gz
+
+# Exclude Database Dumps
+*.sql
+*.sqlite
