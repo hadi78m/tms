@@ -2,42 +2,40 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laramina\Traits\AdminTableTrait;
+use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, AdminTableTrait;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
-    public static function adminTransform($cred)
+    protected $guarded = ['id'];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+    ];
+
+    protected static function booted(): void
     {
-        return [
-            'id'         => $cred->id,
-            'name'       => $cred->name,
-            'email'      => $cred->email,
-            'created_at' => $cred->created_at?->format('Y/m/d H:i'),
-        ];
+        // Enforce equality of username and national_code in the application layer
+        static::saving(function (User $user) {
+            if ($user->national_code) {
+                $user->username = $user->national_code;
+            }
+        });
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    public function contractor()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(SyncedContractor::class, 'contractor_id');
     }
 }

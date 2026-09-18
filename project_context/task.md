@@ -1,0 +1,24 @@
+- [x] 1. Auth Implementation
+  - [x] Create `AuthController` (login/logout with national code)
+  - [x] Create `LoginRequest`
+  - [x] Create `auth/login.blade.php` view
+  - [x] Setup web routes for auth
+- [x] 2. UI Foundation
+  - [x] Setup `layouts/app.blade.php` (Tailwind, RTL, Sidebar)
+- [x] 3. Task Management Controllers & FormRequests
+  - [x] `TaskController` and `StoreTaskRequest`, `UpdateTaskRequest`
+  - [x] `TaskAssignmentController` and `AssignTaskRequest`
+  - [x] `ApprovalController` and `StoreApprovalRequest`
+  - [x] `DocumentController` and `StoreDocumentRequest`
+- [/] 4. Task Views
+  - [ ] `tasks/index.blade.php` (List)
+  - [ ] `tasks/show.blade.php` (Details, SLA, Approvals, Assignments)
+  - [ ] `tasks/create.blade.php`, `tasks/edit.blade.php` (Forms)
+- [ ] 5. Dashboards
+  - [ ] `dashboard/supervisor.blade.php`
+- [ ] 6. Web Routes
+  - [ ] Common task routes
+  - [ ] Protected endpoints for manager/supervisor
+- [ ] 7. Feature Tests
+  - [ ] `WebAuthControllerTest`
+  - [ ] `WebTaskControllerTest`

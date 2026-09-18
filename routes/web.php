@@ -1,30 +1,36 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Web\ApprovalController;
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DocumentController;
+use App\Http\Controllers\Web\TaskAssignmentController;
+use App\Http\Controllers\Web\TaskController;
+use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
 });
 
-require __DIR__.'/auth.php';
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-use App\Http\Controllers\UserController;
+    // Task routes
+    Route::resource('tasks', TaskController::class);
 
-Route::prefix('users')->name('users.')->group(function () {
-    Route::get('/',              [UserController::class, 'index'])->name('index');
-    Route::get('/json',          [UserController::class, 'json'])->name('json');
-    Route::post('/',             [UserController::class, 'store'])->name('store');
-    Route::post('/update/{id}',  [UserController::class, 'update'])->name('update');
-    Route::post('/destroy/{id}', [UserController::class, 'destroy'])->name('destroy');
+    // Task sub-routes
+    Route::post('tasks/{task}/assign', [TaskAssignmentController::class, 'store'])->name('tasks.assign');
+    Route::post('tasks/{task}/submit', [TaskController::class, 'submit'])->name('tasks.submit');
+    Route::post('tasks/{task}/approvals', [ApprovalController::class, 'store'])->name('approvals.store');
+    Route::post('tasks/{task}/documents', [DocumentController::class, 'store'])->name('documents.store');
+
+    // User management (Admin only)
+    Route::resource('users', UserController::class)->middleware('role:admin');
 });

@@ -1,0 +1,34 @@
+- [x] 1. Auth Implementation
+  - [x] Create `AuthController` (login/logout with national code)
+  - [x] Create `LoginRequest`
+  - [x] Create `auth/login.blade.php` view
+  - [x] Setup web routes for auth
+- [x] 2. UI Foundation
+  - [x] Setup `layouts/app.blade.php` (Tailwind, RTL, Sidebar)
+- [x] 3. Task Management Controllers & FormRequests
+  - [x] `TaskController` and `StoreTaskRequest`, `UpdateTaskRequest`
+  - [x] `TaskAssignmentController` and `AssignTaskRequest`
+  - [x] `ApprovalController` and `StoreApprovalRequest`
+  - [x] `DocumentController` and `StoreDocumentRequest`
+- [x] 4. Task Views
+  - [x] `tasks/index.blade.php` (List)
+  - [x] `tasks/show.blade.php` (Details, SLA, Approvals, Assignments)
+  - [x] `tasks/create.blade.php`, `tasks/edit.blade.php` (Forms)
+- [x] 5. Dashboards
+  - [x] `dashboard.blade.php` with role-based navigation and stats
+- [x] 6. Web Routes
+  - [x] Common task routes
+  - [x] Protected endpoints for manager/supervisor (Middleware-based)
+- [x] 7. Feature Tests
+  - [x] `WebAuthControllerTest`
+  - [x] `WebTaskControllerTest`
+
+- [x] 8. Phase V1.2 — User & Access Management
+  - [x] Configure Spatie Middleware Aliases in `bootstrap/app.php`
+  - [x] Create `StoreUserRequest` and `UpdateUserRequest`
+  - [x] Create `UserController` in `app/Http/Controllers/Web/UserController.php`
+  - [x] Create Views `users/index.blade.php`, `users/create.blade.php`, `users/edit.blade.php`
+  - [x] Update Sidebar in `layouts/app.blade.php` for Admin user management
+  - [x] Register Admin resource routes in `routes/web.php`
+  - [x] Create Feature Test `WebUserControllerTest.php`
+  - [x] Run full test suite on PostgreSQL and verify 100% green (69 tests passed)
