@@ -1,0 +1,4 @@
+role_id,model_type,model_id
+1,App\Models\User,1
+2,App\Models\User,2
+3,App\Models\User,3

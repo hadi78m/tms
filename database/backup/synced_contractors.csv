@@ -1,0 +1,2 @@
+id,external_id,source_system,name,code,status,source_updated_at,last_synced_at,sync_status,sync_error,created_at,updated_at,deleted_at
+1,CONT-001,ERP_SYSTEM,شرکت مهندسی داده‌پردازان راهکار,CONT-1001,active,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,synced,,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,

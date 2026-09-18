@@ -1,0 +1,2 @@
+id,project_id,name,expected_output,weight,planned_duration,duration_unit,start_date,end_date,sort_order,status,created_at,updated_at,deleted_at
+1,1,فاز ۱ - تحلیل و پیاده‌سازی اولیه,مستندات معماری، هسته دامین و سرویس‌های پایه,50.00,30,day,2026-01-01,2026-01-31,1,active,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,

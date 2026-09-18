@@ -1,0 +1,2 @@
+id,contract_id,contractor_id,name,description,status,start_date,end_date,created_at,updated_at,deleted_at
+1,1,1,پروژه سامانه مدیریت وظایف (TMS),پروژه عملیاتی متناظر با قرارداد CNT-1405-01 جهت پایش وظایف و کنترل SLA,active,2026-01-01,2026-12-31,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,

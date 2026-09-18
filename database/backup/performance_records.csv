@@ -1,0 +1,1 @@
+id,contract_id,contractor_id,period_start,period_end,tasks_completed,total_weight_completed,rework_count,sla_breach_count,created_at,updated_at

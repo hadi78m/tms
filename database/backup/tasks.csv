@@ -1,0 +1,1 @@
+id,project_id,contract_id,contractor_id,wbs_phase_id,parent_task_id,title,description,weight,priority,status,planned_start_at,planned_due_at,actual_started_at,submitted_at,approved_at,cancelled_at,created_by,created_at,updated_at,deleted_at

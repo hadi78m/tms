@@ -1,0 +1,2 @@
+id,external_id,source_system,contractor_id,system_id,contract_number,title,start_date,end_date,amount,status,source_updated_at,last_synced_at,sync_status,sync_error,created_at,updated_at,deleted_at
+1,CTR-2026-001,ERP_SYSTEM,1,1,CNT-1405-01,قرارداد توسعه و نگهداری سامانه مدیریت وظایف,2026-01-01,2026-12-31,500000000.00,active,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,synced,,2026-09-18 17:52:59+03:30,2026-09-18 17:52:59+03:30,
