@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Domain\DTOs\UploadDocumentData;
+
 use App\Domain\Services\DocumentService;
 use App\Domain\Services\TaskService;
 use App\Http\Controllers\Controller;
@@ -39,12 +39,13 @@ class TaskController extends Controller
         return view('tasks.index', compact('tasks'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $projects = Project::all();
         $wbsPhases = WbsPhase::all();
+        $parentId = $request->query('parent_id');
 
-        return view('tasks.create', compact('projects', 'wbsPhases'));
+        return view('tasks.create', compact('projects', 'wbsPhases', 'parentId'));
     }
 
     public function store(StoreTaskRequest $request)
@@ -57,15 +58,8 @@ class TaskController extends Controller
         if ($request->hasFile('document')) {
             $file = $request->file('document');
             $this->documentService->uploadDocument(
-                new UploadDocumentData(
-                    documentableType: Task::class,
-                    documentableId: $task->id,
-                    file: $file,
-                    originalName: $file->getClientOriginalName(),
-                    mimeType: $file->getMimeType(),
-                    size: $file->getSize(),
-                    uploadedById: Auth::id()
-                ),
+                $task,
+                $file,
                 Auth::user()
             );
         }
@@ -87,6 +81,24 @@ class TaskController extends Controller
         return view('tasks.show', compact('task'));
     }
 
+    public function start(Request $request, Task $task)
+    {
+        $user = Auth::user();
+
+        if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
+            abort(403, 'شما دسترسی به این وظیفه ندارید.');
+        }
+
+        try {
+            $this->taskService->startProgress($task, $user);
+            return redirect()->route('tasks.show', $task->id)->with('status', 'اجرای وظیفه آغاز شد.');
+        } catch (\App\Domain\Exceptions\TaskBlockedException $e) {
+            return redirect()->route('tasks.show', $task->id)->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            return redirect()->route('tasks.show', $task->id)->with('error', 'خطایی در شروع وظیفه رخ داد.');
+        }
+    }
+
     public function submit(Request $request, Task $task)
     {
         $user = Auth::user();
@@ -99,5 +111,26 @@ class TaskController extends Controller
         $this->taskService->updateStatus($task->id, 'completed', $user->id);
 
         return redirect()->route('tasks.show', $task->id)->with('status', 'پایان وظیفه ثبت شد.');
+    }
+
+    public function addDependency(Task $task, \App\Http\Requests\Web\AddDependencyRequest $request)
+    {
+        try {
+            $dependsOnTask = Task::findOrFail($request->input('depends_on_task_id'));
+            $this->taskService->addDependency($task, $dependsOnTask, Auth::user());
+            return back()->with('status', 'پیش‌نیاز با موفقیت اضافه شد.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function removeDependency(Task $task, \App\Models\TaskDependency $dependency)
+    {
+        try {
+            $this->taskService->removeDependency($task, $dependency, Auth::user());
+            return back()->with('status', 'پیش‌نیاز با موفقیت حذف شد.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

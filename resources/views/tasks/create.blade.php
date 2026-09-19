@@ -12,6 +12,13 @@
 
         <form action="{{ route('tasks.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
             @csrf
+            
+            @if(isset($parentId))
+                <input type="hidden" name="parent_task_id" value="{{ $parentId }}">
+                <div class="bg-blue-50 text-blue-800 px-4 py-3 rounded-lg mb-6 text-sm border border-blue-100">
+                    شما در حال ایجاد یک زیرتسک برای وظیفه #{{ $parentId }} هستید.
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- عنوان وظیفه -->

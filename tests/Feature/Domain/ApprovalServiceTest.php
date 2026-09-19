@@ -133,16 +133,16 @@ class ApprovalServiceTest extends TestCase
         );
     }
 
-    public function test_final_approval_must_be_on_under_review_task()
+    public function test_final_approval_must_be_on_supervisor_approved_task()
     {
-        $task = $this->createTestTask(['status' => TaskStatus::InProgress->value]);
+        // Final approval now requires supervisor_approved status (two-tier flow)
+        $task = $this->createTestTask(['status' => TaskStatus::UnderReview->value]);
 
         $this->expectException(InvalidTaskTransitionException::class);
 
-        $this->approvalService->recordApproval(
+        $this->approvalService->recordFinalApproval(
             $task,
             $this->employerUser,
-            ApprovalType::Final->value,
             ApprovalStatus::Approved->value
         );
     }
@@ -163,16 +163,16 @@ class ApprovalServiceTest extends TestCase
 
     public function test_final_approval_transitions_task_status_to_approved()
     {
-        $task = $this->createTestTask(['status' => TaskStatus::UnderReview->value]);
+        // Final approval requires supervisor_approved as prerequisite (two-tier flow)
+        $task = $this->createTestTask(['status' => TaskStatus::SupervisorApproved->value]);
 
         $this->auditServiceMock->expects($this->exactly(2))
             ->method('log')
             ->willReturn(new ActivityLog);
 
-        $approval = $this->approvalService->recordApproval(
+        $approval = $this->approvalService->recordFinalApproval(
             $task,
             $this->employerUser,
-            ApprovalType::Final->value,
             ApprovalStatus::Approved->value,
             'Looks good'
         );
@@ -189,16 +189,15 @@ class ApprovalServiceTest extends TestCase
 
     public function test_final_approval_needs_rework_transitions_task_status()
     {
-        $task = $this->createTestTask(['status' => TaskStatus::UnderReview->value]);
+        $task = $this->createTestTask(['status' => TaskStatus::SupervisorApproved->value]);
 
         $this->auditServiceMock->expects($this->exactly(2))
             ->method('log')
             ->willReturn(new ActivityLog);
 
-        $approval = $this->approvalService->recordApproval(
+        $approval = $this->approvalService->recordFinalApproval(
             $task,
             $this->employerUser,
-            ApprovalType::Final->value,
             ApprovalStatus::NeedsRework->value,
             'Please fix the issues'
         );
@@ -207,8 +206,9 @@ class ApprovalServiceTest extends TestCase
         $this->assertEquals(TaskStatus::NeedsRework->value, $task->status);
     }
 
-    public function test_technical_approval_does_not_transition_status()
+    public function test_technical_approval_transitions_task_to_supervisor_approved()
     {
+        // Technical approval (supervisor, tier-1) moves task to supervisor_approved
         $task = $this->createTestTask(['status' => TaskStatus::UnderReview->value]);
 
         $this->auditServiceMock->expects($this->once())
@@ -216,16 +216,16 @@ class ApprovalServiceTest extends TestCase
             ->with($this->equalTo('task_approval_recorded'))
             ->willReturn(new ActivityLog);
 
-        $approval = $this->approvalService->recordApproval(
+        $approval = $this->approvalService->recordTechnicalApproval(
             $task,
             $this->employerUser,
-            ApprovalType::Technical->value,
             ApprovalStatus::Approved->value,
             'Tech approved'
         );
 
         $task->refresh();
-        $this->assertEquals(TaskStatus::UnderReview->value, $task->status);
+        $this->assertEquals(TaskStatus::SupervisorApproved->value, $task->status);
+        $this->assertEquals(ApprovalType::Technical->value, $approval->approval_type);
         $this->assertEquals(1, $approval->sequence);
     }
 }

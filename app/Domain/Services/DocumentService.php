@@ -24,7 +24,7 @@ class DocumentService
      *
      * @throws \Exception
      */
-    public function uploadDocument(Model $attachable, UploadedFile $file, User $uploader, string $disk = 'local'): Document
+    public function uploadDocument(Model $attachable, UploadedFile $file, User $uploader, string $disk = 'local', ?string $claimedAt = null): Document
     {
         $originalName = $file->getClientOriginalName();
         $mimeType = $file->getClientMimeType();
@@ -41,13 +41,16 @@ class DocumentService
         }
 
         try {
-            return DB::transaction(function () use ($attachable, $originalName, $path, $mimeType, $size, $checksum, $uploader) {
+            return DB::transaction(function () use ($attachable, $originalName, $path, $mimeType, $size, $checksum, $uploader, $claimedAt) {
                 return $attachable->documents()->create([
                     'original_name' => $originalName,
                     'stored_name' => $path,
                     'mime_type' => $mimeType,
                     'size' => $size,
                     'checksum' => $checksum,
+                    'file_hash' => $checksum,
+                    'claimed_at' => $claimedAt,
+                    'recorded_at' => now(),
                     'uploaded_by' => $uploader->id,
                 ]);
             });

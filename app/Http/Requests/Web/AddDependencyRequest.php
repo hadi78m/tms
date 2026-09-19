@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Web;
 
-use App\Models\Task;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreDocumentRequest extends FormRequest
+class AddDependencyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,8 +18,7 @@ class StoreDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'max:20480'], // max 20MB
-            'claimed_at' => ['nullable', 'date'],
+            'depends_on_task_id' => ['required', 'integer', 'exists:tasks,id'],
         ];
     }
 }

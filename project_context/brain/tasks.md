@@ -1,0 +1,7 @@
+- [x] 1. Create DB migration & model for SystemSettings
+- [x] 2. Develop SettingsService
+- [x] 3. Develop SettingController & ReportController
+- [x] 4. Update Web Routes & App Layout
+- [x] 5. Design UI for Settings and Reports using Tailwind CSS
+- [x] 6. Feature Tests and execution
+- [x] 7. Update tracking documents

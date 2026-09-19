@@ -29,6 +29,9 @@
 | `id` | number | شناسه |
 | `name` | string | نام |
 
+- [x] **Phase V1.3: Two-Tier Approval & Employer Workflow**
+- [x] **Phase V1.4: Evidence Hashing & Claim Tracking**
+
 ## تنظیمات
 
 | تنظیم | مقدار پیش‌فرض | توضیحات |

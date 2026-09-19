@@ -32,3 +32,33 @@
   - [x] Register Admin resource routes in `routes/web.php`
   - [x] Create Feature Test `WebUserControllerTest.php`
   - [x] Run full test suite on PostgreSQL and verify 100% green (69 tests passed)
+
+- [x] 9. Phase V1.3 — Two-Tier Approval & Employer Workflow
+  - [x] Add 4 new Spatie roles: `employer`, `project_manager`, `management`, `viewer` to `InitialTmsSeeder`
+  - [x] Add `TaskStatus::SupervisorApproved` enum case to `app/Domain/Enums/TaskStatus.php`
+  - [x] Update `TaskStateTransition`: `under_review → supervisor_approved → approved`
+  - [x] Create migration `2026_09_19_055251_add_supervisor_approved_status_to_tasks.php`
+  - [x] Refactor `ApprovalService` with `recordTechnicalApproval()` and `recordFinalApproval()`
+  - [x] Update `ApprovalServiceTest` to match new state machine (6 tests green)
+  - [x] Add `TwoTierApprovalWorkflowTest.php` (6 tests, 11 assertions, all green)
+  - [x] Run `vendor/bin/pint --dirty` and fix code style
+  - [x] Domain test suite: 31/31 tests green
+
+- [ ] 10. Phase V1.4 — Evidence Hashing & Claim Tracking
+  - [ ] Define claim/evidence models and migrations
+  - [ ] Implement file-hash verification on document upload
+  - [ ] Link claims to approvals and tasks
+  - [ ] Add audit events for claim submission
+  - [ ] Add Feature tests
+
+- [ ] 11. Phase V1.5 — Subtasks & Dependency Blocking
+  - [ ] Implement subtask creation and parent-child validation
+  - [ ] Dependency-blocking: task blocked if dependency not complete
+  - [ ] Add UI for dependency graph
+  - [ ] Add Feature tests
+
+- [ ] 12. Phase V1.6 — Dynamic Settings & Export Reports
+  - [ ] Configurable system settings (dashboard widgets, visibility)
+  - [ ] PDF/Excel export for task lists and performance reports
+  - [ ] Role-based report access control
+  - [ ] Add Feature tests

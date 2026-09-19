@@ -27,9 +27,24 @@ Route::middleware('auth')->group(function () {
 
     // Task sub-routes
     Route::post('tasks/{task}/assign', [TaskAssignmentController::class, 'store'])->name('tasks.assign');
+    Route::post('tasks/{task}/start', [TaskController::class, 'start'])->name('tasks.start');
     Route::post('tasks/{task}/submit', [TaskController::class, 'submit'])->name('tasks.submit');
     Route::post('tasks/{task}/approvals', [ApprovalController::class, 'store'])->name('approvals.store');
     Route::post('tasks/{task}/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::post('tasks/{task}/dependencies', [TaskController::class, 'addDependency'])->name('tasks.dependencies.store');
+    Route::delete('tasks/{task}/dependencies/{dependency}', [TaskController::class, 'removeDependency'])->name('tasks.dependencies.destroy');
+
+    // Settings (Admin only)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/settings', [\App\Http\Controllers\Web\SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [\App\Http\Controllers\Web\SettingController::class, 'update'])->name('settings.update');
+    });
+
+    // Reports (Roles with access)
+    Route::middleware('role:admin|management|employer|project_manager')->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\Web\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [\App\Http\Controllers\Web\ReportController::class, 'export'])->name('reports.export');
+    });
 
     // User management (Admin only)
     Route::resource('users', UserController::class)->middleware('role:admin');

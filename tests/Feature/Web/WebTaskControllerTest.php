@@ -78,4 +78,58 @@ class WebTaskControllerTest extends TestCase
         $response->assertSee('وظایف من');
         $response->assertSee('توزیع وضعیت وظایف');
     }
+
+    public function test_supervisor_sees_technical_approval_buttons_in_under_review_status(): void
+    {
+        $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'technical_approval', 'guard_name' => 'web']);
+        
+        $supervisor = User::factory()->create(['contractor_id' => null]);
+        $supervisor->givePermissionTo('technical_approval');
+
+        $task = Task::factory()->create(['status' => 'under_review']);
+
+        $response = $this->actingAs($supervisor)->get("/tasks/{$task->id}");
+
+        $response->assertStatus(200);
+        $response->assertSee('تایید فنی (ناظر)');
+        $response->assertSee('id="btn-technical-approve"', false);
+        
+        $response->assertDontSee('id="btn-final-approve"', false);
+    }
+
+    public function test_employer_sees_final_approval_buttons_in_supervisor_approved_status(): void
+    {
+        $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'final_approval', 'guard_name' => 'web']);
+        
+        $employer = User::factory()->create(['contractor_id' => null]);
+        $employer->givePermissionTo('final_approval');
+
+        $task = Task::factory()->create(['status' => 'supervisor_approved']);
+
+        $response = $this->actingAs($employer)->get("/tasks/{$task->id}");
+
+        $response->assertStatus(200);
+        $response->assertSee('تایید نهایی (بهره‌بردار)');
+        $response->assertSee('id="btn-final-approve"', false);
+        
+        $response->assertDontSee('id="btn-technical-approve"', false);
+    }
+
+    public function test_supervisor_cannot_see_technical_approval_when_not_under_review(): void
+    {
+        $this->app->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'technical_approval', 'guard_name' => 'web']);
+        
+        $supervisor = User::factory()->create(['contractor_id' => null]);
+        $supervisor->givePermissionTo('technical_approval');
+
+        $task = Task::factory()->create(['status' => 'supervisor_approved']);
+
+        $response = $this->actingAs($supervisor)->get("/tasks/{$task->id}");
+
+        $response->assertStatus(200);
+        $response->assertDontSee('id="btn-technical-approve"', false);
+    }
 }

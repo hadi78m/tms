@@ -34,6 +34,7 @@ class StoreTaskRequest extends FormRequest
             'weight' => ['required', 'numeric', 'min:0', 'max:100'],
             'planned_start_date' => ['nullable', 'date'],
             'planned_due_date' => ['nullable', 'date'],
+            'parent_task_id' => ['nullable', 'integer', 'exists:tasks,id'],
         ];
     }
 
@@ -48,7 +49,7 @@ class StoreTaskRequest extends FormRequest
             weight: (float) $this->input('weight'),
             planned_start_date: $this->input('planned_start_date'),
             planned_due_date: $this->input('planned_due_date'),
-            parent_task_id: null
+            parent_task_id: $this->input('parent_task_id')
         );
     }
 }

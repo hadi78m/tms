@@ -11,6 +11,12 @@ class Document extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'claimed_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'recorded_at' => 'datetime',
+    ];
+
     public function attachable()
     {
         return $this->morphTo();

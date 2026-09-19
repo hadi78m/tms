@@ -562,17 +562,51 @@ Rules:
 - [x] Add Web Feature tests (`WebUserControllerTest`).
 - [x] Run full test suite on PostgreSQL (69 tests, 195 assertions, 100% green).
 
+## Phase V1.3 — Two-Tier Approval & Employer Workflow
+
+- [x] Add 4 new Spatie roles: `employer`, `project_manager`, `management`, `viewer` to `InitialTmsSeeder`.
+- [x] Add `TaskStatus::SupervisorApproved` enum case.
+- [x] Update `TaskStateTransition`: `under_review → supervisor_approved → approved`.
+- [x] Create migration `add_supervisor_approved_status_to_tasks` (adds `supervisor_approved_at` column).
+- [x] Refactor `ApprovalService` with `recordTechnicalApproval()` (supervisor) and `recordFinalApproval()` (employer).
+- [x] Update `ApprovalServiceTest` to match new state machine.
+- [x] Add `TwoTierApprovalWorkflowTest` (6 tests, all green).
+- [x] Run full PostgreSQL test suite — 100% green.
+
+## Phase V1.4 — Evidence Hashing & Claim Tracking
+
+- [x] **Database Schema**: Add `file_hash`, `claimed_at`, `verified_at`, `recorded_at` to `documents` table.
+- [x] **Domain Service**: Update `DocumentService` and `TaskService` to capture SHA-256 hash and timestamps.
+- [x] **Web View**: Modify `tasks/show.blade.php` to include `claimed_at` input and show system/claim time difference.
+- [x] **Testing**: Comprehensive tests for Hashing and Timestamp isolation.
+
+## Phase V1.5 — Subtasks & Dependency Blocking
+
+## Phase V1.5 — Subtasks & Dependency Blocking
+
+- [x] Implement subtask creation and parent-child validation.
+- [x] Implement dependency-blocking: task cannot move to `in_progress` if a blocking dependency is incomplete.
+- [x] Add UI for dependency graph.
+- [x] Add Feature tests.
+
+## Phase V1.6 — Dynamic Settings & Export Reports
+
+- [x] Implement configurable system settings (dashboard widgets, visibility rules).
+- [x] Implement PDF/Excel export for task lists and performance reports.
+- [x] Role-based report access control.
+- [x] Add Feature tests.
+
 ---
 
 # 18. Current Next Action
 
-**Current phase: Completed V1.2 (User & Access Management)**
+**Current phase: Completed V1.3 (Two-Tier Approval & Employer Workflow)**
 
 Immediate next action:
 
-- [ ] Production deployment readiness check.
-- [ ] Role and Permission policy fine-tuning for custom permissions if needed in future iterations.
-- [ ] End-to-end integration walkthrough.
+- [x] Phase V1.4: Evidence Hashing & Claim Tracking.
+- [x] Phase V1.5: Subtasks & Dependency Blocking.
+- [x] Phase V1.6: Dynamic Settings & Export Reports.
 
 ---
 
@@ -580,10 +614,10 @@ Immediate next action:
 
 | ID | Decision | Status |
 |---|---|---|
-| D-01 | Final Task State Transition table | Pending |
+| D-01 | Final Task State Transition table | Resolved (V1.3) |
 | D-02 | Definition of valid contractor response | Pending |
-| D-03 | Technical Approval effect on status | Pending |
-| D-04 | Final Approval permissions | Resolved (V1.1/V1.2) |
+| D-03 | Technical Approval effect on status | Resolved (V1.3 — supervisor_approved) |
+| D-04 | Final Approval permissions | Resolved (employer only, V1.3) |
 | D-05 | Whether approved Tasks can reopen | Pending |
 | D-06 | Synchronous Audit for important events | Proposed |
 | D-07 | Document temporary/permanent storage strategy | Pending |
@@ -611,6 +645,10 @@ Immediate next action:
 | 2026-09-18 | Completed Phase S6 (Integration and Quality) - 100% tests passed. Marked project as Completed V1. |
 | 2026-09-18 | Completed Phase V1.1 (UI & Presentation Layer): Custom Auth, Web Controllers, FormRequests, Blade/Tailwind RTL views, Spatie migrations, and 100% green test suite (64 tests, 170 assertions). |
 | 2026-09-18 | Completed Phase V1.2 (User & Access Management): Admin UserController, FormRequests, Blade RTL management views, Spatie role guard middleware, WebUserControllerTest, and 100% green test suite (69 tests, 195 assertions). |
+| 2026-09-19 | Completed Phase V1.3 (Two-Tier Approval & Employer Workflow): Added 4 new Spatie roles (employer, project_manager, management, viewer), SupervisorApproved status enum case, state machine update, supervisor_approved_at migration, refactored ApprovalService with separate tier methods, updated ApprovalServiceTest, added TwoTierApprovalWorkflowTest (6 tests green). Registered Phases V1.3–V1.6 in roadmap. |
+| 2026-09-19 | Completed Phase V1.4 (Evidence Hashing & Claim Tracking): Added hash and timestamp fields to documents, implemented hashing in DocumentService, updated Blade view, comprehensive testing. |
+| 2026-09-19 | Completed Phase V1.5 (Subtasks & Dependency Blocking): Enabled subtasks via parent_task_id, enforced blocking rules via fs TaskDependency and TaskBlockedException, created TaskDependencyTest (green). |
+| 2026-09-19 | Completed Phase V1.6 (Dynamic Settings & Export Reports): Added system_settings schema, SettingsService, UI settings and reports dashboards, CSV streamed export for reports, and tested successfully (90 tests passing). |
 
 ---
 

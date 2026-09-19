@@ -10,6 +10,9 @@ use App\Domain\Rules\TaskStateTransition;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Domain\Exceptions\TaskBlockedException;
+use App\Domain\Exceptions\CircularDependencyException;
+use App\Models\TaskDependency;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -123,6 +126,16 @@ class TaskService
             $currentStatus = TaskStatus::from($task->status);
             $this->stateTransition->assertCanTransition($currentStatus, TaskStatus::InProgress);
 
+            // Check for unapproved predecessors (Blocked by dependencies)
+            $unapprovedPredecessors = $task->dependenciesAsSuccessor()
+                ->whereHas('predecessor', function ($query) {
+                    $query->where('status', '!=', 'approved');
+                })->exists();
+
+            if ($unapprovedPredecessors) {
+                throw new TaskBlockedException("تسک دارای پیش‌نیازهای تایید نشده است و امکان شروع آن وجود ندارد.");
+            }
+
             $oldStatus = $task->status;
             $task->status = TaskStatus::InProgress->value;
             $task->save();
@@ -150,5 +163,83 @@ class TaskService
 
             return $task;
         });
+    }
+
+    public function addDependency(Task $task, Task $dependsOnTask, User $actor, string $type = 'fs'): TaskDependency
+    {
+        if ($task->id === $dependsOnTask->id) {
+            throw new InvalidArgumentException("تسک نمی‌تواند به خودش وابستگی داشته باشد.");
+        }
+
+        if ($task->project_id !== $dependsOnTask->project_id) {
+            throw new InvalidArgumentException("وابستگی فقط بین تسک‌های یک پروژه مجاز است.");
+        }
+
+        // Circular Dependency Check
+        if ($this->hasCircularDependency($task, $dependsOnTask)) {
+            throw new CircularDependencyException("امکان ایجاد این وابستگی وجود ندارد زیرا باعث ایجاد چرخه (Circular Dependency) می‌شود.");
+        }
+
+        return DB::transaction(function () use ($task, $dependsOnTask, $actor, $type) {
+            $dependency = TaskDependency::firstOrCreate([
+                'successor_task_id' => $task->id,
+                'predecessor_task_id' => $dependsOnTask->id,
+            ], [
+                'dependency_type' => $type,
+                'created_by' => $actor->id,
+            ]);
+
+            $this->auditService->log('task_dependency_added', $task, $actor, [], [
+                'predecessor_id' => $dependsOnTask->id,
+                'dependency_type' => $type,
+            ]);
+
+            return $dependency;
+        });
+    }
+
+    public function removeDependency(Task $task, TaskDependency $dependency, User $actor): void
+    {
+        if ($dependency->successor_task_id !== $task->id) {
+            throw new InvalidArgumentException("این وابستگی متعلق به تسک مشخص شده نیست.");
+        }
+
+        DB::transaction(function () use ($task, $dependency, $actor) {
+            $dependency->delete();
+
+            $this->auditService->log('task_dependency_removed', $task, $actor, [
+                'predecessor_id' => $dependency->predecessor_task_id,
+            ], []);
+        });
+    }
+
+    protected function hasCircularDependency(Task $task, Task $dependsOnTask): bool
+    {
+        // We want to add $dependsOnTask as a predecessor to $task.
+        // So $task -> depends on -> $dependsOnTask.
+        // A cycle exists if $dependsOnTask (or any of its predecessors) depends on $task.
+        
+        $visited = [];
+        $queue = [$dependsOnTask->id];
+
+        while (!empty($queue)) {
+            $currentId = array_shift($queue);
+
+            if ($currentId === $task->id) {
+                return true; // We found the target task in the ancestor chain!
+            }
+
+            if (!isset($visited[$currentId])) {
+                $visited[$currentId] = true;
+                
+                $predecessors = TaskDependency::where('successor_task_id', $currentId)
+                    ->pluck('predecessor_task_id')
+                    ->toArray();
+
+                $queue = array_merge($queue, $predecessors);
+            }
+        }
+
+        return false;
     }
 }

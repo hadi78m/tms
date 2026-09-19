@@ -16,8 +16,11 @@ class DocumentController extends Controller
     public function store(StoreDocumentRequest $request, Task $task)
     {
         $this->documentService->uploadDocument(
-            $request->toDto(),
-            auth()->user()
+            $task,
+            $request->file('file'),
+            auth()->user(),
+            'local',
+            $request->input('claimed_at')
         );
 
         return redirect()->route('tasks.show', $task->id)->with('status', 'مستند با موفقیت بارگذاری شد.');
