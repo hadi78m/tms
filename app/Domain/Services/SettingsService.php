@@ -3,8 +3,8 @@
 namespace App\Domain\Services;
 
 use App\Models\SystemSetting;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class SettingsService
 {
@@ -15,6 +15,7 @@ class SettingsService
     {
         return Cache::rememberForever("system_settings.{$key}", function () use ($key, $default) {
             $setting = SystemSetting::where('key', $key)->first();
+
             return $setting ? $setting->parsed_value : $default;
         });
     }
@@ -22,10 +23,10 @@ class SettingsService
     /**
      * Set a setting value and clear its cache.
      */
-    public function set(string $key, mixed $value, string $type = 'string', string $description = null): SystemSetting
+    public function set(string $key, mixed $value, string $type = 'string', ?string $description = null): SystemSetting
     {
         $existing = SystemSetting::where('key', $key)->first();
-        
+
         $setting = SystemSetting::updateOrCreate(
             ['key' => $key],
             [
@@ -43,7 +44,7 @@ class SettingsService
     /**
      * Retrieve all settings.
      */
-    public function all(): \Illuminate\Database\Eloquent\Collection
+    public function all(): Collection
     {
         return SystemSetting::all();
     }

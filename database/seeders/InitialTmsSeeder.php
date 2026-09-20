@@ -6,14 +6,14 @@ use App\Models\Project;
 use App\Models\SyncedContract;
 use App\Models\SyncedContractor;
 use App\Models\SyncedSystem;
-use App\Models\User;
-use App\Models\WbsPhase;
 use App\Models\Task;
 use App\Models\TaskDependency;
+use App\Models\User;
+use App\Models\WbsPhase;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class InitialTmsSeeder extends Seeder
 {
@@ -23,7 +23,7 @@ class InitialTmsSeeder extends Seeder
         $permissions = [
             'manage users', 'manage settings', 'manage projects', 'create tasks', 'assign tasks',
             'technical_approval', 'final_approval', 'submit rework',
-            'view reports', 'export reports', 'upload evidence'
+            'view reports', 'export reports', 'upload evidence',
         ];
 
         foreach ($permissions as $perm) {
@@ -37,7 +37,7 @@ class InitialTmsSeeder extends Seeder
             'employer' => ['final_approval', 'submit rework', 'view reports', 'export reports'],
             'contractor' => ['upload evidence'],
             'management' => ['view reports', 'export reports'],
-            'viewer' => ['view reports']
+            'viewer' => ['view reports'],
         ];
 
         foreach ($rolesWithPerms as $roleName => $perms) {
@@ -147,8 +147,8 @@ class InitialTmsSeeder extends Seeder
                 [
                     'username' => $ud['national_code'],
                     'name' => $ud['name'],
-                    'mobile' => '09' . substr($ud['national_code'], 1, 9),
-                    'email' => $ud['role'] . '@tms.local',
+                    'mobile' => '09'.substr($ud['national_code'], 1, 9),
+                    'email' => $ud['role'].'@tms.local',
                     'password' => Hash::make('password123'),
                     'is_active' => true,
                     'contractor_id' => $ud['contractor_id'] ?? null,

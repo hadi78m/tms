@@ -13,11 +13,15 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Persian Datepicker -->
+    <link rel="stylesheet" href="{{ asset('css/persianDatepicker/persianDatepicker-default.css') }}">
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Vazirmatn', sans-serif; }
     </style>
+    @stack('styles')
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased font-sans">
     <div class="flex h-screen overflow-hidden">
@@ -145,6 +149,26 @@
         </div>
     </div>
     
+    <!-- jQuery & Persian Datepicker -->
+    <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ asset('js/persianDatepicker/persianDatepicker.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            if ($.fn.persianDatepicker) {
+                $('.datedown').persianDatepicker({
+                    formatDate: "YYYY/MM/DD",
+                    showGregorianDate: false,
+                    autoClose: true
+                });
+                $('.datetop').persianDatepicker({
+                    calendarPosition: { x: 0, y: -350 },
+                    formatDate: "YYYY/MM/DD",
+                    showGregorianDate: false,
+                    autoClose: true
+                });
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

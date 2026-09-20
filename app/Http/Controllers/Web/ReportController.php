@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -27,10 +26,10 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         $type = $request->query('type', 'all_tasks');
-        
-        $response = new StreamedResponse(function() use ($type) {
+
+        $response = new StreamedResponse(function () use ($type) {
             $handle = fopen('php://output', 'w');
-            
+
             // Add UTF-8 BOM for Excel compatibility with Persian
             fwrite($handle, "\xEF\xBB\xBF");
 
@@ -44,11 +43,11 @@ class ReportController extends Controller
                         $task->weight,
                         $task->project->name ?? '-',
                         $task->contractor->name ?? '-',
-                        $task->updated_at->format('Y-m-d H:i')
+                        jdate($task->updated_at)->format('Y/m/d H:i'),
                     ]);
                 }
             } else {
-                fputcsv($handle, ['شناسه', 'عنوان', 'وزن', 'وضعیت', 'تاخیر']);
+                fputcsv($handle, ['شناسه', 'عنوان', 'وزن', 'وضعیت', 'تاریخ شروع', 'مهلت انجام', 'تاخیر']);
                 $tasks = Task::all();
                 foreach ($tasks as $task) {
                     $delay = ($task->planned_due_at && $task->planned_due_at < now() && $task->status != 'completed') ? 'بله' : 'خیر';
@@ -57,16 +56,18 @@ class ReportController extends Controller
                         $task->title,
                         $task->weight,
                         $task->status,
-                        $delay
+                        $task->planned_start_at ? jdate($task->planned_start_at)->format('Y/m/d') : '-',
+                        $task->planned_due_at ? jdate($task->planned_due_at)->format('Y/m/d') : '-',
+                        $delay,
                     ]);
                 }
             }
             fclose($handle);
         });
 
-        $filename = "report_{$type}_" . now()->format('Ymd_His') . ".csv";
+        $filename = "report_{$type}_".jdate()->format('Ymd_His').'.csv';
         $response->headers->set('Content-Type', 'text/csv');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="'.$filename.'"');
 
         return $response;
     }

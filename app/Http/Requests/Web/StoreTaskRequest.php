@@ -4,6 +4,7 @@ namespace App\Http\Requests\Web;
 
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
+use App\Support\JalaliDate;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -16,6 +17,26 @@ class StoreTaskRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare inputs before validation to normalize Jalali dates.
+     */
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+
+        if ($this->filled('planned_start_date')) {
+            $merge['planned_start_date'] = JalaliDate::toGregorianDate($this->input('planned_start_date'));
+        }
+
+        if ($this->filled('planned_due_date')) {
+            $merge['planned_due_date'] = JalaliDate::toGregorianDate($this->input('planned_due_date'));
+        }
+
+        if (! empty($merge)) {
+            $this->merge($merge);
+        }
     }
 
     /**

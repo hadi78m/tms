@@ -24,6 +24,7 @@
                         <th class="px-6 py-4 font-semibold">پروژه</th>
                         <th class="px-6 py-4 font-semibold">پیمانکار</th>
                         <th class="px-6 py-4 font-semibold">وزن</th>
+                        <th class="px-6 py-4 font-semibold">مهلت انجام</th>
                         <th class="px-6 py-4 font-semibold">وضعیت</th>
                         <th class="px-6 py-4 font-semibold">عملیات</th>
                     </tr>
@@ -36,6 +37,9 @@
                         <td class="px-6 py-4">{{ $task->project->name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $task->contractor->name ?? '-' }}</td>
                         <td class="px-6 py-4">{{ $task->weight }}٪</td>
+                        <td class="px-6 py-4 text-xs font-mono" dir="ltr">
+                            {{ $task->planned_due_at ? jdate($task->planned_due_at)->format('Y/m/d') : '-' }}
+                        </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 @if($task->status === 'active') bg-blue-100 text-blue-800
@@ -52,7 +56,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-slate-500">
+                        <td colspan="8" class="px-6 py-8 text-center text-slate-500">
                             هیچ وظیفه‌ای یافت نشد.
                         </td>
                     </tr>

@@ -15,25 +15,25 @@ class UserController extends Controller
     public function json(Request $request)
     {
         return User::adminTable($request, [
-            'search'   => ['name', 'email'],
-            'filters'  => [],
+            'search' => ['name', 'email'],
+            'filters' => [],
             'sortable' => ['name', 'email', 'created_at'],
-            'with'     => [], 
+            'with' => [],
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|string|min:6',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
         ]);
 
         $user = User::create($validated);
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'provider' => User::adminTransform($user),
         ]);
     }
@@ -43,9 +43,9 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'email'     => "required|email|unique:users,email,{$id}",
-            'password'  => 'nullable|string|min:6',
+            'name' => 'required|string|max:255',
+            'email' => "required|email|unique:users,email,{$id}",
+            'password' => 'nullable|string|min:6',
         ]);
 
         if (empty($validated['password'])) {
@@ -55,7 +55,7 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'provider' => User::adminTransform($user),
         ]);
     }
@@ -63,6 +63,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         User::findOrFail($id)->delete();
+
         return response()->json(['success' => true]);
     }
 }

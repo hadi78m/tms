@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Web;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AddDependencyRequest extends FormRequest

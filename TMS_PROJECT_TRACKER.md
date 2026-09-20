@@ -582,8 +582,6 @@ Rules:
 
 ## Phase V1.5 — Subtasks & Dependency Blocking
 
-## Phase V1.5 — Subtasks & Dependency Blocking
-
 - [x] Implement subtask creation and parent-child validation.
 - [x] Implement dependency-blocking: task cannot move to `in_progress` if a blocking dependency is incomplete.
 - [x] Add UI for dependency graph.
@@ -596,17 +594,30 @@ Rules:
 - [x] Role-based report access control.
 - [x] Add Feature tests.
 
+## Phase V1.7 — Jalali/Persian Date Integration
+
+- [x] Implement `JalaliDate` utility and `SafeJalali` decorator in `app/Support/JalaliDate.php` (null-safe formatting returning `-`, Persian/Arabic digit normalization, year range detection).
+- [x] Create global helper functions `jdate()`, `to_jalali()`, and `jalali_to_gregorian()` in `app/Support/helpers.php` (registered via `composer.json` and `AppServiceProvider`).
+- [x] Integrate `persianDatepicker` CSS and JS in `resources/views/layouts/app.blade.php` for `.datedown` and `.datetop` input classes.
+- [x] Convert task creation dates (`planned_start_date`, `planned_due_date`) and document upload date (`claimed_at`) to Jalali datepicker inputs with Persian placeholders and calendar icons.
+- [x] Display formatted Jalali dates across task tables (`tasks/index.blade.php`), task details view (`tasks/show.blade.php`), and CSV export files (`ReportController.php`).
+- [x] Add automated conversion of incoming Jalali dates to Gregorian in `StoreTaskRequest` and `StoreDocumentRequest` via `prepareForValidation()`.
+- [x] Implement unit tests in `tests/Unit/JalaliDateTest.php` (7 tests) and feature tests in `tests/Feature/Web/WebTaskJalaliDateTest.php` (5 tests).
+- [x] Run and verify full PostgreSQL test suite: 102 tests, 281 assertions, 100% green.
+
 ---
 
 # 18. Current Next Action
 
-**Current phase: Completed V1.3 (Two-Tier Approval & Employer Workflow)**
+**Current phase: Completed V1.7 (Jalali/Persian Date Integration)**
 
 Immediate next action:
 
 - [x] Phase V1.4: Evidence Hashing & Claim Tracking.
 - [x] Phase V1.5: Subtasks & Dependency Blocking.
 - [x] Phase V1.6: Dynamic Settings & Export Reports.
+- [x] Phase V1.7: Jalali/Persian Date Integration (102 tests, 281 assertions — 100% green).
+- [ ] Preparation for Production Deployment and final system hardening.
 
 ---
 
@@ -649,6 +660,7 @@ Immediate next action:
 | 2026-09-19 | Completed Phase V1.4 (Evidence Hashing & Claim Tracking): Added hash and timestamp fields to documents, implemented hashing in DocumentService, updated Blade view, comprehensive testing. |
 | 2026-09-19 | Completed Phase V1.5 (Subtasks & Dependency Blocking): Enabled subtasks via parent_task_id, enforced blocking rules via fs TaskDependency and TaskBlockedException, created TaskDependencyTest (green). |
 | 2026-09-19 | Completed Phase V1.6 (Dynamic Settings & Export Reports): Added system_settings schema, SettingsService, UI settings and reports dashboards, CSV streamed export for reports, and tested successfully (90 tests passing). |
+| 2026-09-20 | Completed Phase V1.7 (Jalali/Persian Date Integration): Implemented SafeJalali decorator and JalaliDate converter in app/Support, global helpers jdate() & to_jalali(), Persian Datepicker integration in Blade layout, converted task & document forms to Jalali inputs, added automatic conversion in StoreTaskRequest & StoreDocumentRequest, updated ReportController CSV export to Jalali, created JalaliDateTest and WebTaskJalaliDateTest (100% green: 102 tests, 281 assertions). |
 
 ---
 

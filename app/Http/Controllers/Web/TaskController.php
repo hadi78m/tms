@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Web;
 
-
+use App\Domain\Exceptions\TaskBlockedException;
 use App\Domain\Services\DocumentService;
 use App\Domain\Services\TaskService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Web\AddDependencyRequest;
 use App\Http\Requests\Web\StoreTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskDependency;
 use App\Models\WbsPhase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -91,8 +93,9 @@ class TaskController extends Controller
 
         try {
             $this->taskService->startProgress($task, $user);
+
             return redirect()->route('tasks.show', $task->id)->with('status', 'اجرای وظیفه آغاز شد.');
-        } catch (\App\Domain\Exceptions\TaskBlockedException $e) {
+        } catch (TaskBlockedException $e) {
             return redirect()->route('tasks.show', $task->id)->with('error', $e->getMessage());
         } catch (\Exception $e) {
             return redirect()->route('tasks.show', $task->id)->with('error', 'خطایی در شروع وظیفه رخ داد.');
@@ -113,21 +116,23 @@ class TaskController extends Controller
         return redirect()->route('tasks.show', $task->id)->with('status', 'پایان وظیفه ثبت شد.');
     }
 
-    public function addDependency(Task $task, \App\Http\Requests\Web\AddDependencyRequest $request)
+    public function addDependency(Task $task, AddDependencyRequest $request)
     {
         try {
             $dependsOnTask = Task::findOrFail($request->input('depends_on_task_id'));
             $this->taskService->addDependency($task, $dependsOnTask, Auth::user());
+
             return back()->with('status', 'پیش‌نیاز با موفقیت اضافه شد.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
     }
 
-    public function removeDependency(Task $task, \App\Models\TaskDependency $dependency)
+    public function removeDependency(Task $task, TaskDependency $dependency)
     {
         try {
             $this->taskService->removeDependency($task, $dependency, Auth::user());
+
             return back()->with('status', 'پیش‌نیاز با موفقیت حذف شد.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

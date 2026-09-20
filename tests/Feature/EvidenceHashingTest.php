@@ -2,12 +2,13 @@
 
 use App\Models\Task;
 use App\Models\User;
-use App\Models\Project;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+
 use function Pest\Laravel\actingAs;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('calculates sha256 hash and sets recorded_at upon document upload', function () {
     Storage::fake('local');
@@ -56,4 +57,3 @@ it('saves claimed_at when provided by the user', function () {
         'claimed_at' => $claimedTime,
     ]);
 });
-

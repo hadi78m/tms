@@ -4,6 +4,8 @@ use App\Http\Controllers\Web\ApprovalController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DocumentController;
+use App\Http\Controllers\Web\ReportController;
+use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\TaskAssignmentController;
 use App\Http\Controllers\Web\TaskController;
 use App\Http\Controllers\Web\UserController;
@@ -36,14 +38,14 @@ Route::middleware('auth')->group(function () {
 
     // Settings (Admin only)
     Route::middleware('role:admin')->group(function () {
-        Route::get('/settings', [\App\Http\Controllers\Web\SettingController::class, 'index'])->name('settings.index');
-        Route::post('/settings', [\App\Http\Controllers\Web\SettingController::class, 'update'])->name('settings.update');
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
     });
 
     // Reports (Roles with access)
     Route::middleware('role:admin|management|employer|project_manager')->group(function () {
-        Route::get('/reports', [\App\Http\Controllers\Web\ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/export', [\App\Http\Controllers\Web\ReportController::class, 'export'])->name('reports.export');
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     });
 
     // User management (Admin only)

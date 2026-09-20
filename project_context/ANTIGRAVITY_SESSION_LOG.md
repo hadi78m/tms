@@ -183,3 +183,23 @@
 
 ## نتیجه جلسه
 - COMPLETE V1.2 (User & Access Management)
+
+# Session 2026-09-20 08:36
+
+## هدف جلسه
+- تبدیل جامع و استاندارد تمام تاریخ‌های استفاده شده در سامانه و پروژه به هجری شمسی (جلالی)، هم در نمایش تاریخ‌ها (ویوها، جداول، گزارش‌ها و خروجی‌های دانلودی) و هم در فرم‌های ورودی اطلاعات (Datepicker شمسی و تبدیل خودکار به میلادی برای دیتابیس).
+
+## اقدام‌های انجام‌شده
+1. ایجاد ساختار ایمن و قدرتمند برای فرمت و تبدیل تاریخ جلالی در `app/Support/JalaliDate.php` شامل کلاس `SafeJalali` (جلوگیری از خطای null pointer و نمایش امن `-`) و `JalaliDate` (پشتیبانی کامل از ارقام فارسی/عربی، تشخیص بازه سال‌های شمسی ۱۲۰۰-۱۵۰۰ و میلادی ۱۹۰۰-۲۲۰۰ جهت حفظ سازگاری تست‌ها).
+2. ایجاد توابع سراسری در `app/Support/helpers.php` شامل `jdate()`, `to_jalali()`, `jalali_to_gregorian()` و معرفی در `composer.json` و `AppServiceProvider`.
+3. اتصال استایل‌ها و اسکریپت‌های Persian Datepicker در `resources/views/layouts/app.blade.php` و مقداردهی اولیه به کلاس‌های `.datedown` و `.datetop`.
+4. تبدیل فیلدهای ورودی تاریخ به شمسی در `resources/views/tasks/create.blade.php` (مهلت و تاریخ آغاز) و `resources/views/tasks/show.blade.php` (تاریخ ادعای سند).
+5. افزودن ستون مهلت انجام به جدول لیست تسک‌ها در `resources/views/tasks/index.blade.php` با فرمت شمسی `jdate($task->planned_due_at)->format('Y/m/d')`.
+6. اصلاح گزارش‌گیری در `ReportController` جهت تولید فایل CSV با نام و سطرهای حاوی تاریخ‌های هجری شمسی.
+7. به‌روزرسانی `StoreTaskRequest` و `StoreDocumentRequest` جهت تبدیل خودکار ورودی‌های تاریخ و زمان شمسی به میلادی قبل از اعتبارسنجی (`prepareForValidation`).
+8. طراحی و اجرای ۷ آزمون واحد در `tests/Unit/JalaliDateTest.php` و ۵ آزمون فیچر در `tests/Feature/Web/WebTaskJalaliDateTest.php`.
+9. اجرای موفق و ۱۰۰٪ آزمون‌های سراسری کل پروژه (۱۰۲ تست، ۲۸۱ Assertion، بدون هیچ خطا).
+
+## نتیجه جلسه
+- COMPLETE Jalali Date Integration
+

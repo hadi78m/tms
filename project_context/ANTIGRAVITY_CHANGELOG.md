@@ -1,5 +1,44 @@
 # Antigravity Changelog
 
+## 2026-09-20 08:36
+
+### نوع تغییر
+- [x] Added
+- [x] Modified
+- [ ] Deleted
+- [x] Refactored
+- [ ] Fixed
+- [x] Configuration
+- [ ] Database
+- [x] Test
+
+### شرح
+- پشتیبانی کامل و یکپارچه از تاریخ هجری شمسی (جلالی) در سراسر سامانه و پروژه.
+- پیاده‌سازی کلاس‌های کمکی `app/Support/JalaliDate.php` و `app/Support/helpers.php` شامل دکوراتور ایمن `SafeJalali`، نرمال‌سازی ارقام فارسی و تشخیص هوشمند بازه سال‌های شمسی و میلادی.
+- تجهیز لایه فرانت‌اند و لی‌آوت اصلی (`layouts/app.blade.php`) به استایل‌ها و کتابخانه Persian Datepicker و اتصال خودکار کلاس‌های `.datedown` و `.datetop`.
+- تبدیل اینپوت‌های فرم‌های ایجاد وظیفه (`tasks/create.blade.php`) و آپلود اسناد (`tasks/show.blade.php`) به فیلدهای شمسی همراه با دیت‌پیکر.
+- افزودن و استانداردسازی نمایش تاریخ‌های شمسی در لیست وظایف (`tasks/index.blade.php`) و خروجی‌های گزارش‌گیری CSV در `ReportController`.
+- پیاده‌سازی تبدیل خودکار و هوشمند ورودی‌های شمسی به تاریخ میلادی در متد `prepareForValidation` کلاس‌های `StoreTaskRequest` و `StoreDocumentRequest`.
+- پیاده‌سازی ۱۲ آزمون اختصاصی جدید در `tests/Unit/JalaliDateTest.php` و `tests/Feature/Web/WebTaskJalaliDateTest.php` و پاس شدن ۱۰۰٪ تمام ۱۰۲ تست پروژه در محیط PostgreSQL.
+
+### فایل‌های تغییریافته
+- `app/Support/JalaliDate.php`
+- `app/Support/helpers.php`
+- `app/Providers/AppServiceProvider.php`
+- `composer.json`
+- `resources/views/layouts/app.blade.php`
+- `resources/views/tasks/create.blade.php`
+- `resources/views/tasks/show.blade.php`
+- `resources/views/tasks/index.blade.php`
+- `app/Http/Controllers/Web/ReportController.php`
+- `app/Http/Requests/Web/StoreTaskRequest.php`
+- `app/Http/Requests/Web/StoreDocumentRequest.php`
+- `tests/Unit/JalaliDateTest.php`
+- `tests/Feature/Web/WebTaskJalaliDateTest.php`
+
+### وضعیت
+- COMPLETE
+
 ## 2026-09-18 21:40
 
 ### نوع تغییر

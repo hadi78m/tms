@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SystemSetting extends Model
 {
     use HasFactory;
+
     protected $fillable = ['key', 'value', 'type', 'description'];
 
     public function getParsedValueAttribute()

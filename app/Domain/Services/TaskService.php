@@ -6,13 +6,13 @@ use App\Domain\Contracts\AuditServiceInterface;
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
 use App\Domain\Enums\TaskStatus;
+use App\Domain\Exceptions\CircularDependencyException;
+use App\Domain\Exceptions\TaskBlockedException;
 use App\Domain\Rules\TaskStateTransition;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
-use App\Domain\Exceptions\TaskBlockedException;
-use App\Domain\Exceptions\CircularDependencyException;
 use App\Models\TaskDependency;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -133,7 +133,7 @@ class TaskService
                 })->exists();
 
             if ($unapprovedPredecessors) {
-                throw new TaskBlockedException("تسک دارای پیش‌نیازهای تایید نشده است و امکان شروع آن وجود ندارد.");
+                throw new TaskBlockedException('تسک دارای پیش‌نیازهای تایید نشده است و امکان شروع آن وجود ندارد.');
             }
 
             $oldStatus = $task->status;
@@ -168,16 +168,16 @@ class TaskService
     public function addDependency(Task $task, Task $dependsOnTask, User $actor, string $type = 'fs'): TaskDependency
     {
         if ($task->id === $dependsOnTask->id) {
-            throw new InvalidArgumentException("تسک نمی‌تواند به خودش وابستگی داشته باشد.");
+            throw new InvalidArgumentException('تسک نمی‌تواند به خودش وابستگی داشته باشد.');
         }
 
         if ($task->project_id !== $dependsOnTask->project_id) {
-            throw new InvalidArgumentException("وابستگی فقط بین تسک‌های یک پروژه مجاز است.");
+            throw new InvalidArgumentException('وابستگی فقط بین تسک‌های یک پروژه مجاز است.');
         }
 
         // Circular Dependency Check
         if ($this->hasCircularDependency($task, $dependsOnTask)) {
-            throw new CircularDependencyException("امکان ایجاد این وابستگی وجود ندارد زیرا باعث ایجاد چرخه (Circular Dependency) می‌شود.");
+            throw new CircularDependencyException('امکان ایجاد این وابستگی وجود ندارد زیرا باعث ایجاد چرخه (Circular Dependency) می‌شود.');
         }
 
         return DB::transaction(function () use ($task, $dependsOnTask, $actor, $type) {
@@ -201,7 +201,7 @@ class TaskService
     public function removeDependency(Task $task, TaskDependency $dependency, User $actor): void
     {
         if ($dependency->successor_task_id !== $task->id) {
-            throw new InvalidArgumentException("این وابستگی متعلق به تسک مشخص شده نیست.");
+            throw new InvalidArgumentException('این وابستگی متعلق به تسک مشخص شده نیست.');
         }
 
         DB::transaction(function () use ($task, $dependency, $actor) {
@@ -218,20 +218,20 @@ class TaskService
         // We want to add $dependsOnTask as a predecessor to $task.
         // So $task -> depends on -> $dependsOnTask.
         // A cycle exists if $dependsOnTask (or any of its predecessors) depends on $task.
-        
+
         $visited = [];
         $queue = [$dependsOnTask->id];
 
-        while (!empty($queue)) {
+        while (! empty($queue)) {
             $currentId = array_shift($queue);
 
             if ($currentId === $task->id) {
                 return true; // We found the target task in the ancestor chain!
             }
 
-            if (!isset($visited[$currentId])) {
+            if (! isset($visited[$currentId])) {
                 $visited[$currentId] = true;
-                
+
                 $predecessors = TaskDependency::where('successor_task_id', $currentId)
                     ->pluck('predecessor_task_id')
                     ->toArray();

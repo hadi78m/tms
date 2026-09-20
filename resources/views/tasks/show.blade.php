@@ -93,7 +93,7 @@
                 <h3 class="text-lg font-bold text-slate-800">مستندات و پیوست‌ها</h3>
                 <form action="{{ route('documents.store', $task->id) }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2">
                     @csrf
-                    <input type="datetime-local" name="claimed_at" class="text-xs px-2 py-1 border border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500" title="زمان ادعایی انجام کار">
+                    <input type="text" name="claimed_at" placeholder="تاریخ شمسی: ۱۴۰۵/۰۱/۱۵" autocomplete="off" class="datedown text-xs px-2 py-1 border border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500 text-left" dir="ltr" title="زمان ادعایی انجام کار (شمسی)">
                     <input type="file" name="file" required class="text-xs w-48 text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     <button type="submit" class="text-sm text-blue-600 font-medium hover:text-blue-800 bg-blue-50 px-3 py-1 rounded transition">
                         + بارگذاری سند

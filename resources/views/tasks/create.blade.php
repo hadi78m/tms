@@ -77,16 +77,28 @@
 
                 <!-- تاریخ شروع -->
                 <div>
-                    <label for="planned_start_date" class="block text-sm font-medium text-slate-700 mb-1">تاریخ شروع (میلادی)</label>
-                    <input type="date" name="planned_start_date" id="planned_start_date" value="{{ old('planned_start_date') }}"
-                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" dir="ltr">
+                    <label for="planned_start_date" class="block text-sm font-medium text-slate-700 mb-1">تاریخ شروع (شمسی)</label>
+                    <div class="relative">
+                        <input type="text" name="planned_start_date" id="planned_start_date" value="{{ old('planned_start_date') }}"
+                               placeholder="۱۴۰۵/۰۱/۱۵" autocomplete="off"
+                               class="datedown w-full px-4 py-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left" dir="ltr">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="far fa-calendar-alt"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- تاریخ پایان -->
                 <div>
-                    <label for="planned_due_date" class="block text-sm font-medium text-slate-700 mb-1">مهلت انجام (میلادی)</label>
-                    <input type="date" name="planned_due_date" id="planned_due_date" value="{{ old('planned_due_date') }}"
-                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" dir="ltr">
+                    <label for="planned_due_date" class="block text-sm font-medium text-slate-700 mb-1">مهلت انجام (شمسی)</label>
+                    <div class="relative">
+                        <input type="text" name="planned_due_date" id="planned_due_date" value="{{ old('planned_due_date') }}"
+                               placeholder="۱۴۰۵/۰۱/۱۵" autocomplete="off"
+                               class="datedown w-full px-4 py-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-left" dir="ltr">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="far fa-calendar-alt"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- پیوست اولیه -->

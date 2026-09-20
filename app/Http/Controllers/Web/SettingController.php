@@ -13,6 +13,7 @@ class SettingController extends Controller
     public function index()
     {
         $settings = $this->settingsService->all();
+
         return view('settings.index', compact('settings'));
     }
 
@@ -22,7 +23,7 @@ class SettingController extends Controller
 
         // Checkbox values might be missing if unchecked, so we handle known booleans
         $booleans = ['allow_reopen', 'require_evidence_on_submit', 'lock_weight'];
-        
+
         foreach ($booleans as $key) {
             $value = $request->has($key) ? 'true' : 'false';
             $this->settingsService->set($key, $value, 'boolean');

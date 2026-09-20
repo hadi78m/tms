@@ -1,3 +1,48 @@
+# Phase V1.7 — Jalali/Persian Date Integration
+
+Comprehensive conversion and presentation of all dates in the system and project to Jalali / Solar Hijri format, covering views, Blade templates, tables, forms, datepickers, reports, and request validation. Passed 100% of the entire test suite (102 tests, 281 assertions).
+
+
+## 🛠️ Changes Made
+
+### 1. Jalali Date Core Helper & Safe Handling
+- Implemented `app/Support/JalaliDate.php` containing:
+  - `SafeJalali` decorator: Null-safe wrapper implementing `Stringable` so calling `jdate($null)->format(...)` never throws null pointer exceptions and safely renders `'-'`.
+  - `JalaliDate` utility class: Normalizes Persian and Arabic numbers (`۰-۹` / `٠-٩`) to English digits, differentiates Jalali year ranges (`1200 - 1500`) from Gregorian year ranges (`1900 - 2200`), and provides bidirectional conversion (`toGregorianDate`, `toGregorianDateTime`, and `toJalali`).
+- Created global helpers in `app/Support/helpers.php`:
+  - `jdate(?CarbonInterface $date = null)`: Safe Jalali formatter.
+  - `to_jalali($date, $format)`: Direct formatter.
+  - `jalali_to_gregorian($jalaliDate, $format)`: Converter to standard Gregorian format.
+- Registered `app/Support/helpers.php` in `composer.json` autoload files and added helper registration in `AppServiceProvider`.
+
+### 2. Frontend Datepicker & Global Assets
+- Updated `resources/views/layouts/app.blade.php`:
+  - Included `persianDatepicker-default.css` and added `@stack('styles')`.
+  - Loaded jQuery 3.7.1 and `persianDatepicker.min.js`.
+  - Initialized Persian Datepicker on `.datedown` and `.datetop` classes with Persian digits and standard format (`YYYY/MM/DD`).
+
+### 3. Forms & Views Conversion
+- `resources/views/tasks/create.blade.php`: Converted `planned_start_date` and `planned_due_date` inputs from native HTML date inputs to Jalali `.datedown` inputs with calendar icon badges and Persian placeholders (`۱۴۰۵/۰۱/۱۵`).
+- `resources/views/tasks/show.blade.php`: Converted `claimed_at` in document upload form to `.datedown` with Jalali format.
+- `resources/views/tasks/index.blade.php`: Added deadline column displaying Jalali date (`jdate($task->planned_due_at)->format('Y/m/d')`).
+- `app/Http/Controllers/Web/ReportController.php`: Exported CSV files with Jalali dates in all rows and named files with Jalali timestamp.
+
+### 4. Controller & FormRequest Auto-Conversion
+- `app/Http/Requests/Web/StoreTaskRequest.php`: Implemented `prepareForValidation()` to automatically intercept Jalali dates (`planned_start_date`, `planned_due_date`), normalize Persian numbers, and convert them to standard Gregorian dates prior to validation and database insertion.
+- `app/Http/Requests/Web/StoreDocumentRequest.php`: Implemented `prepareForValidation()` to convert Jalali `claimed_at` timestamp to Gregorian datetime before validation and hashing.
+
+### 5. Automated Testing & Verification
+- `tests/Unit/JalaliDateTest.php`: 7 Unit tests covering conversions, Persian digits, null values, and formatting.
+- `tests/Feature/Web/WebTaskJalaliDateTest.php`: 5 Feature tests covering:
+  - Task creation with Jalali date inputs (`1405/02/01`).
+  - Task details view displaying Jalali dates.
+  - Task list table displaying formatted Jalali deadlines.
+  - Document upload with Jalali `claimed_at` timestamp.
+  - Report CSV export with Jalali timestamps and formatted columns.
+- Passed 100% of the entire project test suite (102 tests, 281 assertions, 0 errors).
+
+---
+
 # Phase V1.1: UI & Presentation Layer
 
 I have started implementing the presentation layer (Phase V1.1) using Blade and Tailwind CSS. The focus is to build the custom views and connect them to our solid backend services via Data Transfer Objects (DTOs).

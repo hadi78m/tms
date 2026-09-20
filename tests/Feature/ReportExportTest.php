@@ -1,9 +1,10 @@
 <?php
 
-use App\Models\User;
 use App\Models\Task;
+use App\Models\User;
 use Spatie\Permission\Models\Role;
-use function Pest\Laravel\{actingAs, get};
+
+use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'management', 'guard_name' => 'web']);
@@ -34,7 +35,7 @@ it('downloads csv export for all tasks', function () {
 
     $response->assertOk();
     $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-    
+
     // Check if it's a streamed response
     expect($response->streamedContent())->toContain('شناسه');
 });

@@ -19,10 +19,10 @@ class ApprovalController extends Controller
 
     public function store(StoreApprovalRequest $request, Task $task): RedirectResponse
     {
-        $actor        = auth()->user();
+        $actor = auth()->user();
         $approvalType = $request->input('approval_type');
-        $status       = $request->input('status');
-        $comment      = $request->input('comment');
+        $status = $request->input('status');
+        $comment = $request->input('comment');
 
         // بررسی مجوز: تایید فنی تنها توسط کاربران دارای مجوز technical_approval
         if ($approvalType === ApprovalType::Technical->value) {
@@ -70,4 +70,3 @@ class ApprovalController extends Controller
             ->with('error', 'نوع تایید نامعتبر است.');
     }
 }
-

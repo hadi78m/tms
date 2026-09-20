@@ -1,10 +1,12 @@
 <?php
 
-use App\Models\User;
-use App\Models\SystemSetting;
-use Spatie\Permission\Models\Role;
 use App\Domain\Services\SettingsService;
-use function Pest\Laravel\{actingAs, get, post, assertDatabaseHas};
+use App\Models\SystemSetting;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertDatabaseHas;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
@@ -29,25 +31,25 @@ it('allows admin to view and update settings', function () {
 
     actingAs($admin)->post(route('settings.update'), [
         'approval_mode' => 'employer_only',
-        'allow_reopen' => 'true'
+        'allow_reopen' => 'true',
     ])->assertRedirect();
 
     assertDatabaseHas('system_settings', [
         'key' => 'approval_mode',
-        'value' => 'employer_only'
+        'value' => 'employer_only',
     ]);
     assertDatabaseHas('system_settings', [
         'key' => 'allow_reopen',
-        'value' => 'true'
+        'value' => 'true',
     ]);
 });
 
 it('caches settings correctly via SettingsService', function () {
     $service = app(SettingsService::class);
     $service->set('test_key', 'test_value');
-    
+
     expect($service->get('test_key'))->toBe('test_value');
-    
+
     // Test default
     expect($service->get('missing_key', 'default_val'))->toBe('default_val');
 });

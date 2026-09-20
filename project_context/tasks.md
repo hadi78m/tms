@@ -44,21 +44,31 @@
   - [x] Run `vendor/bin/pint --dirty` and fix code style
   - [x] Domain test suite: 31/31 tests green
 
-- [ ] 10. Phase V1.4 — Evidence Hashing & Claim Tracking
-  - [ ] Define claim/evidence models and migrations
-  - [ ] Implement file-hash verification on document upload
-  - [ ] Link claims to approvals and tasks
-  - [ ] Add audit events for claim submission
-  - [ ] Add Feature tests
+- [x] 10. Phase V1.4 — Evidence Hashing & Claim Tracking
+  - [x] Define claim/evidence models and migrations
+  - [x] Implement file-hash verification on document upload
+  - [x] Link claims to approvals and tasks
+  - [x] Add audit events for claim submission
+  - [x] Add Feature tests
 
-- [ ] 11. Phase V1.5 — Subtasks & Dependency Blocking
-  - [ ] Implement subtask creation and parent-child validation
-  - [ ] Dependency-blocking: task blocked if dependency not complete
-  - [ ] Add UI for dependency graph
-  - [ ] Add Feature tests
+- [x] 11. Phase V1.5 — Subtasks & Dependency Blocking
+  - [x] Implement subtask creation and parent-child validation
+  - [x] Dependency-blocking: task blocked if dependency not complete
+  - [x] Add UI for dependency graph
+  - [x] Add Feature tests
 
-- [ ] 12. Phase V1.6 — Dynamic Settings & Export Reports
-  - [ ] Configurable system settings (dashboard widgets, visibility)
-  - [ ] PDF/Excel export for task lists and performance reports
-  - [ ] Role-based report access control
-  - [ ] Add Feature tests
+- [x] 12. Phase V1.6 — Dynamic Settings & Export Reports
+  - [x] Configurable system settings (dashboard widgets, visibility)
+  - [x] PDF/Excel export for task lists and performance reports
+  - [x] Role-based report access control
+  - [x] Add Feature tests
+
+- [x] 13. Phase V1.7 — Jalali (Solar Hijri) Date System Integration
+  - [x] Implement `JalaliDate` utility and `SafeJalali` decorator in `app/Support/JalaliDate.php`
+  - [x] Implement global helpers `jdate()`, `to_jalali()`, `jalali_to_gregorian()` in `app/Support/helpers.php`
+  - [x] Integrate Persian Datepicker CSS and JS in `layouts/app.blade.php` with `.datedown` / `.datetop`
+  - [x] Convert task forms and document upload form to Jalali datepicker inputs
+  - [x] Display formatted Jalali dates in task lists, details, and CSV reports
+  - [x] Automatic conversion of Jalali input dates in `StoreTaskRequest` & `StoreDocumentRequest`
+  - [x] Unit & Feature tests (`JalaliDateTest`, `WebTaskJalaliDateTest`) passing 100%
+
