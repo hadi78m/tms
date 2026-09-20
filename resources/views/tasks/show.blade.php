@@ -202,7 +202,6 @@
                                     @if(auth()->user()->hasRole(['project_manager', 'admin']))
                                     <form action="{{ route('tasks.dependencies.destroy', [$task->id, $dep->id]) }}" method="POST" onsubmit="return confirm('آیا از حذف این پیش‌نیاز مطمئن هستید؟');">
                                         @csrf
-                                        @method('DELETE')
                                         <button type="submit" class="text-red-500 hover:text-red-700">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
@@ -232,18 +231,55 @@
                 <h3 class="font-bold text-slate-800">وضعیت SLA</h3>
             </div>
             <div class="p-6 space-y-4">
-                @if($task->sla_started_at)
-                    <div class="bg-blue-50 text-blue-800 px-4 py-3 rounded-lg border border-blue-100">
-                        <p class="text-sm font-medium mb-1">زمان سپری شده از ارجاع:</p>
-                        <p class="text-2xl font-bold" dir="ltr">
-                            {{ \Carbon\Carbon::parse($task->sla_started_at)->diffForHumans(null, true) }}
-                        </p>
+                @if($task->slaRecords && $task->slaRecords->isNotEmpty())
+                    <div class="space-y-3">
+                        @foreach($task->slaRecords as $sla)
+                            <div class="p-3 rounded-lg border {{ $sla->is_breached ? 'bg-red-50 border-red-200 text-red-800' : ($sla->stopped_at ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-blue-50 border-blue-200 text-blue-800') }}">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs font-bold">
+                                        {{ $sla->sla_type === 'response' ? 'SLA پاسخ اولیه' : ($sla->sla_type === 'resolution' ? 'SLA تکمیل و حل' : $sla->sla_type) }}
+                                    </span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full {{ $sla->is_breached ? 'bg-red-200 text-red-800' : ($sla->stopped_at ? 'bg-green-100 text-green-800' : 'bg-blue-200 text-blue-800') }}">
+                                        {{ $sla->is_breached ? 'نقض شده' : ($sla->stopped_at ? 'متوقف شده' : 'در حال محاسبه') }}
+                                    </span>
+                                </div>
+                                <div class="text-xs space-y-1 text-slate-600">
+                                    <div class="flex justify-between">
+                                        <span>شروع:</span>
+                                        <span>{{ $sla->started_at ? jdate($sla->started_at)->format('Y/m/d H:i') : '-' }}</span>
+                                    </div>
+                                    @if($sla->stopped_at)
+                                        <div class="flex justify-between">
+                                            <span>پایان:</span>
+                                            <span>{{ $sla->stopped_at ? jdate($sla->stopped_at)->format('Y/m/d H:i') : '-' }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>مدت زمان مصرفی:</span>
+                                            <span dir="ltr">{{ $sla->actual_duration }} دقیقه</span>
+                                        </div>
+                                    @else
+                                        <div class="flex justify-between">
+                                            <span>زمان سپری‌شده:</span>
+                                            <span dir="ltr">{{ \Carbon\Carbon::parse($sla->started_at)->diffForHumans(null, true) }}</span>
+                                        </div>
+                                    @endif
+                                    <div class="flex justify-between">
+                                        <span>مهلت مجاز:</span>
+                                        <span dir="ltr">{{ $sla->target_duration }} دقیقه</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 @else
                     <div class="bg-slate-50 text-slate-500 px-4 py-3 rounded-lg border border-slate-100 text-sm text-center">
                         تایمر SLA هنوز فعال نشده است.
                     </div>
                 @endif
+
+                @php
+                    $resolutionSla = $task->slaRecords ? $task->slaRecords->firstWhere('sla_type', 'resolution') : null;
+                @endphp
 
                 @if($task->status === 'assigned' && auth()->user()->contractor_id === $task->contractor_id)
                     <form action="{{ route('tasks.start', $task->id) }}" method="POST" class="mb-3">
@@ -258,11 +294,11 @@
                     </form>
                 @endif
 
-                @if(!$task->sla_stopped_at && $task->status === 'in_progress' && auth()->user()->contractor_id === $task->contractor_id)
+                @if($task->status === 'in_progress' && auth()->user()->contractor_id === $task->contractor_id && (!$resolutionSla || !$resolutionSla->stopped_at))
                     <form action="{{ route('tasks.submit', $task->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition">
-                            اعلام اتمام وظیفه (توقف SLA)
+                            اعلام اتمام وظیفه (ارسال جهت بررسی)
                         </button>
                     </form>
                 @endif

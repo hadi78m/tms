@@ -78,7 +78,7 @@ class TaskController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
-        $task->load(['project', 'contractor', 'documents', 'activeAssignment.user', 'wbsPhase']);
+        $task->load(['project', 'contractor', 'documents', 'activeAssignment.user', 'wbsPhase', 'slaRecords']);
 
         return view('tasks.show', compact('task'));
     }
@@ -111,16 +111,26 @@ class TaskController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
-        $this->taskService->updateStatus($task->id, 'completed', $user->id);
+        try {
+            $this->taskService->submitForReview($task, $user);
 
-        return redirect()->route('tasks.show', $task->id)->with('status', 'پایان وظیفه ثبت شد.');
+            return redirect()->route('tasks.show', $task->id)->with('status', 'وظیفه با موفقیت جهت بررسی ثبت شد.');
+        } catch (\Exception $e) {
+            return redirect()->route('tasks.show', $task->id)->with('error', $e->getMessage());
+        }
     }
 
     public function addDependency(Task $task, AddDependencyRequest $request)
     {
+        $user = Auth::user();
+
+        if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
+            abort(403, 'شما دسترسی به این وظیفه ندارید.');
+        }
+
         try {
             $dependsOnTask = Task::findOrFail($request->input('depends_on_task_id'));
-            $this->taskService->addDependency($task, $dependsOnTask, Auth::user());
+            $this->taskService->addDependency($task, $dependsOnTask, $user);
 
             return back()->with('status', 'پیش‌نیاز با موفقیت اضافه شد.');
         } catch (\Exception $e) {
@@ -130,8 +140,18 @@ class TaskController extends Controller
 
     public function removeDependency(Task $task, TaskDependency $dependency)
     {
+        $user = Auth::user();
+
+        if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
+            abort(403, 'شما دسترسی به این وظیفه ندارید.');
+        }
+
+        if ($dependency->successor_task_id !== $task->id) {
+            abort(404, 'این پیش‌نیاز متعلق به این وظیفه نیست.');
+        }
+
         try {
-            $this->taskService->removeDependency($task, $dependency, Auth::user());
+            $this->taskService->removeDependency($task, $dependency, $user);
 
             return back()->with('status', 'پیش‌نیاز با موفقیت حذف شد.');
         } catch (\Exception $e) {

@@ -1,5 +1,50 @@
 # Antigravity Changelog
 
+## 2026-09-20 13:35
+
+### نوع تغییر
+- [ ] Added
+- [x] Modified
+- [ ] Deleted
+- [x] Refactored
+- [x] Fixed
+- [ ] Configuration
+- [ ] Database
+- [x] Test
+
+### شرح
+- پیاده‌سازی و نهایی‌سازی فاز تثبیت لایه وب V1.7 سامانه (TMS V1.7 Stabilization Implementation Phase) بدون هیچ‌گونه دستکاری در قلمرو وزن (Weight Frozen).
+- **Stabilization Fix #1 (Task Assignment):**
+  - اصلاح متد فراخوانی در `TaskAssignmentController` و اتصال مستقیم به متد واقعی دامین `TaskAssignmentService::assign`.
+  - یکپارچه‌سازی و تطبیق دقیق پارامترهای نام‌دار در `AssignTaskRequest::toDto` با سازنده `AssignTaskData` (`task_id`, `user_id`, `assigned_by`, `reason`).
+  - اعمال محافظت دامنه پیمانکار (Contractor Isolation) در لایه وب.
+- **Stabilization Fix #2 (Task Submission):**
+  - رفع خطای فراخوانی متد ناموجود `updateStatus` و وضعیت نامعتبر `completed` در `TaskController::submit`.
+  - اتصال فرآیند ثبت کار به متد استاندارد دامین `TaskService::submitForReview($task, $user)` و هدایت تسک از `in_progress` به `submitted_for_review` همراه با توقف خودکار SLA حل و تکمیل (`stopResolutionSla`).
+- **Stabilization Fix #3 (SLA Display):**
+  - اصلاح کارت نمایش وضعیت SLA در ویوی `resources/views/tasks/show.blade.php` با جایگزینی فیلدهای ناموجود `$task->sla_started_at` و `$task->sla_stopped_at` با رابطه واقعی `slaRecords`.
+  - تفکیک و نمایش شفاف SLA پاسخ اولیه و SLA حل وظیفه همراه با وضعیت جاری (در حال محاسبه / متوقف شده / نقض شده)، زمان‌های مصرفی و تاریخ‌های شمسی با هلپر `jdate()`.
+  - اصلاح وضعیت نمایش دکمه ارسال تسک بر اساس وضعیت جاری تسک و رکورد SLA.
+- **Stabilization Fix #4 (Dependency Removal Route):**
+  - تبدیل روت حذف وابستگی از متد `DELETE` به استاندارد امنیتی پروژه `POST` (`Route::post('tasks/{task}/dependencies/{dependency}/remove', ...)->name('tasks.dependencies.destroy')`).
+  - اصلاح فرم حذف پیش‌نیاز در ویوی `tasks/show.blade.php` و حذف `@method('DELETE')`.
+  - رفع بلاکر رویداد `deleting` در مدل `TaskDependency` جهت امکان‌پذیر شدن حذف رکورد وابستگی توسط سرویس دامین `TaskService::removeDependency`.
+- **Feature Tests:**
+  - ایجاد سوئیت تست جامع `tests/Feature/Web/WebTaskStabilizationTest.php` شامل ۱۲ تست اختصاصی برای ارجاع وظیفه، ارسال کار، انزوای دسترسی، نمایش SLA و حذف وابستگی با متد POST.
+  - اجرای کامل تست‌های سامانه در پایگاه‌داده PostgreSQL با پاس شدن ۱۰۰٪ کلیه ۱۱۴ تست و ۳۳۴ assertion بدون هیچ خطایی.
+
+### فایل‌های تغییریافته
+- `app/Http/Controllers/Web/TaskAssignmentController.php`
+- `app/Http/Controllers/Web/TaskController.php`
+- `app/Http/Requests/Web/AssignTaskRequest.php`
+- `app/Models/TaskDependency.php`
+- `resources/views/tasks/show.blade.php`
+- `routes/web.php`
+- `tests/Feature/Web/WebTaskStabilizationTest.php`
+
+### وضعیت
+- COMPLETE
+
 ## 2026-09-20 08:36
 
 ### نوع تغییر

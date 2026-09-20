@@ -617,6 +617,8 @@ Immediate next action:
 - [x] Phase V1.5: Subtasks & Dependency Blocking.
 - [x] Phase V1.6: Dynamic Settings & Export Reports.
 - [x] Phase V1.7: Jalali/Persian Date Integration (102 tests, 281 assertions — 100% green).
+- [x] Phase V1.7 Stabilization: Web layer stabilization (Assignment, Submission, SLA display, POST dependency removal) with 114 tests, 334 assertions (100% green on PostgreSQL).
+- [ ] Business/Architecture Decision session for Weight domain & Development vs Support model.
 - [ ] Preparation for Production Deployment and final system hardening.
 
 ---
@@ -637,6 +639,7 @@ Immediate next action:
 | D-10 | Same-assignee Assignment idempotency details | Pending |
 | D-11 | SLA pause/resume business rules | Pending |
 | D-12 | Dashboard widgets and configurable visibility | Resolved (V1.1) |
+| D-13 | Weight Domain & Development vs Support entity mapping | Pending (Business Decision Required) |
 
 ---
 
@@ -661,6 +664,7 @@ Immediate next action:
 | 2026-09-19 | Completed Phase V1.5 (Subtasks & Dependency Blocking): Enabled subtasks via parent_task_id, enforced blocking rules via fs TaskDependency and TaskBlockedException, created TaskDependencyTest (green). |
 | 2026-09-19 | Completed Phase V1.6 (Dynamic Settings & Export Reports): Added system_settings schema, SettingsService, UI settings and reports dashboards, CSV streamed export for reports, and tested successfully (90 tests passing). |
 | 2026-09-20 | Completed Phase V1.7 (Jalali/Persian Date Integration): Implemented SafeJalali decorator and JalaliDate converter in app/Support, global helpers jdate() & to_jalali(), Persian Datepicker integration in Blade layout, converted task & document forms to Jalali inputs, added automatic conversion in StoreTaskRequest & StoreDocumentRequest, updated ReportController CSV export to Jalali, created JalaliDateTest and WebTaskJalaliDateTest (100% green: 102 tests, 281 assertions). |
+| 2026-09-20 | Completed Phase V1.7 Stabilization: Fixed TaskAssignmentController & AssignTaskRequest DTO mapping, fixed TaskController::submit to use submitForReview, fixed SLA display card in tasks/show.blade.php using slaRecords collection with Jalali dates, changed dependency removal route to POST conforming to OWASP rules and unblocked deleting in TaskDependency model. Added WebTaskStabilizationTest with 12 new tests (100% green: 114 tests, 334 assertions on PostgreSQL). Weight domain preserved completely frozen. |
 
 ---
 

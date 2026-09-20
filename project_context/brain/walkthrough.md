@@ -1,64 +1,90 @@
-# گزارش اتمام فاز V1.7 — Jalali/Persian Date Integration
+# Walkthrough — TMS V1.7 Stabilization Implementation Phase
 
-فاز یکپارچه‌سازی کامل تاریخ و تقویم هجری شمسی (Phase V1.7 — Jalali/Persian Date Integration) با موفقیت کامل و پس از پاس شدن ۱۰۰٪ آزمون‌های سراسری سامانه (شامل **۱۰۲ تست** و **۲۸۱ Assertion** بدون هیچ خطا بر بستر دیتابیس PostgreSQL) به اتمام رسید.
-
-## دستاوردهای پیاده‌سازی شده
-
-### ۱. لایه هسته و هلپرهای عمومی تاریخ شمسی
-- **دکوراتور ایمن `SafeJalali`:** حل قطعی و دائمی خطای `Call to a member function format() on null`؛ در صورت پوچ (`null`) بودن شیء تاریخ، متد فرمت بدون خطا مقدار پیش‌فرض `'-'` را بازمی‌گرداند و قابلیت کست به رشته (`Stringable`) را دارد.
-- **کلاس کمکی `JalaliDate`:**
-  - تبدیل و نرمال‌سازی خودکار ارقام فارسی و عربی (`۰-۹` و `٠-٩`) به ارقام انگلیسی.
-  - تشخیص هوشمند بازه سال‌ها: تفکیک بازه سال‌های شمسی (`۱۲۰۰ تا ۱۵۰۰`) از سال‌های میلادی (`۱۹۰۰ تا ۲۲۰۰`) جهت حفظ سازگاری ورودی‌های پیشین.
-  - توابع تبدیل دوطرفه امن بین تاریخ جلالی و میلادی (`toGregorianDate`, `toGregorianDateTime`, `toJalali`).
-- **هلپرهای سراسری لاراول:** پیاده‌سازی `jdate()`, `to_jalali()`, `jalali_to_gregorian()` در `app/Support/helpers.php` و ثبت در بخش `files` فایل `composer.json` و `AppServiceProvider`.
-
-### ۲. تجهیز فرانت‌اند و Datepicker تقویم شمسی
-- اضافه شدن فایل‌های استایل `persianDatepicker-default.css` و کتابخانه `persianDatepicker.min.js` در `resources/views/layouts/app.blade.php`.
-- مقداردهی اولیه سراسری برای کلاس‌های `.datedown` و `.datetop` با پشتیبانی از ارقام فارسی و فرمت استاندارد `YYYY/MM/DD`.
-
-### ۳. تبدیل فرم‌ها و نمایش تاریخ در ویوها
-- **فرم ثبت تسک (`tasks/create.blade.php`):** تبدیل اینپوت‌های «تاریخ شروع» و «مهلت انجام» به اینپوت‌های تعاملی شمسی مجهز به دیت‌پیکر، آیکون تقویم و Placeholder شمسی (`۱۴۰۵/۰۱/۱۵`).
-- **فرم آپلود مستندات و ادعاها (`tasks/show.blade.php`):** تبدیل فیلد `claimed_at` به اینپوت شمسی همراه با تقویم.
-- **جدول فهرست تسک‌ها (`tasks/index.blade.php`):** اضافه شدن ستون «مهلت انجام» با فرمت تاریخ جلالی (`jdate($task->planned_due_at)->format('Y/m/d')`).
-- **گزارش‌ها و خروجی‌های CSV (`ReportController.php`):** تبدیل فرمت تمامی ستون‌های تاریخ و برچسب زمانی نام فایل گزارش خروجی به تاریخ شمسی.
-
-### ۴. لایه اعتبارسنجی و تبدیل خودکار ورودی‌ها
-- بازنویسی متد `prepareForValidation()` در `StoreTaskRequest` و `StoreDocumentRequest` جهت رهگیری و تبدیل خودکار تاریخ و زمان‌های شمسی ارسال شده از فرم‌ها به تاریخ استاندارد میلادی قبل از اعتبارسنجی و ذخیره‌سازی در پایگاه‌داده PostgreSQL.
-
-### ۵. آزمون‌ها و کیفیت سنجی (QA)
-- **تست‌های واحد (`tests/Unit/JalaliDateTest.php`):** ۷ آزمون برای اعتبارسنجی تبدیل تاریخ‌ها، ارقام فارسی/عربی، مقادیر پوچ (`null`) و فرمت‌بندی.
-- **تست‌های ویژگی (`tests/Feature/Web/WebTaskJalaliDateTest.php`):** ۵ آزمون برای ثبت وظیفه با تاریخ شمسی، مشاهده جزئیات، نمایش ستون مهلت در جدول، آپلود مدرک و خروجی گزارش CSV.
-- **اجرای سراسری آزمون‌ها:** کل سوئیت تست‌های سامانه شامل **۱۰۲ تست** و **۲۸۱ Assertion** با موفقیت ۱۰۰٪ و بدون خطا پاس شدند (`vendor/bin/pest`).
-- **کد استایل:** اجرای ابزار `pint` و انطباق کامل کدها با استانداردهای پروژه.
+## Overview
+This phase strictly stabilized the approved TMS V1.7 implementation across Web, Service, and Domain layers based on the recent READ-ONLY audit findings.
+**The Weight domain remained completely frozen** (no task_type, no weight nullability changes, no WBS weight changes, no progress formulas, and no connection to performance or finance).
 
 ---
 
-# گزارش اتمام فاز V1.6 — Dynamic Settings & Export Reports
+## Changes Implemented
 
-## دستاوردهای پیاده‌سازی شده
+### 1. Fix #1: Task Assignment Web Flow
+- **DTO Mapping Alignment**: In `app/Http/Requests/Web/AssignTaskRequest.php`, named parameters in `toDto()` were precisely matched with the constructor signature of `App\Domain\DTOs\AssignTaskData`:
+  - `task_id` (int)
+  - `user_id` (int)
+  - `assigned_by` (int)
+  - `reason` (?string)
+- **Controller Invocation**: In `app/Http/Controllers/Web/TaskAssignmentController.php`, replaced nonexistent method calls with the actual domain service method:
+  ```php
+  $this->assignmentService->assign($request->toDto(), $user);
+  ```
+- **Contractor Isolation**: Enforced contractor scope checks in both `AssignTaskRequest::authorize()` and `TaskAssignmentController`.
 
-### ۱. زیرساخت تنظیمات پویا
-- طراحی جدول و مدل `system_settings` با قابلیت پشتیبانی از انواع داده‌ها (رشته، بولین، اعداد، و JSON).
-- ایجاد `SettingsService` برای واکشی و ثبت تنظیمات با استفاده از سیستم Cache لاراول (بهبود چشمگیر کارایی در خواندن مکرر).
-- توسعه `SettingController` و پنل کاربری تنظیمات ادمین با رابط کاربری واکنش‌گرا مبتنی بر Tailwind CSS (جهت پیکربندی حالت تایید وظایف، بازگشایی وظایف، قفل وزن، و غیره).
+### 2. Fix #2: Task Submission Web Flow
+- **Domain State Machine Alignment**: In `app/Http/Controllers/Web/TaskController.php`, replaced nonexistent `updateStatus()` and invalid `completed` status with the approved domain workflow:
+  ```php
+  $this->taskService->submitForReview($task, $user);
+  ```
+- **State Transition**: Safely transitions tasks from `in_progress` to `submitted_for_review`.
+- **SLA Integration**: Preserved the automatic resolution SLA stopping behavior via `app(SlaService::class)->stopResolutionSla($task)`.
 
-### ۲. گزارش‌های تحلیلی
-- توسعه سیستم محاسبه بلادرنگ (Dashboard KPI) در `ReportController` برای:
-  - سنجش وزن کل تسک‌های سیستم.
-  - سنجش وزن تسک‌های تایید نهایی شده (آماده پرداخت).
-  - شناسایی و شمارش تسک‌های دارای تاخیر بحرانی.
-- طراحی UI داشبورد گزارشات با اجزای بصری مدرن.
+### 3. Fix #3: SLA Display on Task Details
+- **Elimination of Nonexistent Properties**: In `resources/views/tasks/show.blade.php`, removed accesses to nonexistent properties `$task->sla_started_at` and `$task->sla_stopped_at`.
+- **Domain Relationship Usage**: Leveraged `$task->slaRecords` eager-loaded collection.
+- **Detailed SLA Metrics**: Separated Response SLA (`response`) and Resolution SLA (`resolution`), showing:
+  - SLA Type Badge
+  - Current status (Active / Stopped / Breached)
+  - Started and Stopped timestamps in Persian/Jalali format (`jdate()`)
+  - Consumed / Elapsed duration in minutes
+  - Target duration in minutes
+- **Conditional Submission Button**: Displayed the submission button only when `$task->status === 'in_progress'` and Resolution SLA is not stopped.
 
-### ۳. استخراج و برون‌ریزی فایل CSV
-- پیاده‌سازی قابلیت دانلود فایل CSV بدون نیاز به پکیج خارجی (به صورت `StreamedResponse` برای مدیریت بهینه حافظه).
-- افزودن `UTF-8 BOM` جهت سازگاری کامل و صحیح نمایش متون فارسی در نرم‌افزارهای صفحه گسترده (مانند Microsoft Excel).
-- دسته‌بندی فایل‌های خروجی به ۲ بخش مجزا:
-  - **گزارش آمادگی پرداخت:** اختصاصی برای وظایف Approved.
-  - **گزارش SLA و وضعیت کلی:** بررسی تمام وظایف و وضعیت تاخیر آن‌ها نسبت به زمان برنامه‌ریزی شده.
+### 4. Fix #4: Dependency Removal Conformance to OWASP
+- **HTTP Method Conformance**: Replaced `DELETE tasks/{task}/dependencies/{dependency}` with POST route:
+  ```php
+  Route::post('tasks/{task}/dependencies/{dependency}/remove', [TaskController::class, 'removeDependency'])
+      ->name('tasks.dependencies.destroy');
+  ```
+- **Form Update**: Removed `@method('DELETE')` in `resources/views/tasks/show.blade.php`.
+- **Model Event Unblocking**: Removed `static::deleting(function () { return false; });` in `app/Models/TaskDependency.php` which was erroneously blocking Eloquent `$dependency->delete()` calls triggered by `TaskService::removeDependency`.
 
-### ۴. سطح دسترسی‌ها و تست‌ها
-- پیاده‌سازی دقیق Middleware‌های `Spatie Permission` جهت جلوگیری از دسترسی کاربران غیرمجاز به بخش‌های تنظیمات و گزارشات.
-- نگارش و اجرای کدهای تستی `SystemSettingTest` و `ReportExportTest`.
+---
 
-## موارد تکمیلی
-اسناد سیستم (`TMS_PROJECT_TRACKER.md` و برنامه‌های اجرایی) برای انعکاس تکمیل این فاز و آماده‌سازی جهت ورود به فاز انتشار به‌روزرسانی شده‌اند.
+## Test Execution Results
+
+All tests were executed against the project's configured **PostgreSQL** testing environment (`tms_testing`):
+
+```bash
+vendor/bin/pest
+```
+
+### Results Summary:
+- **Total Tests**: 114
+- **Passed**: 114 (100% green)
+- **Assertions**: 334
+- **Failures**: 0
+- **Duration**: ~18.6s
+- **Database**: PostgreSQL (No SQLite)
+
+### Feature Tests Added in `tests/Feature/Web/WebTaskStabilizationTest.php`:
+1. `test_valid_task_assignment_via_web`: Verified draft -> assigned, active assignment record, and SLA initiation.
+2. `test_task_reassignment_to_another_user`: Verified previous assignment termination (`ended_at`) and new assignment creation.
+3. `test_idempotent_task_assignment`: Verified idempotency when assigning same worker.
+4. `test_unauthorized_contractor_cannot_assign_other_contractor_task`: Verified 403 HTTP status for cross-contractor attempts.
+5. `test_assign_task_request_to_dto_mapping`: Verified exact DTO constructor argument mapping.
+6. `test_contractor_can_submit_eligible_task`: Verified in_progress -> submitted_for_review and SLA resolution stopping.
+7. `test_task_submission_rejected_for_invalid_state`: Verified invalid state submissions are rejected.
+8. `test_unauthorized_contractor_cannot_submit_task`: Verified contractor isolation on submission (403).
+9. `test_sla_records_display_correctly_on_show_page`: Verified rendering of SLA records with Jalali dates and durations.
+10. `test_authorized_manager_can_remove_dependency_via_post`: Verified POST dependency removal and DB deletion.
+11. `test_contractor_cannot_remove_dependency`: Verified contractor cannot remove dependencies (403).
+12. `test_removing_dependency_of_different_task_fails`: Verified 404 when dependency does not belong to task.
+
+---
+
+## Weight Domain Verification
+- `tasks.weight`: **UNTOUCHED**
+- WBS Weight: **UNTOUCHED**
+- `task_type`: **NOT ADDED**
+- Progress formulas: **NOT INTRODUCED**
+- Performance / Finance connections: **NOT TOUCHED**

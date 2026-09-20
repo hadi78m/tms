@@ -30,6 +30,7 @@
 - [x] 2026-09-19 تکمیل فاز V1.3 (گردشکار تایید دو مرحله‌ای): افزودن ۴ نقش جدید (employer، project_manager، management، viewer)، وضعیت SupervisorApproved، به‌روزرسانی State Machine، migration جدید، بازنویسی ApprovalService با recordTechnicalApproval و recordFinalApproval، تست‌های جدید (۳۱ تست دامین + ۶ تست workflow — همه سبز). ثبت فازهای V1.3–V1.6 در roadmap.
 - [x] 2026-09-19 تکمیل فازهای V1.4 تا V1.6 (هش اسناد و ادعاها، ساب‌تسک‌ها و مسدودسازی وابستگی، تنظیمات داینامیک و خروجی گزارش‌ها).
 - [x] 2026-09-20 یکپارچه‌سازی و تبدیل جامع تمام تاریخ‌های پروژه و سامانه به هجری شمسی (جلالی): ویوهای بلید، ستون‌های جداول، فرم‌های ثبت وظایف و مدارک با persianDatepicker، تبدیل خودکار درخواست‌ها در Request، گزارش‌های CSV، و پاس شدن ۱۰۰٪ تمامی ۱۰۲ تست پروژه.
+- [x] 2026-09-20 تکمیل فاز تثبیت وب V1.7 (Web Stabilization Phase): اصلاح انتساب تسک (`TaskAssignmentService::assign` و نگاشت دقیق DTO)، اصلاح متد ارسال تسک (`TaskService::submitForReview` و توقف SLA حل)، بازنویسی نمایش وضعیت SLA در صفحه وظیفه بر مبنای `slaRecords`، تغییر روت حذف وابستگی به `POST` طبق قوانین OWASP، ایجاد ۱۲ تست وب در `WebTaskStabilizationTest` و پاس شدن ۱۰۰٪ کلیه ۱۱۴ تست سامانه در PostgreSQL.
 
 ## یادداشت‌ها
 - تست‌ها مستقیماً بر روی پایگاه‌داده PostgreSQL اجرا و اعتبارسنجی می‌شوند.

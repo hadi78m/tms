@@ -19,12 +19,8 @@ class TaskDependency extends Model
 
     protected static function booted(): void
     {
-        // Immutable model: prevent any updates or deletes
+        // Prevent updates to maintain dependency record integrity
         static::updating(function () {
-            return false;
-        });
-
-        static::deleting(function () {
             return false;
         });
     }

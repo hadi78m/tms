@@ -1,5 +1,50 @@
 # Antigravity Session Log
 
+# Session 2026-09-20 13:35
+
+## هدف جلسه
+- اجرای فاز تثبیت V1.7 سامانه (TMS V1.7 Stabilization Implementation Phase) بر اساس یافته‌های ممیزی دقیق اخیر.
+- تثبیت کامل تعاملات لایه وب با لایه دامین در ۴ محور مشخص (Assignment, Submission, SLA Display, Dependency Removal).
+- حفاظت ۱۰۰٪ و بدون تغییر از قلمرو وزن (Weight Frozen).
+
+## وضعیت اولیه
+- ممیزی READ-ONLY ناهماهنگی‌هایی را در لایه وب شناسایی کرده بود:
+  - عدم تطبیق نام متد و پارامترهای DTO در ارجاع تسک.
+  - فراخوانی متد ناموجود `updateStatus` با وضعیت نامعتبر `completed` در ثبت کار.
+  - ارجاع به فیلدهای ناموجود `sla_started_at` / `sla_stopped_at` در ویوی تسک.
+  - استفاده از متد نامطلوب امنیتی `DELETE` به جای `POST` در حذف وابستگی‌ها.
+
+## اقدام‌های انجام‌شده
+1. **اصلاح انتساب وظیفه (Fix #1):**
+   - اتصال `TaskAssignmentController::store` به متد دامین `TaskAssignmentService::assign`.
+   - انطباق دقیق پارامترهای نام‌دار در `AssignTaskRequest::toDto` با سازنده `AssignTaskData`.
+   - اعمال بررسی انزوای پیمانکار در فرم ریکوئست و کنترلر.
+2. **اصلاح ارسال کار (Fix #2):**
+   - فراخوانی متد استاندارد دامین `TaskService::submitForReview($task, $user)` در `TaskController::submit`.
+   - انتقال صحیح وضعیت از `in_progress` به `submitted_for_review` و توقف خودکار SLA حل وظیفه (`stopResolutionSla`).
+3. **اصلاح نمایش SLA در ویو (Fix #3):**
+   - بازنویسی کارت SLA در `resources/views/tasks/show.blade.php` با بهره‌گیری از کالکشن `slaRecords`.
+   - نمایش تفکیک‌شده SLA پاسخ اولیه و SLA حل وظیفه با تاریخ‌های شمسی (`jdate()`)، وضعیت، مهلت مجاز و زمان مصرفی/سپری‌شده.
+   - اصلاح شروط نمایش دکمه ارسال کار متناسب با وضعیت تسک و وضعیت توقف SLA.
+4. **اصلاح روت و سازوکار حذف وابستگی (Fix #4):**
+   - تغییر روت حذف وابستگی به متد امنیتی `POST` با نام `tasks.dependencies.destroy`.
+   - حذف `@method('DELETE')` از فرم حذف پیش‌نیاز در ویوی تسک.
+   - رفع قفل رویداد `deleting` در مدل `TaskDependency` و فعال‌سازی متد حذف دامین `TaskService::removeDependency`.
+5. **تست‌های خودکار:**
+   - پیاده‌سازی ۱۲ سناریوی آزمون جامع وب در `tests/Feature/Web/WebTaskStabilizationTest.php`.
+   - اجرای موفق و پاس شدن ۱۰۰٪ سوئیت کامل تست‌ها در دیتابیس PostgreSQL (۱۱۴ تست، ۳۳۴ assertion).
+   - فرمت‌بندی استاندارد کدهای تغییریافته با `vendor/bin/pint`.
+
+## تصمیم‌های گرفته‌شده
+- قلمرو وزن (Weight) کاملاً دست‌نخورده باقی ماند و هیچ تغییری در WBS، فیلدها یا محاسبات داده نشد.
+- مجوزهای Spatie در لایه وب/کنترلر حفظ شدند و به لایه دامین تزریق نشدند تا معماری تفکیک لایه‌ها حفظ شود.
+
+## نتیجه جلسه
+- COMPLETE (Stabilization Verified & 100% Green).
+
+## ادامه پیشنهادی
+- تشکیل جلسه تصمیم‌گیری معماری و بیزینس برای تعیین تکلیف اتصال وزن (Weight Domain) و مدل Development vs Support به Deliverable / WBS / Progress.
+
 # Session 2026-09-18 11:15
 
 ## هدف جلسه

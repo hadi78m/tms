@@ -34,7 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::post('tasks/{task}/approvals', [ApprovalController::class, 'store'])->name('approvals.store');
     Route::post('tasks/{task}/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::post('tasks/{task}/dependencies', [TaskController::class, 'addDependency'])->name('tasks.dependencies.store');
-    Route::delete('tasks/{task}/dependencies/{dependency}', [TaskController::class, 'removeDependency'])->name('tasks.dependencies.destroy');
+    Route::post('tasks/{task}/dependencies/{dependency}/remove', [TaskController::class, 'removeDependency'])->name('tasks.dependencies.destroy');
 
     // Settings (Admin only)
     Route::middleware('role:admin')->group(function () {

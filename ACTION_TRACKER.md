@@ -4,6 +4,34 @@
 
 ---
 
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۶/۳۰ (2026-09-20) - فاز تثبیت وب (Web Stabilization Phase)
+
+### 📝 خلاصه اقدامات
+- اصلاح فراخوانی متد `TaskAssignmentService::assign` و نگاشت دقیق پارامترهای سازنده DTO در `AssignTaskRequest`.
+- اصلاح فرآیند ارسال کار در `TaskController::submit` با جایگزینی `submitForReview` به جای متد ناموجود و اصلاح ماشین وضعیت.
+- بازنویسی نمایش وضعیت SLA در ویوی `tasks/show.blade.php` با استفاده مستقیم از رابطه `slaRecords` و هلپر تاریخ شمسی.
+- تغییر روت حذف وابستگی به متد امنیتی `POST` و تصحیح مدل `TaskDependency` جهت امکان‌پذیر شدن حذف وابستگی.
+- نگارش ۱۲ تست Feature در `WebTaskStabilizationTest.php` و پاس شدن ۱۰۰٪ آزمون‌های سراسری در PostgreSQL (۱۱۴ تست، ۳۳۴ assertion).
+
+### 🛠️ فایل‌های تغییر یافته
+
+```text
+app/Http/Controllers/Web/TaskAssignmentController.php
+app/Http/Controllers/Web/TaskController.php
+app/Http/Requests/Web/AssignTaskRequest.php
+app/Models/TaskDependency.php
+resources/views/tasks/show.blade.php
+routes/web.php
+tests/Feature/Web/WebTaskStabilizationTest.php
+project_context/ANTIGRAVITY_CHANGELOG.md
+project_context/ANTIGRAVITY_SESSION_LOG.md
+TMS_PROJECT_TRACKER.md
+MEMORY.md
+ACTION_TRACKER.md
+```
+
+---
+
 ## 📅 گزارش تغییرات - ۱۴۰۵/۰۶/۳۰ (2026-09-20)
 
 ### 📝 خلاصه اقدامات

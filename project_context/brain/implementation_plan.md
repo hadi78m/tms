@@ -1,90 +1,32 @@
-# Phase V1.6 — Dynamic Settings & Export Reports
+# TMS V1.7 — Stabilization Implementation Plan
 
-این برنامه جهت پیاده‌سازی فاز نهایی دامنه نسخه اول (V1.6) تنظیم شده است که شامل راه‌اندازی زیرساخت تنظیمات پویا، تولید گزارش‌های تفکیکی و قابلیت برون‌ریزی (CSV Export) می‌باشد.
+## اهداف و محدوده (Scope)
+این فاز صرفاً برای تثبیت عملکردهای تأییدشده لایه وب، رفع خطاهای ران‌تایم شناسایی‌شده در ممیزی اخیر و هماهنگ‌سازی متدهای کنترلر و درخواست با لایه دامین است.
+**قلمرو وزن (Weight) کاملاً دست‌نخورده (FROZEN) باقی می‌ماند.**
 
-## User Review Required
+## اقدامات اجرایی
 
-> [!IMPORTANT]
-> لطفا این برنامه را بررسی کرده و در صورت تایید، اجازه شروع اجرای آن را بدهید. پس از اجرای این برنامه، تمام تست‌ها برای اطمینان از صحت عملکرد اجرا خواهند شد.
+### ۱. اصلاح تخصیص و ارجاع وظایف (Task Assignment)
+- اصلاح `AssignTaskRequest::toDto()` برای تطابق ۱۰۰٪ با پارامترهای نام‌دار `AssignTaskData` (`task_id`, `user_id`, `assigned_by`, `reason`).
+- افزودن اعتبارسنجی دامنه پیمانکار به `AssignTaskRequest::authorize()`.
+- اصلاح متد فراخوانی‌شده در `TaskAssignmentController::store` از `assignTask` به متد واقعی سرویس: `TaskAssignmentService::assign()`.
 
-## Open Questions
+### ۲. اصلاح ثبت ارائه کار تسک (Task Submission)
+- اصلاح خط ۱۱۴ در `TaskController::submit`: جایگزینی متد ناموجود `updateStatus` و وضعیت نامعتبر `completed` با متد دامین:
+  `TaskService::submitForReview($task, $user)`
+- حفظ وضعیت‌های رسمی ماشین وضعیت (`in_progress -> submitted_for_review`).
+- حفظ عملکرد خودکار توقف Resolution SLA و ثبت وقایع حسابرسی.
 
-> [!NOTE]
-> آیا ساختار جدول `system_settings` نیاز به قابلیت‌های چندزبانه یا ذخیره‌سازی آرایه (JSON) برای هر کلید دارد، یا صرفا رشته و مقادیر پایه کافی است؟ (پیش‌فرض سیستم به صورت ذخیره‌سازی رشته‌ای با قابلیت کستینگ بر اساس ستون `type` طراحی می‌شود).
+### ۳. اصلاح نمایش وضعیت SLA در صفحه جزئیات تسک
+- اصلاح `resources/views/tasks/show.blade.php` جهت خواندن مستقیم داده‌های SLA از رابطه موجود `slaRecords` به جای متغیرهای ناموجود `$task->sla_started_at` و `$task->sla_stopped_at`.
+- نمایش وضعیت و تایمرهای واقعی Resolution SLA و Response SLA.
+- اصلاح شرط نمایش دکمه «اعلام اتمام وظیفه» بر اساس وضعیت `in_progress` و پیمانکار مجری.
 
-## Proposed Changes
+### ۴. تغییر روت حذف وابستگی به متد امن POST
+- تغییر روت `tasks/{task}/dependencies/{dependency}` در `routes/web.php` به متد `POST` با مسیر `tasks/{task}/dependencies/{dependency}/remove` جهت انطباق با قوانین OWASP و AGENTS.md.
+- حذف دستور `@method('DELETE')` از فرم حذف پیش‌نیاز در `resources/views/tasks/show.blade.php`.
+- افزودن اعتبارسنجی مالکیت وابستگی در کنترلر.
 
----
-
-### 1. Database & Models (System Settings)
-
-#### [NEW] `database/migrations/xxxx_xx_xx_xxxxxx_create_system_settings_table.php`
-- ایجاد جدول `system_settings` با ستون‌های `key` (منحصربه‌فرد)، `value` (متنی/JSON)، `type` (رشته، بولین، عدد و...) و `description`.
-
-#### [NEW] `app/Models/SystemSetting.php`
-- مدل متصل به جدول تنظیمات با قابلیت کستینگ مقادیر.
-
-#### [NEW] `database/seeders/SystemSettingsSeeder.php`
-- سیدر جهت مقداردهی پیش‌فرض تنظیمات (`approval_mode`, `allow_reopen`, `require_evidence_on_submit`, `lock_weight`).
-
----
-
-### 2. Services & Utilities
-
-#### [NEW] `app/Domain/Services/SettingsService.php`
-- سرویسی برای دسترسی سریع به تنظیمات با قابلیت Cache و ارائه مقادیر جایگزین (Fallback).
-- امکان ثبت هلپر `setting()` به صورت سراسری در صورت لزوم.
-
-#### [NEW] `app/Services/ExportService.php` (یا متد در ReportController)
-- ابزاری سبک برای ساخت خروجی‌های CSV به صورت استریم (StreamedResponse) بدون وابستگی به پکیج‌های سنگین خارجی.
-
----
-
-### 3. Controllers & Routes
-
-#### [NEW] `app/Http/Controllers/Web/SettingController.php`
-- کنترلری برای صفحه مدیریت تنظیمات (`index`) و ذخیره/بروزرسانی (`update`) که صرفاً در دسترس نقش `admin` باشد.
-
-#### [NEW] `app/Http/Controllers/Web/ReportController.php`
-- کنترلری جهت ساخت گزارشات تفکیکی برای کاربران با نقش‌های مدیریتی/نظارتی و خروجی اکسل/CSV.
-
-#### [MODIFY] `routes/web.php`
-- افزودن مسیرهای `/admin/settings` با اعمال Middleware نقش `admin`.
-- افزودن مسیرهای `/reports` و `/reports/export` برای ساختار گزارش‌دهی با دسترسی نقش‌های مجاز.
-
----
-
-### 4. Views (UI)
-
-#### [NEW] `resources/views/settings/index.blade.php`
-- فرم مدیریت سیستم در سایدبار ادمین با استایل تیلویند (RTL).
-
-#### [NEW] `resources/views/reports/index.blade.php`
-- نمای تجمیعی برای نمایش جدول‌ها و نمودارهای گزارش‌گیری شامل:
-  - گزارش پیشرفت ادعایی و تایید شده.
-  - گزارش تاخیرات SLA و موارد بحرانی.
-  - آمادگی پرداخت و تسک‌های Approved شده براساس پروژه و وزن.
-
-#### [MODIFY] `resources/views/layouts/app.blade.php`
-- افزودن لینک‌های «تنظیمات سیستم» و «گزارش‌ها» در منوی سایدبار.
-
----
-
-### 5. Testing
-
-#### [NEW] `tests/Feature/SystemSettingTest.php`
-- تست دسترسی و بروزرسانی تنظیمات و سرویس `SettingsService`.
-
-#### [NEW] `tests/Feature/ReportExportTest.php`
-- تست بارگذاری گزارشات و دریافت فایل خروجی CSV با دیتای معتبر.
-
-## Verification Plan
-
-### Automated Tests
-- اجرای `php artisan test --compact` در محیط تست PostgreSQL.
-- بررسی عدم ایجاد Regression در فازهای پیشین.
-
-### Manual Verification
-- ورود با نقش Admin، تغییر تنظیمات در پنل و مشاهده تاثیر آن.
-- تولید داده‌های تستی (تسک‌ها، تاییدات و SLA) و بررسی خروجی CSV گزارشات از طریق مرورگر.
-- بررسی محدودیت‌های دسترسی به گزارشات برای کاربران عادی.
+### ۵. آزمون‌های ویژگی (Feature Tests)
+- ایجاد آزمون‌های جامع در `tests/Feature/Web/WebTaskStabilizationTest.php` برای پوشش کامل سناریوهای ارجاع، ارسال کار، حذف وابستگی و نمایش SLA.
+- اجرای کامل آزمون‌ها در دیتابیس PostgreSQL و تایید سبز بودن ۱۰۰٪ تست‌ها.
