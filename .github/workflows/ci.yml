@@ -133,6 +133,32 @@ jobs:
             echo "FATAL: migration count mismatch — authoritative set is 32, got $RAN." >&2; exit 1
           fi
 
+      # ── FRONTEND: Vite manifest is required by the web layout — without it
+      #    any test that renders a view fails with ViteManifestNotFoundException.
+      #    package-lock.json exists ⇒ npm ci (not npm install). Build script is
+      #    `vite build` (package.json); laravel-vite-plugin outputs to
+      #    public/build with a manifest.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci --no-fund --no-audit
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Frontend build gate — manifest must exist
+        run: |
+          ls -la public/build
+          if [ ! -f public/build/manifest.json ]; then
+            echo "FATAL: Vite build completed but public/build/manifest.json is missing." >&2
+            exit 1
+          fi
+          echo "Vite manifest: PRESENT"
+
       # ── TESTS: the TestCase T-6 gate stays active for every test class ────
       - name: Run test suite
         run: php artisan test --compact
