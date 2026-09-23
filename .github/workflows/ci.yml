@@ -29,8 +29,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # composer.json requires "php": "^8.3" — 8.3 is the lowest supported version.
-        php: ['8.3']
+        # composer.lock was resolved with platform php ^8.3 and contains 48
+        # locked packages requiring php >=8.4 (symfony/* v8.1, pest v5, phpunit).
+        # PHP 8.4 satisfies both composer.json (^8.3) and the locked set.
+        php: ['8.4']
 
     services:
       postgres:
@@ -127,6 +129,10 @@ jobs:
         run: php artisan test --compact
 
       # Non-sensitive summary artifact (no .env, no credentials, no logs with secrets).
+      - name: Mask dummy CI credentials in logs
+        run: |
+          echo "::add-mask::${DB_PASSWORD}"
+          echo "::add-mask::${APP_KEY}"
       - name: Upload test summary
         if: always()
         uses: actions/upload-artifact@v4
