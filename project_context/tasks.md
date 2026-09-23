@@ -53,7 +53,9 @@
   - [x] Reconnaissance: git diff migrations خالی · بدون پیاده‌سازی پنهان T-3/T-5/T-7 · PostgreSQL unreachable (تأیید زنده NOT RUN)
   - [x] تحلیل T-3 (گزینه‌های A/B با اثرات کامل) · T-5 (گزینه‌های A/B/C/D) · T-7 (Spec پیاده‌سازی-آمادهٔ CI) · T-1 (توصیه: KEEP AS-IS)
   - [x] Dependency Matrix: هر ۴ قلم مستقل · ترتیب پیشنهادی T-7 → T-3 → T-5 → T-1
-  - [ ] ۴ تصمیم مالک: T-3 A/B · T-5 A/B/C/D · T-7 YES/NO · T-1 KEEP/M-10 (§۱۰ سند)
+  - [x] ۴ تصمیم مالک ثبت شد → **DEC-038** (2026-09-23): T-1 KEEP · T-3=A · T-5=A · T-7=YES
+  - [x] T-7 اجرای واقعی: ۴ فاز (PHP 8.4 → Gate 2 fix → Frontend build) → Run 35835190435 سبز کامل (203/591/0)
+  - [x] V1.8 Hardening بسته شد — R-1..R-3 · T-1..T-7 همگی CLOSED یا تصمیم‌گیری‌شده
 - [x] 8. V1.8 Production Migration (2026-09-22)
   - [x] بازبینی یکپارچگی ۲۳ مهاجرت Baseline (صفر تغییر)
   - [x] پشتیبان‌گیری پیش از تغییر (`pg_dump` → `storage/app/backups/`)

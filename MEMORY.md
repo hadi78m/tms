@@ -14,6 +14,7 @@
 ## وضعیت تسک‌ها
 
 ### در حال انجام
+- ✅ **V1.8 Closure — تمام تصمیمات مالک ثبت شد (2026-09-23).** `DEC-038`: `T-1=KEEP AS-IS` · `T-3=گزینهٔ A` (مدل فعلی — بدون task_rejected) · `T-5=گزینهٔ A` (بدون قابلیت حذف Project) · `T-7=YES` (CI سبز کامل — Run 35835190435: **203 passed · 591 assertions · 0 failed** روی PHP 8.4/PG 18/tms_testing با Gate 1/2 + manifest gate). V1.8 Hardening کامل بسته شد: R-1..R-3 · T-1..T-7 همگی CLOSED. In Progress:
 - ✅ **V1.8 Next Phase Decision & Implementation Plan — انجام شد (2026-09-23).** فاز برنامه‌ریزی خالص — صفر تغییر کد/تست/Migration/CI. تحلیل کامل چهار تصمیم باز: `T-3` (گزینهٔ A: مدل فعلی / B: رویداد مستقل — افزودنی، صفر Migration، نقطهٔ صدور در دو تیر ApprovalService فقط برای `NeedsRework`) · `T-5` (گزینه‌های A: بدون قابلیت حذف / B: حذف نرم فقط بدون Module فعال / C: بایگانی سطح-پروژه / D: خالی) · `T-7` (Spec پیاده‌سازی-آمادهٔ GitHub Actions: PHP 8.3 · postgres:18 UTF8/C · `tms_testing` الزامی · سد TestCase + step `current_database()` · migrate:status = 32/32) · `T-1` (**توصیه: KEEP AS-IS** — گارد در هر ۴ مسیر؛ M-10 فقط محافظت SQL خام خارج از مرز محصول می‌افزاید). Dependency Matrix: هر ۴ قلم مستقل — ترتیب پیشنهادی T-7 → T-3 → T-5 → T-1. دروازه:
   ```text
   OWNER DECISION REQUIRED   (T-3 A/B · T-5 A/B/C/D · T-7 YES/NO · T-1 KEEP/M-10)

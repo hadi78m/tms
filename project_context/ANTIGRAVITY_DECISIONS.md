@@ -1574,3 +1574,32 @@ READY FOR V1.8 POST-MIGRATION CODE HARDENING
 
 ### وضعیت
 - ACTIVE (قطعی — نیمهٔ باقی‌ماندهٔ `T-2` بسته شد)
+
+---
+
+## DEC-038 — تصمیمات نهایی Hardening: T-1 · T-3 · T-5 · T-7
+
+### تاریخ
+2026-09-23
+
+### تصمیم
+مالک پروژه هر چهار تصمیم باز V1.8 را قطعی پاسخ داد:
+
+| Item | تصمیم | معنا |
+|---|---|---|
+| **T-1** | `KEEP ACCEPTED AS-IS` | بدون `M-10`؛ گارد Application در ۴ مسیر کافی است |
+| **T-3** | گزینهٔ **A** | مدل فعلی `task_approval_recorded` + `needs_rework` + Audit Trail کافی است — رویداد مستقل `task_rejected` **ساخته نمی‌شود** |
+| **T-5** | گزینهٔ **A** | حذف/بایگانی Project **قابلیت محصول نیست** — وضعیت فعلی (صفر مسیر حذف + RESTRICT + SoftDeletes بی‌استفاده) رسمی می‌شود |
+| **T-7** | **YES** | CI پیاده شد و پس از ۴ فاز fix (PHP 8.4 · Gate 2 zero-match · Frontend build) در Run `35835190435` کاملاً سبز شد: **203 passed · 591 assertions · 0 failed** |
+
+### دلیل
+پاسخ صریح مالک در Owner Decision Gate (`docs/V1.8_OWNER_DECISION_GATE_T3_T5_REPORT.md`).
+
+### پیامدها
+- T-3 و T-5 به‌عنوان «CLOSED — گزینهٔ A» بسته می‌شوند؛ هیچ رویداد یا مسیر حذف جدیدی ساخته نمی‌شود.
+- اگر در آینده نیاز به حذف/بایگانی Project یا رویداد مستقل رد پیدا شود، این DEC باید صریحاً باز شود.
+- V1.8 Hardening کامل بسته شد: R-1..R-3 · T-1..T-7 همگی CLOSED یا تصمیم‌گیری‌شده.
+- پیاده‌سازی CI مستند در: `docs/V1.8_T7_CI_FRONTEND_BUILD_FIX_AND_REVERIFICATION_REPORT.md`.
+
+### وضعیت
+- ACTIVE (قطعی — دروازهٔ V1.8 بسته شد)

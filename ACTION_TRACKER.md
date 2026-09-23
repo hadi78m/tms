@@ -4,6 +4,25 @@
 
 ---
 
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۱ (2026-09-23) - فاز V1.8 Owner Decision Gate + T-7 CI Cycle + Closure
+
+### 📝 خلاصه اقدامات
+
+- **Owner Decision Gate (T-3/T-5):** گزارش بی‌طرف گزینه‌ها ساخته شد (`docs/V1.8_OWNER_DECISION_GATE_T3_T5_REPORT.md`) — سپس مالک تصمیم گرفت: **T-3=A** (مدل فعلی) · **T-5=A** (بدون قابلیت حذف) → ثبت در `DEC-038`.
+- **T-7 CI — ۴ فاز واقعی روی GitHub Actions:**
+  1. Run 35825473271 (a0df128): FAIL — Composer/PHP 8.3 platform mismatch (۴۸ پکیج lock نیازمند 8.4)
+  2. Run 35830322842 (31936a1، PHP 8.4): Composer ✅ Gate 1 ✅ Migrate ✅ — Gate 2 silent exit 1 (`grep -c` zero-match زیر `bash -e -o pipefail` + ANSI codes)
+  3. Run 35832036047 (163ad93، Gate 2 fix): Gate 2 ✅ (32/0) — Tests: 15 fail همه `ViteManifestNotFoundException`
+  4. **Run 35835190435 (22051ea، npm ci+vite build+manifest gate): کاملاً سبز — 203 passed · 591 assertions · 0 failed · 2 deprecated**
+- **Closure:** T-1..T-7 + R-1..R-3 همگی بسته — V1.8 Hardening کامل.
+
+### 📁 فایل‌ها
+- **workflow:** `.github/workflows/ci.yml` (3 commits: 31936a1 · 163ad93 · 22051ea)
+- **گزارش‌ها:** T-7 ×۴ · Owner Decision Gate ×۱
+- **دست‌نخورده:** migrations · production · app code (بجز آنچه در commits مجاز ثبت شد) · tests
+
+---
+
 ## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۱ (2026-09-23) - فاز V1.8 Next Phase Decision & Implementation Plan
 
 ### 📝 خلاصه اقدامات
