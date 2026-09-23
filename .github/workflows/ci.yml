@@ -114,8 +114,17 @@ jobs:
         run: |
           STATUS=$(php artisan migrate:status)
           echo "$STATUS"
-          RAN=$(echo "$STATUS" | grep -cE '\] Ran ')
-          PENDING=$(echo "$STATUS" | grep -cE '\] Pending ')
+          # Robustness notes for this gate:
+          #  * `grep -c` exits 1 on zero matches — under `bash -e -o pipefail`
+          #    that would abort the step even though a zero count is a VALID
+          #    result (0 pending is exactly what we require). `|| true` is
+          #    scoped ONLY to the zero-match case; the fail-closed assertions
+          #    below are untouched.
+          #  * ANSI color codes are stripped so the count works on any
+          #    terminal setting (locally colored, CI uncolored).
+          CLEAN=$(printf %s "$STATUS" | tr -d '\r' | sed -e 's/[[:cntrl:]]\[[0-9;]*[A-Za-z]//g')
+          RAN=$(printf %s "$CLEAN" | grep -cE '] *Ran' || true)
+          PENDING=$(printf %s "$CLEAN" | grep -cE '] *Pending' || true)
           echo "migrations ran = $RAN · pending = $PENDING"
           if [ "$PENDING" -ne 0 ]; then
             echo "FATAL: pending migrations detected." >&2; exit 1
