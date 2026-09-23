@@ -36,6 +36,9 @@ class TaskService
                 'title' => $data->title,
                 'description' => $data->description,
                 'priority' => $data->priority,
+                // T-2-A (DEC-037): the authoritative task kind arrives explicitly
+                // from validated domain input — never a silent DB default.
+                'task_type' => $data->task_type->value,
                 'weight' => $data->weight,
                 'planned_start_at' => $data->planned_start_date,
                 'planned_due_at' => $data->planned_due_date,

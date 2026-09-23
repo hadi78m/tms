@@ -4,6 +4,7 @@ namespace Tests\Unit\Domain;
 
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
+use App\Domain\Enums\TaskType;
 use PHPUnit\Framework\TestCase;
 
 class CreateTaskDataTest extends TestCase
@@ -16,6 +17,7 @@ class CreateTaskDataTest extends TestCase
             'Test Task',
             null,
             TaskPriority::Normal,
+            TaskType::Development,
             10.5,
             null,
             null,

@@ -16,6 +16,7 @@ test('manager can create task with jalali start and due dates', function () {
         'project_id' => $project->id,
         'title' => 'Task with Jalali dates',
         'priority' => 'high',
+        'task_type' => 'development',
         'weight' => 25,
         'planned_start_date' => '۱۴۰۵/۰۱/۱۵', // Persian numerals
         'planned_due_date' => '1405/01/25',    // English numerals

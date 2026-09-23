@@ -1,5 +1,10 @@
 # سامانه مدیریت وظایف پروژه‌ها و قراردادهای پیمانکاری
 
+> **⚠️ وضعیت سند (۱۴۰۵/۰۶/۳۰):** این سند نمای کلی سطح-بالا است. بخش‌هایی از آن که با
+> تصمیمات فاز V1.8 مغایر بودند، در همین فایل اصلاح و علامت‌گذاری شده‌اند.
+> **مرجع قطعی V1.8:** `docs/V1.8_WEIGHT_MODULE_ARCHITECTURE_AUDIT.md`
+> **مرجع Schema:** `docs/10-database-design.md`
+
 ## نام پروژه
 
 Task Management System (TMS)
@@ -38,13 +43,18 @@ TMS نباید اطلاعات اصلی قرارداد، پیمانکار و سا
 * Contract
 * Contractor
 * System
+* Project
+* **Module / Deliverable** ⬅️ (افزوده‌شده در V1.8 — مالک سهم توسعه)
+* **Module Stage** ⬅️ (افزوده‌شده در V1.8 — ۹ مرحلهٔ استاندارد وزن‌دار)
+* WBS Phase
+* **WBS Phase Output** ⬅️ (افزوده‌شده در V1.8 — Checklist خروجی‌ها)
 * Task
 * Subtask
 * Dependency
-* WBS Phase
 * Document
 * Comment
 * Approval
+* **Stage Progress Approval** ⬅️ (افزوده‌شده در V1.8 — تأیید درصدی)
 * SLA
 * Performance Record
 * Activity Log
@@ -58,7 +68,10 @@ TMS نباید اطلاعات اصلی قرارداد، پیمانکار و سا
 3. پیمانکار اجازه ایجاد Task ندارد.
 4. Task می‌تواند Subtask داشته باشد.
 5. Task می‌تواند وابستگی داشته باشد.
-6. وزن Task یا مرحله باید از ابتدا مشخص شود.
+6. ✅ **اصلاح‌شده در V1.8** — ~~وزن Task یا مرحله باید از ابتدا مشخص شود.~~
+   **تصمیم قطعی V1.8:** Weight متعلق به **Module / Deliverable** و **Module Stage** است.
+   Task هیچ وزن و هیچ درصد پیشرفت مستقلی ندارد (BD-01، BD-02).
+   متن قبلی این بند با تصمیمات V1.8 متناقض بود و باطل شد.
 7. وزن‌دهی بر اساس نفرساعت پیمانکار انجام نمی‌شود.
 8. WBS برای تعیین مراحل، خروجی مورد انتظار و مدت اجرای هر مرحله استفاده می‌شود.
 9. WBS الزاماً به Gantt Chart تبدیل نمی‌شود.
@@ -72,30 +85,80 @@ TMS نباید اطلاعات اصلی قرارداد، پیمانکار و سا
 17. SLA و تأخیر وظایف باید قابل ثبت، کنترل و گزارش‌گیری باشند.
 18. دیتابیس TMS باید از صفر و متناسب با نیازهای خودش طراحی شود و نباید Schema دیتابیس سامانه اصلی کپی شود.
 
+### تصمیمات قطعی افزوده‌شده در V1.8
+
+19. Weight متعلق به Module / Deliverable است، نه Task.
+20. هر Module دارای ۹ Stage استاندارد با مجموع ۱۰۰٪ است:
+    Analysis 15٪، Design 5٪، Coding 35٪، Functional Test 3٪، PenTest 5٪،
+    Training 7٪، Pilot 10٪، Production 5٪، Support 15٪.
+21. درصد هر Stage می‌تواند **تدریجی** تأیید شود (مثال: ۵ + ۷ + ۳ = ۱۵).
+22. WBS Phase با Module Stage **یکی نیست**. WBS Phase مالک وزن نیست.
+23. تکمیل WBS Phase از **Checklist خروجی‌ها + تأیید نهایی ناظر** حاصل می‌شود،
+    نه از «همهٔ Taskها انجام شد».
+24. بهره‌بردار و ناظر هر دو می‌توانند درصد Stage را تعیین یا تغییر دهند.
+25. **تأیید نهایی رسمی درصد و تکمیل فاز، انحصاراً با ناظر پروژه است.**
+26. ناظر در تعیین مستقیم درصد **محدود نمی‌شود**.
+27. Support کاملاً مستقل از WBS Phase است؛ یک Stage با ۱۵٪ است و می‌تواند
+    Task داشته باشد یا نداشته باشد.
+28. تمام تغییرات درصد باید Audit Trail داشته باشند و مقدار قبلی نباید از بین برود.
+
+### تصمیمات به‌تعویق‌افتاده (نباید حدس زده شوند)
+
+* سیاست مجموع وزن Moduleهای یک Project
+* معنای دقیق Weight Lock
+* ضرورت `task_type`
+* فرمول Progress و هر محاسبهٔ مالی
+
 ---
 
-## نقش‌های احتمالی کاربران
+## نقش‌های کاربران
 
-* مدیر سیستم
-* مدیر قرارداد
-* بهره‌بردار
-* ناظر پروژه
-* مدیر ارشد / مشاهده‌گر گزارش‌ها
+> **✅ به‌روزرسانی V1.8:** متن قبلی این بخش می‌گفت «این نقش‌ها فعلاً مفهومی هستند و
+> هنوز نباید به Role و Permission واقعی تبدیل شوند». این با وضعیت کد متناقض بود
+> (تناقض `C-03`). فاز V1.2 این نقش‌ها را به‌صورت **واقعی** پیاده کرد.
 
-این نقش‌ها فعلاً مفهومی هستند و هنوز نباید به Role و Permission واقعی تبدیل شوند.
+* مدیر سیستم (`admin`)
+* مدیر پروژه (`project_manager`)
+* ناظر پروژه (`supervisor`)
+* بهره‌بردار (`employer`)
+* مدیر ارشد (`management`)
+* پیمانکار (`contractor`)
+* مشاهده‌گر (`viewer`)
+
+**وضعیت پیاده‌سازی:** ۷ نقش و ۱۱ Permission از طریق Spatie Permission
+(`InitialTmsSeeder`) ساخته شده‌اند. هیچ `user_type` یا `role_type` ثابتی وجود ندارد
+و دسترسی‌ها کاملاً قابل تنظیم هستند.
+
+**تصمیم V1.8:** Dashboardها و Visibility بر اساس `Role + Permission + Settings`
+کنترل می‌شوند — نه بر اساس User Type ثابت.
 
 ---
 
-## گردش کار مفهومی Task
+## گردش کار Task
 
-Draft
-→ Assigned
-→ In Progress
-→ Submitted
-→ Under Review
-→ Approved / Rejected
+> **✅ به‌روزرسانی V1.8:** فهرست قبلی ۶ وضعیت داشت و با `TaskStatus` واقعی
+> متناقض بود (تناقض `C-04`).
 
-این گردش کار هنوز باید در مرحله طراحی نهایی بررسی شود.
+```text
+draft
+  → assigned
+  → in_progress
+  → submitted_for_review
+  → under_review
+  → supervisor_approved
+  → approved
+
+مسیرهای فرعی:
+  * → needs_rework  (از under_review و supervisor_approved)
+  * → cancelled     (از draft, assigned, in_progress, needs_rework)
+```
+
+**وضعیت پیاده‌سازی:** ماشین وضعیت در `app/Domain/Rules/TaskStateTransition.php`
+با ۹ وضعیت پیاده شده و هر گذار غیرمجاز با `InvalidTaskTransitionException` رد می‌شود.
+
+> **⚠️ نکتهٔ حیاتی V1.8:** تأیید یک Task (`status = 'approved'`) **هیچ مقداری به
+> Progress اضافه نمی‌کند.** Task فقط واحد اجرای کار و Evidence است.
+> Progress فقط از تأییدهای درصدی **Stage** حاصل می‌شود.
 
 ---
 
@@ -110,3 +173,49 @@ Draft
 * امکان توسعه API در آینده
 * حفظ قابلیت اتصال به سامانه اصلی
 * عدم ایجاد قابلیت‌های خارج از محدوده پروژه بدون تأیید مالک سیستم
+
+---
+
+## معماری مدل V1.8 — Weight / Module / WBS
+
+> **وضعیت:** Design Freeze — تأیید مالک پروژه در انتظار. **هیچ کدی تغییر نکرده است.**
+
+```text
+Contract
+   │
+   └── Project                            ← کانتینر مدیریتی. بدون وزن.
+         │
+         ├── Module / Deliverable         ← مالک سهم توسعه (مثال: 40%)
+         │      │
+         │      └── Module Stage          ← ۹ مرحلهٔ استاندارد
+         │             Analysis      15%     Functional Test  3%     Pilot      10%
+         │             Design         5%     PenTest          5%     Production  5%
+         │             Coding        35%     Training         7%     Support     15%
+         │                                      مجموع = 100% از Module
+         │
+         ├── WBS Phase                    ← محدوده/زمان/خروجی. بدون وزن.
+         │      │
+         │      └── WBS Phase Output       ← Checklist خروجی‌ها
+         │
+         └── Task                         ← اجرای کار. بدون وزن. بدون درصد.
+                └── Evidence / SLA / Approval کیفی
+```
+
+### اصل حاکم بر مدل
+
+> Task واحد اجرای کار است؛ Module/Deliverable مالک سهم توسعه است؛
+> Stage سهم استاندارد Module را مشخص می‌کند؛ WBS Phase محدوده و خروجی اجرایی را
+> مدیریت می‌کند؛ تأیید درصدی توسط Employer/Supervisor ممکن است؛ تأیید نهایی رسمی
+> با Supervisor است؛ Support مستقل از WBS Phase است؛ و تمام تصمیمات باید
+> Audit Trail داشته باشند.
+
+### اسناد تفصیلی V1.8
+
+| سند | موضوع |
+|---|---|
+| `docs/V1.8_WEIGHT_MODULE_ARCHITECTURE_AUDIT.md` | گزارش ممیزی، تصمیمات قطعی، تناقضات، دروازهٔ مهاجرت |
+| `docs/weight-module-design-v1.8.md` | موجودیت Module و Module Stage، مالکیت وزن |
+| `docs/module-stage-approval-design-v1.8.md` | تأیید درصدی تجمعی، اختیارات، کنترل ظرفیت |
+| `docs/wbs-phase-completion-design-v1.8.md` | Checklist خروجی‌ها، تأیید نهایی ناظر |
+| `docs/dashboard-data-requirements-v1.8.md` | نیازهای دادهٔ چهار Dashboard |
+| `docs/10-database-design.md` | نمای کلی Schema (فعلی و پیشنهادی) |

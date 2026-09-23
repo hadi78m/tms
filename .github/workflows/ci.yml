@@ -1,0 +1,138 @@
+name: CI
+
+# V1.8 T-7 — Safety-gated CI for the TMS Laravel repository.
+#
+# Invariants enforced by this workflow:
+#   * Tests run ONLY against the PostgreSQL database `tms_testing`.
+#   * The database identity is proven via `SELECT current_database()` BEFORE
+#     migrations, and the migration result is re-proven BEFORE the test suite.
+#   * PostgreSQL major version must be 18.
+#   * Production database `tms` is never referenced, created, or contacted.
+#   * The in-suite gate in tests/TestCase.php (T-6) remains active and untouched.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save runners.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }} / PostgreSQL 18)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        # composer.json requires "php": "^8.3" — 8.3 is the lowest supported version.
+        php: ['8.3']
+
+    services:
+      postgres:
+        # ENV-1 requirement: UTF8 encoding / C locale for Persian text integrity.
+        image: postgres:18
+        env:
+          POSTGRES_DB: tms_testing
+          POSTGRES_USER: tms_ci
+          POSTGRES_PASSWORD: tms_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tms_ci -d tms_testing"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: tms_testing
+      DB_USERNAME: tms_ci
+      DB_PASSWORD: tms_ci_password
+      APP_ENV: testing
+      APP_KEY: base64:2fl+Ktvkfl+Fuz4Qp/A75G2RTiWVA/ZoKZvp6fiiM10=
+      APP_URL: http://localhost
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_pgsql, pgsql, mbstring, intl, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: locked
+
+      # ── SAFETY GATE 1: prove the connected database identity ──────────────
+      # Reads the name of the database the Laravel default connection is
+      # actually attached to (the same target RefreshDatabase would reset).
+      - name: Gate 1 — Verify connected database is tms_testing and PostgreSQL major is 18
+        run: |
+          php -r '
+          $pdo = new PDO(
+              "pgsql:host=" . getenv("DB_HOST") . ";port=" . getenv("DB_PORT") . ";dbname=" . getenv("DB_DATABASE"),
+              getenv("DB_USERNAME"),
+              getenv("DB_PASSWORD"),
+              [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+          );
+          $db  = $pdo->query("SELECT current_database()")->fetchColumn();
+          $ver = $pdo->query("SHOW server_version_num")->fetchColumn();
+          $major = intdiv((int) $ver, 10000);
+          echo "current_database = " . $db . PHP_EOL;
+          echo "PostgreSQL major version = " . $major . PHP_EOL;
+          if ($db !== "tms_testing") {
+              fwrite(STDERR, "FATAL: database identity check failed — expected tms_testing, got: " . $db . PHP_EOL);
+              exit(1);
+          }
+          if ($major !== 18) {
+              fwrite(STDERR, "FATAL: PostgreSQL major version check failed — expected 18, got: " . $major . PHP_EOL);
+              exit(1);
+          }
+          '
+
+      # ── MIGRATIONS: only after Gate 1 passed; target is tms_testing ───────
+      - name: Migrate testing database
+        run: php artisan migrate --force --no-interaction
+
+      # ── SAFETY GATE 2: migration status must show zero pending and the
+      #    authoritative migration count for this repository (32). ──────────
+      - name: Gate 2 — Verify migration status (32 ran, 0 pending)
+        run: |
+          STATUS=$(php artisan migrate:status)
+          echo "$STATUS"
+          RAN=$(echo "$STATUS" | grep -cE '\] Ran ')
+          PENDING=$(echo "$STATUS" | grep -cE '\] Pending ')
+          echo "migrations ran = $RAN · pending = $PENDING"
+          if [ "$PENDING" -ne 0 ]; then
+            echo "FATAL: pending migrations detected." >&2; exit 1
+          fi
+          if [ "$RAN" -ne 32 ]; then
+            echo "FATAL: migration count mismatch — authoritative set is 32, got $RAN." >&2; exit 1
+          fi
+
+      # ── TESTS: the TestCase T-6 gate stays active for every test class ────
+      - name: Run test suite
+        run: php artisan test --compact
+
+      # Non-sensitive summary artifact (no .env, no credentials, no logs with secrets).
+      - name: Upload test summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.php }}
+          path: |
+            storage/logs/*.log
+          retention-days: 30
+        continue-on-error: true

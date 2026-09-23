@@ -70,6 +70,7 @@ it('can create a subtask with parent_id', function () {
         'title' => 'Subtask',
         'project_id' => $project->id,
         'priority' => 'high',
+        'task_type' => 'development',
         'weight' => 10,
         'parent_task_id' => $parent->id,
     ]);

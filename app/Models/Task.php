@@ -14,6 +14,8 @@ class Task extends Model
 
     protected $casts = [
         'weight' => 'decimal:2',
+        'module_stage_id' => 'integer',
+        'module_id' => 'integer',
         'planned_start_at' => 'datetime',
         'planned_due_at' => 'datetime',
         'actual_started_at' => 'datetime',
@@ -40,6 +42,25 @@ class Task extends Model
     public function wbsPhase()
     {
         return $this->belongsTo(WbsPhase::class, 'wbs_phase_id');
+    }
+
+    /**
+     * Optional link to a Module Stage (OQ-04 = 2B). A Support Task may have
+     * none — `task_type` is the authoritative kind, not this relation.
+     */
+    public function moduleStage()
+    {
+        return $this->belongsTo(ModuleStage::class, 'module_stage_id');
+    }
+
+    /**
+     * Denormalized for fast "tasks of this module" filtering. It is NOT an
+     * independent source of business truth; consistency is guaranteed by
+     * TaskService (DEC-021).
+     */
+    public function module()
+    {
+        return $this->belongsTo(Module::class, 'module_id');
     }
 
     public function parentTask()

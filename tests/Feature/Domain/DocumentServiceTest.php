@@ -177,7 +177,9 @@ class DocumentServiceTest extends TestCase
 
         // Assert AuditServiceInterface was called
         $auditService = app(AuditServiceInterface::class);
-        $auditService->shouldHaveReceived('log')->once()->with(
+        // V1.8 (DEC-032): uploadDocument() now also emits `document_uploaded`, so
+        // this is no longer the only `log()` call — assert the call, not the count.
+        $auditService->shouldHaveReceived('log')->atLeast()->once()->with(
             'document_deleted',
             $document,
             $this->user,

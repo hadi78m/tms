@@ -68,6 +68,16 @@
                     </select>
                 </div>
 
+                <!-- نوع تسک (T-2-UI-A · DEC-037) -->
+                <div>
+                    <label for="task_type" class="block text-sm font-medium text-slate-700 mb-1">نوع تسک <span class="text-red-500">*</span></label>
+                    <select name="task_type" id="task_type" required
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
+                        <option value="development" {{ old('task_type', 'development') == 'development' ? 'selected' : '' }}>توسعه</option>
+                        <option value="support" {{ old('task_type') == 'support' ? 'selected' : '' }}>پشتیبانی</option>
+                    </select>
+                </div>
+
                 <!-- وزن -->
                 <div>
                     <label for="weight" class="block text-sm font-medium text-slate-700 mb-1">وزن (۰ تا ۱۰۰) <span class="text-red-500">*</span></label>

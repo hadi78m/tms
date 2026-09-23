@@ -4,10 +4,12 @@ namespace App\Http\Requests\Web;
 
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
+use App\Domain\Enums\TaskType;
 use App\Support\JalaliDate;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class StoreTaskRequest extends FormRequest
 {
@@ -52,6 +54,13 @@ class StoreTaskRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'priority' => ['required', 'string', Rule::in(array_column(TaskPriority::cases(), 'value'))],
+            // T-2-A (DEC-037): task_type is a required, explicit input of Create
+            // Task. The DB default 'development' is a migration backfill concern
+            // (DEC-016), never a substitute for business input.
+            'task_type' => ['required', new Enum(TaskType::class)],
+            // R1-F1 (DEC-036): weight stays REQUIRED on the official create path.
+            // `tasks.weight` is nullable in the schema (M-07) only for
+            // legacy/import scenarios; the HTTP path must never produce NULL.
             'weight' => ['required', 'numeric', 'min:0', 'max:100'],
             'planned_start_date' => ['nullable', 'date'],
             'planned_due_date' => ['nullable', 'date'],
@@ -67,6 +76,7 @@ class StoreTaskRequest extends FormRequest
             title: $this->input('title'),
             description: $this->input('description'),
             priority: TaskPriority::from($this->input('priority')),
+            task_type: TaskType::from($this->input('task_type')),
             weight: (float) $this->input('weight'),
             planned_start_date: $this->input('planned_start_date'),
             planned_due_date: $this->input('planned_due_date'),

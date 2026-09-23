@@ -42,7 +42,7 @@ class DocumentService
 
         try {
             return DB::transaction(function () use ($attachable, $originalName, $path, $mimeType, $size, $checksum, $uploader, $claimedAt) {
-                return $attachable->documents()->create([
+                $document = $attachable->documents()->create([
                     'original_name' => $originalName,
                     'stored_name' => $path,
                     'mime_type' => $mimeType,
@@ -53,6 +53,19 @@ class DocumentService
                     'recorded_at' => now(),
                     'uploaded_by' => $uploader->id,
                 ]);
+
+                // V1.8 (H-6 · DEC-032): explicit emission inside the SAME
+                // business transaction. No Observer — an automatic one would
+                // double-log alongside the explicit document_deleted event.
+                $this->auditService->log(
+                    'document_uploaded',
+                    $document,
+                    $uploader,
+                    [],
+                    $document->toArray()
+                );
+
+                return $document;
             });
         } catch (\Exception $e) {
             // DB Transaction failed, remove the orphaned file from physical storage

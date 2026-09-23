@@ -27,6 +27,16 @@ class Project extends Model
         return $this->belongsTo(SyncedContractor::class, 'contractor_id');
     }
 
+    public function modules()
+    {
+        return $this->hasMany(Module::class, 'project_id');
+    }
+
+    public function activeModules()
+    {
+        return $this->hasMany(Module::class, 'project_id')->where('status', 'active');
+    }
+
     public function wbsPhases()
     {
         return $this->hasMany(WbsPhase::class, 'project_id');

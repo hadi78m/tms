@@ -6,6 +6,7 @@ use App\Domain\Contracts\AuditServiceInterface;
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
 use App\Domain\Enums\TaskStatus;
+use App\Domain\Enums\TaskType;
 use App\Domain\Exceptions\InvalidTaskTransitionException;
 use App\Domain\Services\SlaService;
 use App\Domain\Services\TaskService;
@@ -125,6 +126,7 @@ class TaskServiceTest extends TestCase
             title: 'Test Task Title',
             description: 'Task description',
             priority: TaskPriority::Normal,
+            task_type: TaskType::Development,
             weight: 15.5,
             planned_start_date: '2026-09-01',
             planned_due_date: '2026-09-30',

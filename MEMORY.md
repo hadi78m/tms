@@ -14,10 +14,73 @@
 ## وضعیت تسک‌ها
 
 ### در حال انجام
-- تحویل نسخه پایدار و آماده‌سازی برای مراحل استقرار نهایی
+- ✅ **V1.8 Next Phase Decision & Implementation Plan — انجام شد (2026-09-23).** فاز برنامه‌ریزی خالص — صفر تغییر کد/تست/Migration/CI. تحلیل کامل چهار تصمیم باز: `T-3` (گزینهٔ A: مدل فعلی / B: رویداد مستقل — افزودنی، صفر Migration، نقطهٔ صدور در دو تیر ApprovalService فقط برای `NeedsRework`) · `T-5` (گزینه‌های A: بدون قابلیت حذف / B: حذف نرم فقط بدون Module فعال / C: بایگانی سطح-پروژه / D: خالی) · `T-7` (Spec پیاده‌سازی-آمادهٔ GitHub Actions: PHP 8.3 · postgres:18 UTF8/C · `tms_testing` الزامی · سد TestCase + step `current_database()` · migrate:status = 32/32) · `T-1` (**توصیه: KEEP AS-IS** — گارد در هر ۴ مسیر؛ M-10 فقط محافظت SQL خام خارج از مرز محصول می‌افزاید). Dependency Matrix: هر ۴ قلم مستقل — ترتیب پیشنهادی T-7 → T-3 → T-5 → T-1. دروازه:
+  ```text
+  OWNER DECISION REQUIRED   (T-3 A/B · T-5 A/B/C/D · T-7 YES/NO · T-1 KEEP/M-10)
+  ```
+  ⚠️ محیطی (تغییر تصمیم نیست): PostgreSQL در شروع فاز unreachable بود؛ `migrate:status`/`db:show` اجرا نشد (آخرین وضعیت معتبر 2026-09-22) · Full Suite اجرای مجدد TIMEOUT (>300s) — **NOT RUN، هیچ نتیجه‌ای جعل نشد**. مرجع: `docs/V1.8_NEXT_PHASE_DECISION_AND_IMPLEMENTATION_PLAN.md`
+- ✅ **V1.8 Final Hardening (T-3/T-4/T-5/T-7) — انجام شد (2026-09-22).** صفر تغییر کد. `T-4 = CLOSED` (صفر مغایرت رفتاری؛ `>=0` در برابر `>0` عمدی و مستند در §۴۱۳ طراحی؛ نام‌ها تطابق ۱:۱ با catalog). `T-3 = OWNER DECISION REQUIRED` — بازرسی کامل: ۴ مسیر رد، همه در همان تراکنش auditable (`DatabaseAuditService` failure هرگز swallow نمی‌شود) ⇒ صفر bypass؛ گزینه‌های A (مدل فعلی کافی) / B (رویداد مستقل — فقط کد+تست) بی‌طرف ثبت شد. `T-5 = OWNER DECISION REQUIRED / DEFERRED` — DB hard-delete protection موجود (RESTRICT)؛ اما هیچ قاعدهٔ soft-delete و **هیچ مسیر حذف Project** در کد وجود ندارد. `T-7 = INFRASTRUCTURE GAP` — CI نیست؛ توصیهٔ implementation-ready آماده شد (service postgres:18 UTF8/C · `tms_testing` الزامی به‌دلیل T-6 gate)؛ سد TestCase از قبل فعال است. Suite برابر Baseline: **203 · 591 · 0**. `tms` و `tms_testing` دست‌نخورده · صفر Migration.
+  دروازه:
+  ```text
+  OWNER DECISION REQUIRED   (T-3 · T-5 · T-7 · بازتأیید T-1)
+  ```
+  مرجع: `docs/V1.8_FINAL_HARDENING_T3_T4_T5_T7.md`
+
+- ✅ **V1.8 Remaining Hardening Implementation (R-3 + T-6) — انجام شد (2026-09-22).** `R-3` بسته شد با smallest safe refactor: `ModuleStage::approvedQuery()` به `approvals()->active()` و `StageProgressApprovalService::isSuperseded()` به `$approval->isSuperseded()` واگذار شدند (هر دو قبلاً کپی حرفِی بودند — رفتار اثباتاً یکسان، `203 passed · 591 assertions` برابر Baseline)؛ `Module::scopeActive()` عمداً جدا ماند (naming collision، مفهوم مستقل). `T-6` بسته شد با دو لایه: **ENFORCED** — Safety Gate در `tests/TestCase.php` (نام واقعی دیتابیسِ متصل باید به `testing` ختم شود وگرنه Suite قبل از RefreshDatabase fail می‌شود) و **DOCUMENTED** — `docs/DATABASE_SAFETY.md` (گیت عملیاتی برای artisan دستی). `tms` و `tms_testing` دست‌نخورده · صفر Migration. باز: `T-1 ACCEPTED AS-IS` · `T-3 OWNER DECISION REQUIRED` · `T-4/T-5/T-7` deferred.
+  دروازه:
+  ```text
+  READY FOR NEXT IMPLEMENTATION PHASE
+  ```
+  مرجع: `docs/V1.8_REMAINING_HARDENING_IMPLEMENTATION.md`
+
+- ✅ **V1.8 Post-Migration Code Hardening — انجام شد (2026-09-22).** Reconnaissance کامل (۹ مصرف‌کنندهٔ `tasks.weight` · مسیر واحد ایجاد Task · ۵ تعریف «Active») و سپس بسته‌شدن `R-1` و `R-2` با **۴ تصمیم صریح مالک پروژه**: `DEC-036` (`R1-D`: NULL وزن در مسیر عادی ممنوع · `R1-F1`: weight در Create Task اجباری می‌ماند — صفر تغییر در `ReportController`) و `DEC-037` (`T-2-A`: `task_type` **اجباری** در `StoreTaskRequest` با Enum validation از `TaskType` موجود · `T-2-UI-A`: فیلد «نوع تسک» در فرم — مسیر کامل `Blade → Request → DTO → TaskService → DB` بدون silent fallback؛ `BD-06` حالا در عمل قابل‌دست‌یابی است). `R-3` فقط Audit: `STRUCTURALLY DUPLICATED BUT BEHAVIORALLY CONSISTENT` · Semantic Drift صفر · **بدون Refactor**. تست رگرسیون جدید: `tests/Feature/Web/TaskTypeAndWeightPolicyTest.php` (**۱۲ تست · ۳۲ assertion**). نتیجه: **`203 passed · 2 deprecated · 591 assertions · 0 failed`** (از ۱۹۱ → ۲۰۳). `tms` دست‌نخورده · صفر Migration · تست‌ها فقط روی `tms_testing`.
+  دروازه:
+  ```text
+  READY FOR V1.8 POST-MIGRATION HARDENING COMPLETE
+  ```
+  مرجع: `docs/V1.8_POST_MIGRATION_CODE_HARDENING_REPORT.md`
+
+- ✅ **V1.8 T-1 Resolution & Post-Migration Code Reconciliation — انجام شد (2026-09-22).** شکاف `T-1` با **اجرای واقعی روی PostgreSQL 18.6** اثبات شد: هر دو مسیر (سرویس و SQL خام) اجازه می‌دادند یک Approval تاریخی **دو جانشین** بگیرد، پس `supersede()` می‌توانست به‌جای **جایگزینی**، مقدار را **اضافه** کند — نمونهٔ قطعی: `A=5 → B=7 → C=3` نتیجه `10` می‌داد نه `7` (و چون `10 ≤ 15` سقف آن را نمی‌گرفت). اصلاح: یک گارد از متد **موجود** `assertNotSuperseded()` در `supersede()` — **صفر تغییر Schema، صفر Migration جدید، صفر تصمیم جدید**. یک نقص **هم‌رده** هم بسته شد: `adjust()` تاریخ ردیف superseded را بازنویسی می‌کرد (نقض `DEC-027`). تست رگرسیون جدید: `tests/Feature/V18/StageProgressApprovalSupersedeChainTest.php` (**۱۶ تست · ۵۵ assertion**) که **اول علیه کد اصلاح‌نشده** اجرا شد و ۶ نقص واقعی را گرفت. نتیجهٔ نهایی: **`191 passed · 2 deprecated · 559 assertions · 0 failed`** (از ۱۷۵ → ۱۹۱). `tms` **بی‌ت‌به‌بیت دست‌نخورده**؛ دو یافته فقط گزارش شد (`R-1` وزن تسک در گزارش‌ها · `R-2` نبود نویسندهٔ `task_type`) و یک توصیهٔ ساختاری ثبت شد (`R-3` پنج تعریف تکراری «Active»).
+  دروازه:
+  ```text
+  READY FOR V1.8 POST-MIGRATION CODE HARDENING
+  ```
+  مرجع: `docs/V1.8_T1_POST_MIGRATION_RECONCILIATION.md`
+
+- ✅ **V1.8 PRODUCTION MIGRATION روی `tms` — انجام شد (2026-09-22).** با مجوز صریح مالک پروژه و **فقط پس از پشتیبان‌گیری کامل** (`pg_dump` → `storage/app/backups/tms_pre_v18_20260922_113350.dump`)، ۹ مهاجرت V1.8 با **توالی دو مرحله‌ای** اعمال شد: `M-07` تنها در **Batch 2** (توسط `--path`)، سپس هشت مهاجرت در **Batch 3**. نتیجهٔ واقعی: **`32 migrations · 35 tables · 4 triggers · 3 functions`**. توپولوژی Batch: `{1:23, 2:1, 3:8}` — دقیقاً همان چیزی که `DEC-018` می‌خواهد.
+  **صفر ردیف دادهٔ موجود حذف یا بازنویسی شد** (`projects 1 · tasks 3 · wbs_phases 1 · users 8 · task_dependencies 1` همه دست‌نخورده؛ فقط `migrations 23→32` و `system_settings 4→5`). `tasks.weight` (20/10/10) و `wbs_phases.weight` (50) دست‌نخورده؛ `task_type` طبق `DEC-016` به `development` پر شد و `completion_status` طبق `DEC-017` به `pending`.
+  یکپارچگی متن فارسی با MD5 تأیید شد: `desc_md5` در Database **دقیقاً** برابر `85805816d962de31632e2103bf873447` (same as migration literal).
+  دروازه:
+  ```text
+  PRODUCTION MIGRATION SUCCESSFUL
+  ```
+  مرجع: `docs/V1.8_PRODUCTION_MIGRATION_REPORT.md`
+
+- ✅ **V1.8 Migration Implementation — تمام شد (فاز قبل).** ۹ فایل Migration جدید نوشته شد؛ **۲۳ مهاجرت موجود صفر تغییر کردند**. با مجوز صریح مالک پروژه، `tms_testing` از **WIN1252 به UTF8** بازسازی شد (`ENV-1` رفع شد) و کل زنجیرهٔ **۳۲/۳۲** مهاجرت روی PostgreSQL 18.6 اجرا شد. **کل Test Suite واقعاً اجرا شد: `175 passed · 2 deprecated · 504 assertions · 0 failed`** (که **۶۳ سناریو** آن مربوط به V1.8 است). **`tms` بیت‌به‌بیت دست‌نخورده مانده است.**
+  دروازهٔ آن فاز (تاریخی):
+  ```text
+  READY FOR PRODUCTION MIGRATION REVIEW
+  ```
+
+- ✅ **همهٔ پرسش‌های باز بسته شدند** — `OWNER DECISION REQUIRED: 0` · `RECOMMENDATION READY: 0` · `BLOCKER: 0`.
+  - موج اول: `OQ-27` · `OQ-28` · `OQ-29` (`DEC-016`..`DEC-018`).
+  - موج دوم: `OQ-30`=D · `OQ-24`=A · `OQ-31` · `OQ-25` · `OQ-02` + `H-1`..`H-7` + `N-1`..`N-5` (`DEC-020`..`DEC-032`).
+  - رکوردهای تاریخی مرحله‌های قبل: Migration Review → `BLOCKED — REVIEW ISSUE` · OQ Resolution → `BLOCKED — OWNER DECISION REQUIRED`
+    (گزارش‌ها: `docs/V1.8_MIGRATION_REVIEW_REPORT.md` · `docs/V1.8_OQ_AND_REVIEW_ISSUE_RESOLUTION.md`).
 
 ### در انتظار
-- [ ] توسعه قابلیت‌های تکمیلی و یکپارچه‌سازی API در صورت نیاز
+- [x] ✅ **رفع `ENV-1`** — `tms_testing` با `TEMPLATE template0 ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C'` بازسازی شد (با مجوز صریح مالک پروژه).
+- [x] ✅ `M-09` روی `tms_testing` اجرا شد — متن فارسی درست ذخیره شد (۳۶ کاراکتر).
+- [x] ✅ **Test Suite واقعاً اجرا شد** — `175 passed · 2 deprecated · 504 assertions · 0 failed`.
+- [x] ✅ **Production Migration Review** — انجام شد؛ هر ۱۵ گیت ایمنی (Phase 6) PASS شد (`--pretend` · schema reconciliation · backup · صفر عملیات مخرب).
+- [x] ✅ **Production Migration روی `tms`** — اجرا شد؛ `M-07` در Batch 2 سپس ۸ مهاجرت در Batch 3 → **`32 · 35 · 4 · 3`**.
+- [x] ✅ **`T-1`** — `ACCEPTED AS-IS` (بدون UNIQUE) و **گارد سطح سرویس اعمال شد**؛ زنجیرهٔ supersession حالا خطی است. تصمیم باقی‌مانده برای UNIQUE در DB همچنان باز است (Master + `M-10`).
+- [x] ✅ **تصمیم `R-1`** — `DEC-036`: `R1-D` (NULL در مسیر عادی ممنوع) + `R1-F1` (weight اجباری می‌ماند) — گزارش‌ها دست نخوردند؛ تست نگهبان ساخته شد.
+- [x] ✅ **تصمیم `R-2`** — `DEC-037`: `T-2-A` + `T-2-UI-A` — `task_type` اجباری در FormRequest/DTO/Service با فیلد UI؛ نیمهٔ باقی‌ماندهٔ `T-2` بسته شد.
+- [x] ✅ **`R-3` بسته شد** — smallest safe refactor (approvedQuery و Service::isSuperseded به تعریف واحد واگذار شدند) · رفتار اثباتاً یکسان · Suite برابر Baseline.
+- [x] ✅ **`T-6` بسته شد** — ENFORCED Safety Gate در TestCase + DOCUMENTED gate در `docs/DATABASE_SAFETY.md`.
+- [ ] `T-3`..`T-7` — بررسی و بستن.
+- [ ] توسعه قابلیت‌های تکمیلی و یکپارچه‌سازی API در صورت نیاز.
 
 ### انجام شده
 - [x] 2026-09-18 پیاده‌سازی فاز S0 و Foundation دامین.
@@ -31,9 +94,28 @@
 - [x] 2026-09-19 تکمیل فازهای V1.4 تا V1.6 (هش اسناد و ادعاها، ساب‌تسک‌ها و مسدودسازی وابستگی، تنظیمات داینامیک و خروجی گزارش‌ها).
 - [x] 2026-09-20 یکپارچه‌سازی و تبدیل جامع تمام تاریخ‌های پروژه و سامانه به هجری شمسی (جلالی): ویوهای بلید، ستون‌های جداول، فرم‌های ثبت وظایف و مدارک با persianDatepicker، تبدیل خودکار درخواست‌ها در Request، گزارش‌های CSV، و پاس شدن ۱۰۰٪ تمامی ۱۰۲ تست پروژه.
 - [x] 2026-09-20 تکمیل فاز تثبیت وب V1.7 (Web Stabilization Phase): اصلاح انتساب تسک (`TaskAssignmentService::assign` و نگاشت دقیق DTO)، اصلاح متد ارسال تسک (`TaskService::submitForReview` و توقف SLA حل)، بازنویسی نمایش وضعیت SLA در صفحه وظیفه بر مبنای `slaRecords`، تغییر روت حذف وابستگی به `POST` طبق قوانین OWASP، ایجاد ۱۲ تست وب در `WebTaskStabilizationTest` و پاس شدن ۱۰۰٪ کلیه ۱۱۴ تست سامانه در PostgreSQL.
+- [x] 2026-09-21 تکمیل فاز **V1.8 Final Reconciliation** (Business Decision Reconciliation & Migration Gate) — **Documentation Only، صفر تغییر کد**. تثبیت نهایی `BD-01`..`BD-07` در `DEC-009` (شامل قید صریح «WBS Phase برای محاسبهٔ Weight استفاده نمی‌شود»، ممنوعیت مدل Boolean برای Stage، و مجاز بودن تفاوت `approved_amount` از `proposed_amount`). حل ۱۱ مورد از پرسش‌های باز: `OQ-03` (بدون رابطهٔ WBS↔Module)، `OQ-06` (یک pending)، `OQ-06-a` (Denormalized)، `OQ-06-b` (approved ≠ proposed)، `OQ-07` (برچسب گزارش باید تغییر کند)، `OQ-12` (غیرمسدودکننده)، `OQ-05` قدیمی (منقضی) — همه **استخراج‌شده از سابقهٔ Repository** بدون اختراع قاعدهٔ جدید (`DEC-010`). اعتبارسنجی معماری: **هر ۶ بند معتبر، صفر مغایرت**. تأیید مانع Audit و ثبت آن به‌عنوان گام صفر (`DEC-011`). اعتبارسنجی محیط: PostgreSQL در دسترس نیست، بیس تست **نامعلوم** — هیچ نتیجه‌ای جعل نشد. ثبت `DEC-012`.
+- [x] 2026-09-21 تکمیل فاز **V1.8 Detailed Schema Design** — **Documentation Only، صفر تغییر کد، صفر Migration، صفر تغییر Schema، صفر عملیات مخرب**. دریافت و قفل سه تصمیم قطعی (`DEC-013`): `OQ-01a = 1A` (Module مالک وزن پروژه · `SUM = 100%` · **بدون `kind`**) · `OQ-04 = 2B` (`module_stage_id` NULLABLE · **`task_type` اضافه می‌شود**: `development`/`support`) · `OQ-05 = 3A` (وزن پایهٔ Stage پس از اولین تأیید **قفل** می‌شود · `lock_weight` بازنشسته، **بدون جایگزین**). طراحی ۴ جدول جدید (`modules`, `module_stages`, `stage_progress_approvals`, `wbs_phase_checklist_items`) + تغییرات `tasks` و `wbs_phases`؛ ۱۲ FK، ~۲۰ Constraint (شامل `0 <= approved_amount <= proposed_amount`)، ۱۸ Index. برای قواعد چند-ردیفی که CHECK نمی‌تواند اعمال کند: **مرز تراکنش دامنه (الزامی) + `CONSTRAINT TRIGGER ... DEFERRABLE INITIALLY DEFERRED` (توصیه‌شده)** — **CHECK جعلی ساخته نشد**. مشخصات کامل `DatabaseAuditService` + ۳۰ رویداد الزامی. طبقه‌بندی ۹ فیلد/جدول Legacy (`tasks.weight` و `lock_weight` DEPRECATED · `wbs_phases.weight` و `weight_change_requests` LEGACY). گزارش ۱۲ تناقض (`C-13`..`C-26`) با تعیین مرجع معتبر. کشف شکاف `performance_records` per-contractor (`OQ-32`) — **قاعده‌ای اختراع نشد**. حل `OQ-14`. ثبت `DEC-013`..`DEC-015`. **دروازه: `READY FOR MIGRATION REVIEW`.** پیش‌نیاز PostgreSQL جداگانه گزارش شد: **در دسترس نیست**، بیس تست **نامعلوم** — هیچ نتیجه‌ای جعل نشد.
+
+- [x] 2026-09-22 تکمیل فاز **V1.8 Migration Review** — **بازبینی خواندنی، صفر Migration، صفر تغییر کد، صفر Schema Mutation، صفر تغییر داده**. اجرای چک‌لیست ۳۸ بندی روی `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` + بازبینی مستقیم Repository (۲۳ Migration، Models، Enums، ۵ سرویس، Bladeها، ۳۰ فایل تست، Seeders)، Audit Architecture، محیط PostgreSQL و بیس تست. **تصمیمات کسب‌وکاری هیچ‌کدام نقض نشده‌اند** (صفر مغایرت). محیط **بسته شد**: PG 18.6 · PID 22436 · `tms` **موجود** · `tms_testing` **موجود** · اتصال Laravel تأییدشده (`db:show` → `tms`, ۳۱ جدول) · `migrate:status` → **۲۳/۲۳ Ran** · صفر جدول V1.8 · `tasks.weight` هنوز NOT NULL · دادهٔ موجود: ۱ پروژه / ۱ فاز / ۳ تسک / صفر `weight IS NULL`. بیس تست: `Unit` → **۱۶ passed / ۱ deprecated / ۵۱ assertions** (اجرای واقعی) · Test Suite کامل → `NOT RUN — would require schema mutation` (`RefreshDatabase` → `migrate:fresh` روی `tms_testing`) · ادعای «۱۱۴/۳۳۴» **UNVERIFIED**. یافته‌ها: 🔴 `B-1` (۵ پرسش ساختاری باز = شرط نوشتن Migration) · 🟠 `H-1`..`H-7` · 🟡 `M-1`..`M-7` · 🟢 `I-1`..`I-7`. **حکم: `BLOCKED — REVIEW ISSUE`.** گزارش: `docs/V1.8_MIGRATION_REVIEW_REPORT.md`.
+- [x] 2026-09-22 تکمیل فاز **V1.8 Migration Review Inputs Closed** — **Documentation Only، صفر کد، صفر Migration، صفر SQL روی Database، صفر تغییر داده**. بستن سه پرسش 🔴 پایانی با تصمیم قطعی مالک پروژه: `OQ-27` → Backfill `task_type = 'development'` برای تمام تسک‌های موجود و رسمی‌شدن Support به‌عنوان Task Type **از V1.8 به بعد** (`DEC-016`) · `OQ-28` → `expected_output = "مشاهدهٔ Checklist"` برای فازهای جدید، با تصریح اینکه **Checklist مرجع واقعی خروجی فاز** است (`DEC-017`) · `OQ-29` → `down()` مهاجرت `M-07` **آگاهانه `throw` می‌کند** و هیچ مقدار مصنوعی مثل `0` تولید نمی‌شود؛ قاعدهٔ عمومی: اگر Rollback نیازمند دادهٔ غیرقابل‌بازسازی مطمئن باشد، Migration باید با Exception واضح متوقف شود (`DEC-018`). تثبیت وضعیت دروازه در `DEC-019` با تصریح **Review ≠ Execution**. ساخت چک‌لیست رسمی `docs/V1.8_MIGRATION_REVIEW_CHECKLIST.md` (۳۸ بند در ۵ محور: Schema · Domain rules · Legacy · Audit · Environment). بازنویسی بخش ۱۴ سند Schema — **هیچ پرسش حل‌شده‌ای دیگر به‌عنوان blocker نمایش داده نمی‌شود**. به‌روزرسانی وضعیت محیطی با مشاهدهٔ خواندنی: **سرور PostgreSQL اینک روی `127.0.0.1:5432` در حال شنیدن است** (`pg_isready` → `accepting connections`، فرایند `postgres` PID 22436) — اما `tms` / `tms_testing` / اتصال Laravel / اجرای بیس تست همگی **UNVERIFIED** ماندند. بیس «۱۱۴ تست / ۳۳۴ assertion» **نه PASS و نه FAIL** — هیچ نتیجه‌ای جعل نشد و هیچ fallback به SQLite پذیرفته نشد.
+
+- [x] 2026-09-22 تکمیل فاز **V1.8 Owner Decision Closure & Design Reconciliation** — **Documentation Only، صفر کد، صفر Migration (نوشته یا اجراشده)، صفر SQL mutation، صفر تغییر Schema، صفر تغییر داده**. ثبت **۱۶ تصمیم قطعی مالک پروژه** (`DEC-020`..`DEC-035`): `OQ-30` = گزینهٔ D (Triggerهای تک‌ردیفی ساخته شوند؛ سه Trigger تجمعی **DEFERRED**) · `OQ-24` = گزینهٔ A (`tasks.module_id` بماند، تضمین در Service، بدون Trigger) · `H-3` (اتمیکبودن: یک عملیات = یک تراکنش) · `H-4` (**دکترین قفل والد**) · `H-5` (**صفر ماژول فعال معتبر**) · `N-4` (دکترین Service/Database) · `H-1` (حذف کوئری نامعتبر `SUM(...) FOR UPDATE` → قفل والد Stage) · `N-1` (**`superseded` وضعیت مشتق** + تعریف Active Approval) · `N-2` (شاخهبندی `TG_OP`) · `OQ-31` · `OQ-25` · `OQ-02` (RESOLVED) · `H-6` (`document_uploaded` صریح در Service، بدون Observer) · تثبیت طبقهبندی Legacy · مدل نهایی Business Truth · دروازه. اعمال ۱۶ اصلاح طراحی در `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` (`§۶.۸` دکترین جدید · `§۶.۴.۱` حفاظت از History · `§۲.۵` · `§۱۴` · `§۱۵` …) و تولید گزارش `docs/V1.8_FINAL_DESIGN_RECONCILIATION.md` (۱۲ بخش + ۷ یادداشت فنی `T-1`..`T-7`). **دروازه: `READY FOR MIGRATION IMPLEMENTATION REVIEW`** — ⚠️ مجوز اجرا نیست. هیچ نتیجهٔ تستی جعل نشد.
+
+- [x] 2026-09-22 تکمیل فاز **V1.8 Migration Implementation (Baseline Reconciliation + Incremental)** — **۹ فایل Migration جدید نوشته شد؛ ۲۳ مهاجرت موجود بی‌کم‌وکاست دست‌نخورده ماندند (صفر تغییر در تاریخچه)**. Baseline سه‌راهه (فایل‌های Migration ↔ Schema واقعی PG ↔ طراحی V1.8) کاملاً منطبق است. `php artisan migrate --pretend` ✅ PASS. اجرای واقعی روی `tms_testing`: **۸ از ۹** مهاجرت DONE (M-07 در `Batch 2` مستقل، هشت مهاجرت دیگر در `Batch 3`)؛ `M-09` در مانع محیطی متوقف شد. **۴ Trigger + ۳ Function + ۲۲ CHECK** ساخته شد و **رفتار همه با اجرای واقعی SQL اثبات شد** (۳۲ سنجه: رد `weight=0/101` · رد کد تکراری ماژول · پذیرش دو ماژول با `code=NULL` → تأیید `DEC-031` · **پذیرش درج ماژول ششم که مجموع را از ۱۰۰ می‌گذراند** → تأیید تجربی اینکه قاعدهٔ تجمعی **فقط** در Service تضمین می‌شود (`DEC-025`) · مسدودشدن `UPDATE` روی تأیید تصمیم‌گرفته‌شده · مسدودشدن `DELETE` تاریخچهٔ تأیید و Audit · **supersede بدون هیچ `UPDATE`** و **صفر دوباره‌شماری** در تجمیع · قفل وزن Stage با اولین **ثبت** ...). کد: `DatabaseAuditService` ساخته و Bind شد (`DEC-011`) · `document_uploaded` صریحاً در `DocumentService` اضافه شد (`DEC-032`) · ۵ Enum · ۶ Exception · ۴ Model · ۴ سرویس دامنه (`ModuleService`, `ModuleStageService`, `StageProgressApprovalService`, `WbsPhaseService`). تست‌های جدید: **۵۹ سناریو** در `tests/Feature/V18/`. **یافتهٔ طراحی که اصلاح شد (`AP-1`):** `archive`/`restore` بدون ورودی بازتوازن **هیچ مسیر قانونی برای کاهش تعداد ماژول نداشتند** → امضا به `archive(Module, User, array $remainingWeights = [])` و `restore(Module, User, array $activeWeights = [])` اصلاح شد (طبق `R-4` · `DEC-022`). بیس واقعی Unit: `16 passed · 1 deprecated · 51 assertions`. **حکم: `BLOCKED — ENVIRONMENT`** (`ENV-1`). گزارش: `docs/V1.8_MIGRATION_BASELINE_RECONCILIATION.md`.
 
 ## یادداشت‌ها
 - تست‌ها مستقیماً بر روی پایگاه‌داده PostgreSQL اجرا و اعتبارسنجی می‌شوند.
 - سیستم احراز هویت اختصاصی بر پایه شناسه کاربری و کدملی ۱۰ رقمی پیاده‌سازی شده است.
 - تبدیل تاریخ شمسی به میلادی از طریق `prepareForValidation` در لایه FormRequestها مدیریت می‌شود و لایه دیتابیس همواره دیتای تمیز و استاندارد دریافت می‌کند.
+- ⚠️ **موانع فنی فعال (کشف‌شده در ممیزی V1.8):**
+  1. ✅ **رفع شد (۱۴۰۵/۰۶/۳۱):** `DatabaseAuditService` ساخته و در `AppServiceProvider` جایگزین `NullAuditService` شد؛ `activity_logs` اکنون واقعاً پر می‌شود. `NullAuditService` فقط برای تست‌های No-op حفظ شده است.
+  1-b. 🔴 **مانع جدید `ENV-1`:** دیتابیس `tms_testing` رمزگذاری **WIN1252** دارد (ساخته‌شده از `template1`) در حالی که `tms` روی **UTF8** است. نتیجه: درج هر متن غیر-Latin1 در `tms_testing` توسط Laravel با `SQLSTATE[22P05] Untranslatable character` شکست می‌خورد، `M-09` (تنها مهاجرت با متن فارسی) اجرا نمی‌شود و `RefreshDatabase` → `migrate:fresh` در همان نقطه می‌شکند ⇒ **کل Test Suite مسدود است**. ⚠️ از طریق `psql` خطا داده **نمی‌شود** و **mojibake** ذخیره می‌گردد (خطر خاموش). رفع نیازمند مجوز `DROP DATABASE`/`CREATE DATABASE tms_testing ... ENCODING 'UTF8'` است.
+  2. آمادگی PostgreSQL **تأیید شد** (۱۴۰۵/۰۶/۳۱): PG **18.6** · PID **22436** · `pg_isready` → `accepting connections` · `tms` **موجود** · `tms_testing` **موجود** · اتصال Laravel تأییدشده (`php artisan db:show`) · `migrate:status` → **۲۳/۲۳ Ran** · صفر جدول V1.8. **تنها مورد بازمانده:** بیس تست کامل → `NOT RUN — would require schema mutation` (`RefreshDatabase` در `tests/Pest.php` عملاً `migrate:fresh` روی `tms_testing` اجرا می‌کند) · بیس ۱۱۴/۳۳۴ **تأییدنشده (UNVERIFIED)** است — نه PASS و نه FAIL. هیچ fallback به SQLite پذیرفته نمی‌شود.
+- 📌 **مرجع قطعی طراحی وزن:** `docs/V1.8_WEIGHT_MODULE_ARCHITECTURE_AUDIT.md`
+- 📌 **مرجع Schema:** `docs/10-database-design.md`
+- 📌 **مرجع چک‌لیست Migration Review:** `docs/V1.8_MIGRATION_REVIEW_CHECKLIST.md`
+- 📌 **مرجع حل‌وفصل OQ و یافته‌های بازبینی (وضعیت جاری):** `docs/V1.8_OQ_AND_REVIEW_ISSUE_RESOLUTION.md` — حکم: `BLOCKED — OWNER DECISION REQUIRED` (۶ تصمیم مالک پروژه · ۹ توصیهٔ آماده · ۰ مورد خودبه‌خود حل‌شده).
+- ⛔ **قاعدهٔ حاکم بر سند جاری:** هیچ توصیه‌ای «تصمیم» نیست. تا تأیید صریح مالک پروژه، `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` (§۶.۵ · §۱۲.۲ · §۸.۳ · §۱۴.۱) **تغییر نمی‌کند** و هیچ فایل Migrationی نوشته نمی‌شود.
+- ⛔ **هشدار دربارهٔ ادعای بیس تست:** هر اشاره‌ای به «۱۱۴ تست / ۳۳۴ assertion سبز» — در این فایل، در `TMS_PROJECT_TRACKER.md` یا هر سند دیگر — **UNVERIFIED** است و **نباید PASS فرض شود** تا زمانی که test suite واقعاً روی PostgreSQL اجرا و نتیجه‌اش ثبت شود (تناقض `C-24`). عدم دسترسی یا عدم اجرا، نه PASS است و نه FAIL.
 

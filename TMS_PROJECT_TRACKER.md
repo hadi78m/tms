@@ -103,7 +103,7 @@ Support tasks may be attached directly to Project without a WBS Phase.
 - [~] MySQL was considered for future infrastructure, but current V1.7 design uses PostgreSQL-specific features.
 - [x] Eloquent models created.
 - [x] Migrations created.
-- [~] Full migration execution against a live PostgreSQL instance not yet verified.
+- [x] **Full migration execution against a live PostgreSQL instance — VERIFIED (2026-09-22).** `tms`: **`32 migrations · 35 tables · 4 triggers · 3 functions`** · توپولوژی Batch `{1:23, 2:1, 3:8}` · `tms_testing`: `32` · **Test Suite: `175 passed · 2 deprecated · 504 assertions · 0 failed`**.
 - [~] Tests must not silently depend on SQLite because migrations use PostgreSQL-specific features.
 
 ## PostgreSQL-specific features
@@ -169,7 +169,7 @@ Support tasks may be attached directly to Project without a WBS Phase.
 - [x] Parent task/comment references may use SET NULL where required.
 - [x] History/audit records are not cascade-deleted.
 - [x] Active assignment has a partial unique index.
-- [x] WBS phase total weight of 100 is an application/service rule.
+- [ ] ⚠️ **WBS phase total weight of 100 is an application/service rule.** — **CORRECTED 2026-09-21 (V1.8 audit):** این قاعده **هرگز پیاده‌سازی نشده است**. grep روی کل `app/` هیچ Validation، Rule یا تستی پیدا نمی‌کند (تناقض `C-06`/`C-07`). این مفهوم در مدل V1.8 با «مجموع وزن ۹ Stage یک Module = 100» جایگزین می‌شود.
 - [x] Task weight is constrained to 0–100.
 - [x] Performance completed weight is constrained to 0–100.
 - [x] Performance records have unique contract/contractor/period boundaries.
@@ -458,10 +458,12 @@ Rules:
 
 - [x] Dashboards are conceptual information views, not fixed user types.
 - [x] Visibility and widgets must be controlled by Roles, Permissions and Settings.
-- [ ] Define dashboard widgets.
+- [ ] ⚠️ **Define dashboard widgets.** — **CORRECTED 2026-09-21 (V1.8 audit):** هیچ ماتریس Widget/Visibility در کد وجود ندارد. `settings/index.blade.php` فقط ۴ سوییچ دارد.
 - [ ] Define dashboard metrics.
 - [ ] Define report access by Permission.
 - [ ] Define configurable visibility settings.
+
+> **نکته V1.8:** علامت `[x] Resolved (V1.1)` برای «Dashboard widgets and configurable visibility» در بخش ۱۹ **نادرست بود** (تناقض `C-09`). علاوه بر آن، `DashboardController` فقط بر `contractor_id` شاخه می‌زند (نه Role/Permission) و `SettingsService` صفر مصرف‌کننده در داشبورد دارد. جزئیات: `docs/dashboard-data-requirements-v1.8.md`
 
 ---
 
@@ -609,17 +611,53 @@ Rules:
 
 # 18. Current Next Action
 
-**Current phase: Completed V1.7 (Jalali/Persian Date Integration)**
+**Current phase: V1.8 T-1 RESOLUTION & POST-MIGRATION RECONCILIATION — COMPLETE (`READY FOR V1.8 POST-MIGRATION CODE HARDENING`)**
+
+> `T-1` اثبات و رفع شد: `supersede()` می‌توانست به‌جای جایگزینی، مقدار را اضافه کند (`A=5 → B=7 → C=3` ⇒ `10` به‌جای `7`). اصلاح: دو گارد `assertNotSuperseded` در `supersede()` و `adjust()`. **صفر تغییر Schema · صفر Migration جدید.**
+> تست: **`191 passed · 2 deprecated · 559 assertions · 0 failed`** (از 175 → 191) · `tms` دست‌نخورده.
+> مرجع: `docs/V1.8_T1_POST_MIGRATION_RECONCILIATION.md`
+
+> `tms` اکنون روی **۳۲ مهاجرت** است (`35 tables · 4 triggers · 3 functions`) — ۲۳ Baseline دست‌نخورده + ۹ لایهٔ افزایشی V1.8.
+> مرجع: `docs/V1.8_PRODUCTION_MIGRATION_REPORT.md`
 
 Immediate next action:
 
-- [x] Phase V1.4: Evidence Hashing & Claim Tracking.
-- [x] Phase V1.5: Subtasks & Dependency Blocking.
-- [x] Phase V1.6: Dynamic Settings & Export Reports.
-- [x] Phase V1.7: Jalali/Persian Date Integration (102 tests, 281 assertions — 100% green).
-- [x] Phase V1.7 Stabilization: Web layer stabilization (Assignment, Submission, SLA display, POST dependency removal) with 114 tests, 334 assertions (100% green on PostgreSQL).
-- [ ] Business/Architecture Decision session for Weight domain & Development vs Support model.
+- [x] Phase V1.4 .. V1.7 + Stabilization (114 tests, 334 assertions — 100% green on PostgreSQL).
+- [x] **Phase V1.8 Design Freeze: Weight / Module / WBS Architecture Clarification — COMPLETE (Documentation Only).**
+- [x] **Phase V1.8 Final Reconciliation: Business Decision Reconciliation & Migration Gate — COMPLETE (Documentation Only).**
+- [x] **Phase V1.8 Detailed Schema Design — COMPLETE (`READY FOR MIGRATION REVIEW`).**
+- [x] هر سه تصمیم قطعی دریافت شد: `OQ-01a = 1A` · `OQ-04 = 2B` · `OQ-05 = 3A` (`DEC-013`)
+- [x] ✅ **Human Review** این سند: `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` — انجام شد.
+- [x] ✅ **پاسخ ۳ پرسش 🔴 ورودی Migration:** `OQ-28` · `OQ-29` · `OQ-27` (`DEC-016`..`DEC-018`)
+- [x] ✅ **تأیید ۵ پرسش 🟡 ساختاری:** `OQ-30` (Triggerها) · `OQ-31` · `OQ-24` · `OQ-25` · `OQ-02` (`DEC-020`..`DEC-032`)
+- [x] ✅ **Migration Design** — ۹ فایل Migration نوشته شد (`M-07` جدا از هشت مهاجرت دیگر).
+- [x] ✅ **Migration Implementation** — روی `tms_testing` و سپس **`tms`** اجرا شد · تست‌ها: `175 passed · 504 assertions`.
+- [x] ✅ **T-1 Resolution** — گارد سطح سرویس (بدون UNIQUE) · ۱۶ تست رگرسیون · تست: `191 passed`.
+- [x] ✅ **Post-Migration Code Hardening** — `DEC-036` (`R-1`: `R1-D` + `R1-F1`) · `DEC-037` (`R-2`/`T-2`: `T-2-A` + `T-2-UI-A` — `task_type` اجباری در کل مسیر Create Task) · تست: `203 passed · 591 assertions`. مرجع: `docs/V1.8_POST_MIGRATION_CODE_HARDENING_REPORT.md`.
+- [ ] **تصمیم `T-1`:** افزودن `UNIQUE(supersedes_approval_id)` (Master جدید + مهاجرت `M-10`) — نیازمند مجوز مالک.
+- [ ] **تصمیم `R-3`:** کنسولیدیشن ۵ تعریف تکراری «Active» — فقط Audit شد؛ `RECOMMENDATION — NOT APPROVED`.
+- [ ] **⛔ راه‌اندازی PostgreSQL** و بازتأیید بیس تست (وضعیت فعلی: **نامعلوم**)
 - [ ] Preparation for Production Deployment and final system hardening.
+
+### Phase V1.8 Detailed Schema Design
+
+- [x] بازبینی موجودیت‌های اجرایی Repository (۲۳ Migration، ۱۷ Model، ۹ Service، ۱۰ Controller) — استخراج تعریف دقیق ستون‌ها.
+- [x] طراحی ۴ جدول جدید: `modules` · `module_stages` · `stage_progress_approvals` · `wbs_phase_checklist_items`.
+- [x] طراحی تغییرات ۲ جدول: `tasks` (+`task_type`، +`module_stage_id` NULLABLE، +`module_id`) · `wbs_phases` (+۵ ستون تأیید نهایی ناظر).
+- [x] نقشهٔ ۱۲ FK با `ON DELETE RESTRICT` + بررسی پوشش Index روی FK.
+- [x] ~۲۰ Constraint شامل `0 <= approved_amount <= proposed_amount` (الزام قطعی مالک پروژه).
+- [x] ۱۸ Index جدید + ۲ Unique Index.
+- [x] راهبرد اعمال قواعد مجموع چند-ردیفی (بدون CHECK جعلی): مرز تراکنش دامنه + Constraint Trigger تعویق‌شده.
+- [x] راهبرد قفل وزن Stage پس از اولین تأیید (`OQ-05 = 3A`).
+- [x] راهبرد Audit: مشخصات کامل `DatabaseAuditService` + ۳۰ رویداد الزامی + محتوای `old_values`/`new_values`.
+- [x] راهبرد مهاجرت ۹ گانه (ترتیب وابستگی FK) + Backfill + Rollback.
+- [x] طبقه‌بندی قطعی ۹ فیلد/جدول Legacy: ACTIVE / DEPRECATED / LEGACY / REMOVE LATER.
+- [x] تحلیل تأثیر تست: ۱۴ فایل موجود (۳ مورد معنایی) + ۴۸ تست جدید در ۹ گروه.
+- [x] گزارش ۱۲ تناقض مستنداتی (`C-13`..`C-26`) با تعیین مرجع معتبر برای هر مورد.
+- [x] کشف شکاف واقعی: `performance_records` بعد پیمانکار دارد اما `stage_progress_approvals` ندارد → `OQ-32`.
+- [x] حل `OQ-14` (بازگشایی فاز) از فهرست Audit مالک پروژه.
+- [x] اعلام دروازه: `READY FOR MIGRATION REVIEW` + پیش‌نیاز PostgreSQL جداگانه.
+- [x] 🚫 **صفر تغییر کد، صفر Migration، صفر تغییر Schema، صفر عملیات مخرب.**
 
 ---
 
@@ -638,8 +676,29 @@ Immediate next action:
 | D-09 | PostgreSQL test environment | Resolved |
 | D-10 | Same-assignee Assignment idempotency details | Pending |
 | D-11 | SLA pause/resume business rules | Pending |
-| D-12 | Dashboard widgets and configurable visibility | Resolved (V1.1) |
-| D-13 | Weight Domain & Development vs Support entity mapping | Pending (Business Decision Required) |
+| D-12 | Dashboard widgets and configurable visibility | ⚠️ **Reopened (2026-09-21)** — علامت Resolved نادرست بود؛ هیچ ماتریس Widget/Visibility در کد نیست |
+| D-13 | Weight Domain & Development vs Support entity mapping | ✅ **Resolved (2026-09-21)** — تصمیمات BD-01..BD-23 ثبت شد. جزئیات: `docs/V1.8_WEIGHT_MODULE_ARCHITECTURE_AUDIT.md` و `DEC-003`..`DEC-005` |
+| D-14 | سیاست مجموع وزن Moduleها (`OQ-01`) | ✅ **Resolved (2026-09-21)** — `OQ-01a = 1A`: `modules.weight` وجود دارد · `SUM = 100%` · **بدون ستون `kind`**. `DEC-013` |
+| D-15 | رابطهٔ WBS Phase ↔ Module (`OQ-03`) | ✅ **Resolved (2026-09-21)** — **بدون رابطه**؛ هر دو فرزند مستقیم Project. `DEC-010` |
+| D-16 | الزام اتصال Support Task به Stage (`OQ-04`) | ✅ **Resolved (2026-09-21)** — `OQ-04 = 2B`: اتصال **اختیاری** (`module_stage_id` NULLABLE) + **`task_type` اضافه می‌شود** (`development`/`support`). `DEC-013` |
+| D-17 | معنای Weight Lock (`OQ-05`) | ✅ **Resolved (2026-09-21)** — `OQ-05 = 3A`: وزن پایهٔ Stage **پس از اولین تأیید قفل می‌شود**. `lock_weight` بازنشسته، **بدون جایگزین** (قاعده است، نه تنظیمات). `DEC-013` |
+| D-18 | تعداد مجاز `pending` هم‌زمان (`OQ-06`) | ✅ **Resolved** — فقط یکی؛ در Service Layer (نه Unique Index). `DEC-010` |
+| D-19 | سرنوشت گزارش «آماده پرداخت» (`OQ-07`) | 🟡 **Constraint resolved** — برچسب باید تغییر کند. تشخیص دقیق توصیه‌شده: تغییر برچسب به «پیشرفت تأییدشده». غیرمسدودکننده. `DEC-010` |
+| D-20 | دامنهٔ فاز بعد (`OQ-08`) | ✅ **Resolved** — تفکیک: Design Freeze → Reconciliation → Schema Design → Migration Review → Migration Design → Implementation. `DEC-008` |
+| D-21 | مرجع مجوز درصد (`OQ-11`) | 🟢 **Deferred** — از Role/Permission/Settings استفاده می‌شود، نه ستون user-type. `DEC-014` |
+| D-22 | Morph Map (`OQ-12` / `D-08`) | 🟢 **Non-blocking** — هیچ نوع Morph جدیدی لازم نیست. `DEC-010` |
+| D-23 | مانع `DatabaseAuditService` | 🔴 **گام صفر پیاده‌سازی** — سرویس واقعی وجود ندارد. `DEC-011` |
+| D-24 🆕 | مقادیر `stage_code` | ✅ **Resolved** — ۹ مقدار دقیق با `penetration_test` (نه `pentest`). `DEC-014`، تناقض `C-13` |
+| D-25 🆕 | نام جدول Checklist | ✅ **Resolved** — `wbs_phase_checklist_items`. `DEC-014`، تناقض `C-14` |
+| D-26 🆕 | دامنهٔ `approved_amount` | ✅ **Resolved** — `0 <= approved_amount <= proposed_amount`. `DEC-013`، تناقض `C-16` |
+| D-27 🆕 | راهبرد اعمال `SUM = 100%` | 🔴 **Pending تأیید** — Service (الزامی) + Deferred Constraint Trigger (توصیه‌شده). `OQ-30` |
+| D-28 🆕 | Backfill مقدار `task_type` | 🔴 **Pending** — پیشنهاد: همهٔ تسک‌های موجود `development`. `OQ-27` |
+| D-29 🆕 | `expected_output` برای فازهای جدید | 🔴 **Pending** — پیشنهاد: متن ثابت «مشاهدهٔ Checklist». `OQ-28` |
+| D-30 🆕 | `down()` مهاجرت `DROP NOT NULL` روی `tasks.weight` | 🔴 **Pending** — پیشنهاد: `throw` آگاهانه. `OQ-29` |
+| D-31 🆕 | انتساب تأیید Stage به پیمانکار | 🔴 **Pending** — شکاف کشف‌شده در `performance_records`. به فاز Performance موکول. `OQ-32` |
+| D-32 🆕 | بلاک `DELETE` سطح-SQL روی رکوردهای تاریخی | 🟡 **Pending** — `OQ-31` (نیازمند Trigger) |
+| D-33 🆕 | `tasks.module_id` Denormalized بماند؟ | 🟡 **Pending** — `OQ-24` (پیشنهاد: بماند) |
+| D-34 🆕 | محل `$metadata` در `activity_logs` | 🟡 **Pending** — `OQ-25` (پیشنهاد: ادغام در `new_values`) |
 
 ---
 
@@ -665,6 +724,10 @@ Immediate next action:
 | 2026-09-19 | Completed Phase V1.6 (Dynamic Settings & Export Reports): Added system_settings schema, SettingsService, UI settings and reports dashboards, CSV streamed export for reports, and tested successfully (90 tests passing). |
 | 2026-09-20 | Completed Phase V1.7 (Jalali/Persian Date Integration): Implemented SafeJalali decorator and JalaliDate converter in app/Support, global helpers jdate() & to_jalali(), Persian Datepicker integration in Blade layout, converted task & document forms to Jalali inputs, added automatic conversion in StoreTaskRequest & StoreDocumentRequest, updated ReportController CSV export to Jalali, created JalaliDateTest and WebTaskJalaliDateTest (100% green: 102 tests, 281 assertions). |
 | 2026-09-20 | Completed Phase V1.7 Stabilization: Fixed TaskAssignmentController & AssignTaskRequest DTO mapping, fixed TaskController::submit to use submitForReview, fixed SLA display card in tasks/show.blade.php using slaRecords collection with Jalali dates, changed dependency removal route to POST conforming to OWASP rules and unblocked deleting in TaskDependency model. Added WebTaskStabilizationTest with 12 new tests (100% green: 114 tests, 334 assertions on PostgreSQL). Weight domain preserved completely frozen. |
+| 2026-09-21 | Completed **Phase V1.8 Design Freeze** (Weight / Module / WBS Architecture Clarification) — **Documentation Only, zero code changes**. Verified business decisions BD-01..BD-23: Weight belongs to Module/Deliverable and Module Stage (9 standard stages: Analysis 15, Design 5, Coding 35, Functional Test 3, PenTest 5, Training 7, Pilot 10, Production 5, Support 15 = 100); Task has no independent progress; WBS Phase is NOT a Module Stage and owns no weight; WBS Phase completion comes from Checklist + supervisor final confirmation, not from task completion; partial cumulative stage approval (5+7+3=15); supervisor is the exclusive final approver and is not restricted from setting percentages directly; Support is a Stage independent of WBS Phase. Identified 9 architecture gaps (G-01..G-18) and 12 documentation conflicts (C-01..C-12). Resolved D-13; reopened D-12; added D-14..D-21. Created 5 design documents + populated docs/10-database-design.md and corrected docs/01-project-overview.md. Recorded ADRs DEC-003..DEC-008. **Migration gate: BLOCKED — BUSINESS DECISION REQUIRED.** Test baseline NOT verified in this phase (PostgreSQL not running on 127.0.0.1:5432; suite returned 97 failed / 16 passed, all Connection refused). |
+| 2026-09-21 | Corrected tracker inaccuracies found during V1.8 audit: (a) §6 "WBS phase total weight of 100 is an application/service rule" was marked complete but is **not implemented anywhere** (C-06/C-07); (b) §19 D-12 "Dashboard widgets and configurable visibility — Resolved (V1.1)" is **incorrect** — no widget/visibility matrix exists in code (C-09). |
+| 2026-09-21 | Completed **Phase V1.8 Detailed Schema Design** — **Documentation Only, zero code changes, zero migrations, zero schema changes, zero destructive operations**. Received and froze all three final business decisions (`DEC-013`): `OQ-01a = 1A` (Module owns project-level weight; `SUM(modules.weight) = 100%`; **no `kind` column**), `OQ-04 = 2B` (`tasks.module_stage_id` stays NULLABLE; **`task_type` added** with `development`/`support`; type must NOT be inferred from `module_stage_id`), `OQ-05 = 3A` (`module_stages.weight` locks after the first approval; old `lock_weight` setting retired with **no replacement** because the lock is a structural rule, not a configurable behaviour). Designed 4 new tables (`modules`, `module_stages`, `stage_progress_approvals`, `wbs_phase_checklist_items`) plus changes to `tasks` and `wbs_phases`; 12 FKs, ~20 constraints, 18 indexes, 2 unique indexes. For the cross-row aggregate rules PostgreSQL cannot enforce with a plain CHECK, chose **domain transaction boundary (mandatory) + `CONSTRAINT TRIGGER … DEFERRABLE INITIALLY DEFERRED` (recommended)** — **no fake CHECK was created**; `DEFERRED` is required because rebalancing two module weights inherently passes through an inconsistent intermediate state. Documented `DatabaseAuditService` as step zero with 30 required events. Classified all legacy fields (`tasks.weight` DEPRECATED, `wbs_phases.weight` LEGACY, `lock_weight` DEPRECATED, `weight_change_requests` LEGACY — all REMOVE LATER). Reported **12 documentation/code conflicts** (`C-13`..`C-26`) with the authoritative source identified for each. Discovered a real gap: `performance_records` has a contractor dimension but `stage_progress_approvals` does not, so per-contractor `total_weight_completed` is undefined — **no rule was invented** (`OQ-32`). Resolved `OQ-14` (phase reopening supported, per the owner's audit event list). Recorded `DEC-013`, `DEC-014`, `DEC-015`. **Gate: `READY FOR MIGRATION REVIEW`.** PostgreSQL prerequisite reported separately: **NOT reachable** (no listener on 5432, `pg_isready` no response, no service registered, ports 5430–5435 empty, `psql 18.6` client present but no server) — test baseline remains UNVERIFIED, no results fabricated. |
+| 2026-09-22 | Completed **Phase V1.8 Migration Implementation** (incremental layer) and **Phase V1.8 Production Migration**. Wrote 9 new migrations; **all 23 existing migrations left untouched** (`git diff -- database/migrations` empty). Rebuilt the disposable `tms_testing` from WIN1252 to UTF8 with explicit owner approval (resolving `ENV-1`) and ran the full chain `32/32`. Ran the real suite: **`175 passed · 2 deprecated · 504 assertions · 0 failed`** (63 of them new V1.8 scenarios). The tests found two genuine bugs that were then fixed: `BUG-1` (`ModuleStageService::rebalance()` compared the incoming map to 100 instead of the module's final total, making a two-stage weight swap impossible) and `BUG-2` (superseded rows were not excluded from the "one pending" rule nor from the decision path, locking a stage forever and allowing decisions on stale history). Then executed the **production migration on `tms`** after a full `pg_dump` backup, using the two-step sequence required by `DEC-018` (`M-07` alone in **Batch 2**, the other eight in **Batch 3**) — final topology `{1:23, 2:1, 3:8}`. Result: **`32 migrations · 35 tables · 4 triggers · 3 functions · 5 settings`**. **Zero existing rows deleted or rewritten** — only `migrations 23→32` and `system_settings 4→5`; `projects 1 · tasks 3 · wbs_phases 1 · users 8` all intact. Persian seed verified byte-for-byte by MD5 (**85805816d962de31632e2103bf873447**) rather than by shell literal comparison. Empirically proved the `DEC-018` batch-separation benefit on `tms_testing` (correct split: rollback reverts all 8, `exit 0`, `M-07` untouched; single batch: the 8 revert then `M-07` throws) and **refined finding `H-2`**: because `M-07` carries the smallest timestamp, Laravel processes it last, so the eight DO come back — the real hazard is **operational ambiguity**, not data loss. `T-1` accepted as-is with a `RECOMMENDATION — NOT APPROVED`; `T-2` resolved by `DEC-016`. **Gate: `PRODUCTION MIGRATION SUCCESSFUL`.** |
 
 ---
 

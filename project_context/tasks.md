@@ -19,6 +19,50 @@
 - [x] 6. Web Routes
   - [x] Common task routes
   - [x] Protected endpoints for manager/supervisor (Middleware-based)
+- [x] 9. V1.8 T-1 Resolution & Post-Migration Reconciliation (2026-09-22)
+  - [x] اثبات شکاف fork در زنجیرهٔ supersession با اجرای واقعی روی PostgreSQL
+  - [x] اصلاح `supersede()` (گارد `assertNotSuperseded` روی `$source`)
+  - [x] اصلاح `adjust()` (نقض `DEC-027` — تاریخ ردیف superseded بازنویسی می‌شد)
+  - [x] تست رگرسیون: `StageProgressApprovalSupersedeChainTest.php` (۱۶ تست)
+  - [x] Active Definition Audit (۵ تعریف تکراری — فقط گزارش)
+  - [x] Schema/Application Reconciliation
+  - [x] تأیید ایمنی `tms` (صفر تغییر)
+  - [ ] تصمیم `R-1` (وزن تسک در گزارش‌ها) — نیازمند مجوز مالک
+  - [ ] تصمیم `R-2` (نویسندهٔ `task_type`) — نیازمند مجوز مالک
+  - [ ] تصمیم `R-3` (کنسولیدیشن تعریف Active) — نیازمند مجوز مالک
+- [x] 10. V1.8 Post-Migration Code Hardening (2026-09-22)
+  - [x] Reconnaissance کامل: ۹ مصرف‌کنندهٔ weight · مسیر واحد Create Task · ۵ تعریف Active
+  - [x] تصمیم مالک `R-1` → `DEC-036`: `R1-D` + `R1-F1` — گزارش‌ها دست‌نخورده، invariant با تست قفل شد
+  - [x] تصمیم مالک `R-2` → `DEC-037`: `T-2-A` + `T-2-UI-A` — `task_type` اجباری در Request/DTO/Service + فیلد UI
+  - [x] تست رگرسیون: `TaskTypeAndWeightPolicyTest.php` (۱۲ تست · ۳۲ assertion)
+  - [x] سازگارسازی ۴ تست HTTP موجود با فیلد اجباری جدید
+  - [x] R-3 فقط Audit: STRUCTURALLY DUPLICATED BUT BEHAVIORALLY CONSISTENT — بدون Refactor
+  - [x] تأیید ایمنی `tms` (صفر تغییر) + صفر Migration
+  - [x] R-3 بسته شد در فاز بعد (Remaining Hardening Implementation)
+- [x] 11. V1.8 Remaining Hardening Implementation — R-3 + T-6 (2026-09-22)
+  - [x] R-3.1 re-inspection: ۵ تعریف + Module::scopeActive هم‌نام غیرمرتبط — هیچ موردی از دست نرفته بود
+  - [x] R-3 baseline: targeted 34 passed + full 203/591
+  - [x] R-3.6 smallest safe refactor: approvedQuery → scopeActive · Service::isSuperseded → مدل (رفتار یکسان)
+  - [x] R-3.7 verification: targeted + full suite + static search + git diff — 203/591/0 برابر Baseline
+  - [x] T-6 ENFORCED: Safety Gate در tests/TestCase.php (نام DB واقعی باید *testing باشد)
+  - [x] T-6 DOCUMENTED: docs/DATABASE_SAFETY.md (گیت عملیاتی برای artisan دستی)
+  - [x] ایمنی: صفر Migration · tms read-only · tms_testing بدون mutation
+  - [ ] تصمیم `T-3` (رویداد task_rejected) — نیازمند مالک
+  - [ ] تصمیم `T-1` (UNIQUE در DB / M-10) — ACCEPTED AS-IS فعلی؛ توصیهٔ فنی: KEEP AS-IS
+- [x] 10. V1.8 Next Phase Decision & Implementation Plan (2026-09-23) — برنامه‌ریزی خالص، صفر تغییر
+  - [x] Reconnaissance: git diff migrations خالی · بدون پیاده‌سازی پنهان T-3/T-5/T-7 · PostgreSQL unreachable (تأیید زنده NOT RUN)
+  - [x] تحلیل T-3 (گزینه‌های A/B با اثرات کامل) · T-5 (گزینه‌های A/B/C/D) · T-7 (Spec پیاده‌سازی-آمادهٔ CI) · T-1 (توصیه: KEEP AS-IS)
+  - [x] Dependency Matrix: هر ۴ قلم مستقل · ترتیب پیشنهادی T-7 → T-3 → T-5 → T-1
+  - [ ] ۴ تصمیم مالک: T-3 A/B · T-5 A/B/C/D · T-7 YES/NO · T-1 KEEP/M-10 (§۱۰ سند)
+- [x] 8. V1.8 Production Migration (2026-09-22)
+  - [x] بازبینی یکپارچگی ۲۳ مهاجرت Baseline (صفر تغییر)
+  - [x] پشتیبان‌گیری پیش از تغییر (`pg_dump` → `storage/app/backups/`)
+  - [x] اجرای `M-07` در Batch مستقل سپس ۸ مهاجرت در Batch بعدی روی `tms`
+  - [x] تأیید Schema: `32 migrations · 35 tables · 4 triggers · 3 functions`
+  - [x] تأیید ایمنی داده: صفر ردیف حذف/بازنویسی؛ فقط `migrations +9` و `system_settings +1`
+  - [x] Smoke Test در لایهٔ Eloquent (صفر Exception) + تأیید MD5 متن فارسی
+  - [ ] تصمیم `T-1` (`UNIQUE(supersedes_approval_id)`) — نیازمند مجوز مالک
+  - [ ] تصمیم `T-2` (اجباری‌کردن `task_type` در لایهٔ Form/Service) — نیازمند مجوز مالک
 - [x] 7. Feature Tests
   - [x] `WebAuthControllerTest`
   - [x] `WebTaskControllerTest`
@@ -72,3 +116,165 @@
   - [x] Automatic conversion of Jalali input dates in `StoreTaskRequest` & `StoreDocumentRequest`
   - [x] Unit & Feature tests (`JalaliDateTest`, `WebTaskJalaliDateTest`) passing 100%
 
+- [x] 14. Phase V1.7 Stabilization — Web Layer
+  - [x] Fix `TaskAssignmentController` → `TaskAssignmentService::assign` + `AssignTaskRequest::toDto` mapping
+  - [x] Fix `TaskController::submit` → `TaskService::submitForReview` (invalid `updateStatus`/`completed` removed)
+  - [x] Rewrite SLA status card in `tasks/show.blade.php` using `slaRecords` relation
+  - [x] Change dependency removal route from `DELETE` to `POST` (OWASP compliance)
+  - [x] Add `WebTaskStabilizationTest` (12 tests)
+
+- [x] 15. Phase V1.8 — Weight / Module / WBS Design Freeze (Documentation Only)
+  - [x] READ-ONLY audit of Repository (21 migrations, 17 models, 9 services, 10 controllers)
+  - [x] Full dependency map for all 4 weight-bearing columns
+  - [x] Identify 9 architecture gaps (`G-01`..`G-18`)
+  - [x] Identify 12 documentation conflicts (`C-01`..`C-12`)
+  - [x] Record business decisions `BD-01`..`BD-23`
+  - [x] Record ADRs `DEC-003`..`DEC-008`
+  - [x] Create 5 V1.8 design documents + populate `docs/10-database-design.md`
+  - [x] Correct documentation conflicts in `docs/01-project-overview.md`
+  - [x] Declare migration gate: `BLOCKED — BUSINESS DECISION REQUIRED`
+  - [x] 🚫 **Zero code changes** — no Migration/Model/Service/Controller/Route/Blade/Test touched
+
+- [x] 16. Phase V1.8 Final Reconciliation — Business Decision Reconciliation & Migration Gate
+  - [x] Reconfirm BD-01..BD-07 (recorded as `DEC-009`)
+  - [x] Extract OQ answers from existing repository record (recorded as `DEC-010`)
+    - [x] `OQ-03` → no WBS Phase ↔ Module relation (Step-2 diagram + BD-02)
+    - [x] `OQ-06` → one pending per owner (§13 + `WeightChangeRequestService:24-26` + test)
+    - [x] `OQ-06-a` → keep denormalized `module_id`
+    - [x] `OQ-06-b` → `approved_amount` may differ from `proposed_amount` (BD-05)
+    - [x] `OQ-07` → payment label must change (conflicts with §2) — non-blocking
+    - [x] `OQ-12` → non-blocking, no new morph type needed in V1.8a
+    - [x] old `OQ-05` → obsolete (locking *Task* weight — moot under BD-07)
+  - [x] Validate Step-2 architecture model — all 6 checks pass, zero contradictions
+  - [x] Design Weight model at schema level (`modules`, `module_stages`, `stage_progress_approvals`)
+  - [x] Design WBS Phase model (independent of weight) + `wbs_phase_outputs`
+  - [x] Analyse task classification — `task_type` deliberately NOT added (`OQ-04` reported)
+  - [x] Confirm audit blocker (`DatabaseAuditService` missing) — recorded as `DEC-011`
+  - [x] Verify PostgreSQL status — NOT reachable, no test result fabricated
+  - [x] Record `DEC-009`..`DEC-012`
+  - [x] Declare gate: `BLOCKED — BUSINESS DECISION REQUIRED` (3 questions)
+  - [x] 🚫 **Zero code changes**
+
+- [x] 17. Phase V1.8 Detailed Schema Design
+  - [x] Authoritative decisions received and frozen (`DEC-013`): `OQ-01a = 1A`, `OQ-04 = 2B`, `OQ-05 = 3A`
+  - [x] Re-inspect executable repository (23 migrations, exact column definitions) — do not assume prior docs are correct
+  - [x] Design `modules` (weight = project share, `SUM = 100%`, **no `kind` column**)
+  - [x] Design `module_stages` (9 standard stages, `SUM = 100%` per module, **weight locks after first approval**)
+  - [x] Design `stage_progress_approvals` (partial cumulative, `0 <= approved_amount <= proposed_amount`, immutable once decided)
+  - [x] Design `wbs_phase_checklist_items` (complete/incomplete + who/when)
+  - [x] Design `tasks` changes (`task_type` NOT NULL, `module_stage_id` NULLABLE, `module_id` nullable)
+  - [x] Design `wbs_phases` changes (5 supervisor-decision columns + consistency checks)
+  - [x] Produce the FK map (12 FKs) with FK index coverage review
+  - [x] Design ~20 constraints and 18 indexes + 2 unique indexes
+  - [x] Explain the aggregate-enforcement strategy — **no fake CHECK**; deferred constraint trigger + domain transaction boundary
+  - [x] Document `DatabaseAuditService` as step zero with 30 required events and `old_values`/`new_values` payloads
+  - [x] Define the 9-migration sequence with FK dependency ordering
+  - [x] Define the data backfill strategy and the rollback strategy per migration
+  - [x] Classify all legacy fields (ACTIVE / DEPRECATED / LEGACY / REMOVE LATER)
+  - [x] Analyse test impact (14 existing files, only 3 semantic) and design 48 new tests in 9 groups
+  - [x] Report 12 documentation/code conflicts (`C-13`..`C-26`) with the authoritative source identified
+  - [x] Discover the `performance_records` per-contractor gap (`OQ-32`) — **no rule invented**
+  - [x] Resolve `OQ-14` (phase reopening supported)
+  - [x] Record `DEC-013`, `DEC-014`, `DEC-015`
+  - [x] Declare gate: `READY FOR MIGRATION REVIEW` + report the PostgreSQL prerequisite separately
+  - [x] 🚫 **Zero code changes, zero migrations, zero schema changes, zero destructive operations**
+
+- [x] 18. Phase V1.8 Migration Review  ✅ **COMPLETED (2026-09-22) — verdict: `BLOCKED — REVIEW ISSUE`**
+  - [x] Run `docs/V1.8_MIGRATION_REVIEW_CHECKLIST.md` against `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` (38 items in 5 axes)
+  - [x] Re-inspect the executable repository directly (23 migrations, models, enums, services, views, tests, seeders) — no assumption from prior docs
+  - [x] Report artifact: `docs/V1.8_MIGRATION_REVIEW_REPORT.md` (19 sections + issue classification + final gate)
+  - [x] Verify environment read-only: PG 18.6 · PID 22436 · `tms` **exists** · `tms_testing` **exists** · Laravel connection verified (`db:show`) · 23/23 migrations ran · zero V1.8 tables
+  - [x] Test baseline: `--testsuite=Unit` → **16 passed / 1 deprecated / 51 assertions (real run)** · full suite → `NOT RUN — would require schema mutation` (`RefreshDatabase` → `migrate:fresh` on `tms_testing`) · «114/334» stays **UNVERIFIED**
+  - [x] Legacy strategy verified (consumer counts reproduced: `tasks.weight` = 4 blades + 2 KPI + 2 CSV + 13 test files; `wbs_phases.weight` = zero readers, zero tests)
+  - [x] Migration dependency order verified as FK-correct; rollback/data-safety/PG-compatibility reviewed
+  - [x] Found `B-1` (🔴 1) · `H-1`..`H-7` (🟠 7) · `M-1`..`M-7` (🟡 7) · `I-1`..`I-7` (🟢 7)
+  - [x] Answer 3 🔴 migration-input questions — **all closed by the project owner** (`DEC-016`..`DEC-018`)
+    - [x] `OQ-27` → backfill `task_type = 'development'`; Support becomes an official Task Type from V1.8 (`DEC-016`)
+    - [x] `OQ-28` → new WBS Phases use `expected_output = "مشاهدهٔ Checklist"`; the Checklist is the real output reference (`DEC-017`)
+    - [x] `OQ-29` → `M-07` `down()` throws deliberately; **no synthetic `0` values** (`DEC-018`)
+  - [ ] ✗ Confirm or reject 5 🟡 structural questions: `OQ-30` (triggers), `OQ-31`, `OQ-24`, `OQ-25`, `OQ-02` — **still open → 🔴 BLOCKER `B-1`**
+
+- [x] 18.5 Phase V1.8 OQ & Review Issue Resolution  ✅ COMPLETE (documentation only)
+  - [x] ✅ **Closed by Owner Decision Closure** — all 6 `OWNER DECISION REQUIRED` items answered, 9 recommendations approved and applied
+  - [x] ✅ All findings closed: `OQ-30`=D · `OQ-24`=A · `OQ-31` · `OQ-25` · `OQ-02` · `H-1` · `H-2` · `H-3` · `H-4` · `H-5` · `H-6` · `N-1`..`N-5`  (see step 18.6)
+  - [x] Document: `docs/V1.8_OQ_AND_REVIEW_ISSUE_RESOLUTION.md` (created 2026-09-22 — READ-ONLY reconciliation)
+  - [ ] ✗ 6 decisions still required from owner: `OQ-30` · `OQ-24` · `H-3` · `H-4` · `H-5` · `N-4`
+  - [ ] 9 recommendations ready (**RECOMMENDATION — NOT APPROVED**): `OQ-31` · `OQ-25` · `OQ-02` · `H-1` · `H-2` · `H-6` · `N-1` · `N-2` · `N-3`
+  - [ ] ✗ 0 questions resolved silently + 0 new business rules invented + 0 items deferred
+  - [x] 5 new findings produced: `N-1` (supersede ↔ immutability ↔ ceiling contradiction) · `N-2` (`TG_OP` trigger-body defect) · `N-3` (task→stage cross-project consistency) · `N-4` (Service-vs-DB doctrine tension) · `N-5` (all 23 existing migrations in Batch 1)
+  - [x] 15 stale items corrected in `docs/10-database-design.md` (`H-7`); 3 ambiguous items reported only
+  - [x] 🚫 Zero migrations written, zero application code changed, zero schema mutation, zero data changed
+  - [x] Environment axis: 4 of 5 items **VERIFIED** · item 5 (`baseline tests actually executed`) **DEFERRED** with explicit reason
+  - [x] 🚫 **Zero migrations written, zero application code changed, zero schema mutation, zero data changed**
+
+- [ ] 19. Phase V1.8 Migration Design  ⏳ READY (awaiting Migration Implementation Review)
+  - [x] Prerequisite: owner decided `OQ-30`=D · `OQ-24`=A · `H-3` · `H-4` · `H-5` · `N-4` (`DEC-020`..`DEC-025`)
+  - [x] Prerequisite: 9 recommendations applied (`H-1` · `H-2` · `N-1` · `N-2` · `OQ-31` · `OQ-25` · `OQ-02` · `H-6` · `N-3`)
+  - [x] Prerequisite: `N-1` (active-approval ceiling) and `N-2` (`TG_OP` branching) resolved in design (`DEC-027` · `DEC-028`)
+  - [ ] Prerequisite: Human Migration Implementation Review of `docs/V1.8_FINAL_DESIGN_RECONCILIATION.md` + 7 technical notes `T-1`..`T-7`
+  - [ ] Write M-01 `create_modules_table`
+  - [ ] Write M-02 `create_module_stages_table`
+  - [ ] Write M-03 `create_stage_progress_approvals_table`
+  - [ ] Write M-04 `create_wbs_phase_checklist_items_table`
+  - [ ] Write M-05 `add_v18_columns_to_tasks`
+  - [ ] Write M-06 `add_v18_columns_to_wbs_phases`
+  - [ ] Write M-07 `relax_tasks_weight_nullable` (`DROP NOT NULL` only) — **separate older batch** (`H-2`); `down()` throws by design (`DEC-018`)
+  - [ ] Write M-08 `create_v18_single_row_integrity_triggers` — **3 single-row triggers only** (`DEC-020` · `DEC-029`); the 3 aggregate triggers are DEFERRED
+  - [ ] Write M-09 `seed_v18_reference_data`
+  - [ ] ⛔ Do NOT execute yet
+
+- [ ] 20. Phase V1.8 Migration Implementation + PostgreSQL Tests  ⛔ BLOCKED (explicit authorization required)
+  - [x] **Prerequisite:** PostgreSQL server verified — **18.6** · PID 22436 · `pg_isready` → accepting connections
+  - [x] **Prerequisite:** `tms` and `tms_testing` verified **existing** (owner `root` · 31 tables each)
+  - [x] **Prerequisite:** Laravel 13.31.0 connection verified (`php artisan db:show` · 23/23 migrations Ran)
+  - [x] **Prerequisite:** apply design corrections from `DEC-020`..`DEC-034` when writing migrations (design-only done)
+  - [ ] **Prerequisite:** actually run `php artisan test --compact` — record the result **only if it really ran** (baseline «114 tests / 334 assertions» stays UNVERIFIED; no SQLite fallback)
+  - [ ] Run migrations on `tms`
+  - [ ] Run the 48 new tests in 9 groups
+  - [ ] Run the full suite on PostgreSQL
+  - [ ] Build `DatabaseAuditService` (implementation step zero)
+
+- [ ] 21. Phase V1.8 Web UI  ⛔ BLOCKED
+  - [ ] `ProjectController` + `ModuleController` + `ModuleStageController` (none exist today)
+  - [ ] `WbsPhaseController` + checklist UI (none exist today)
+  - [ ] `StageProgressApprovalController` + routes + FormRequests
+  - [ ] RTL/Tailwind views with Jalali dates for Module / Stage / Checklist / Progress Approval
+  - [ ] Remove weight input from `tasks/create.blade.php`, weight column from `tasks/index.blade.php`
+  - [ ] Remove «وزن اجرایی» card from `tasks/show.blade.php`; add stage progress display
+  - [ ] Repoint the 2 KPIs in `reports/index.blade.php` (`OQ-07`)
+  - [ ] Add `progress_approval_mode` to `settings/index.blade.php`; mark `lock_weight` as retired
+  - [ ] Fix stale status labels in `dashboard.blade.php`
+  - [ ] Four dashboards driven by Role + Permission + Settings
+  - [ ] Add `task_type` selector to task forms
+
+- [x] 18.6 Phase V1.8 Owner Decision Closure & Design Reconciliation  ✅ COMPLETE (documentation only)
+  - [x] 16 decisions recorded as `DEC-020`..`DEC-035` in the single Decision Registry
+  - [x] 16 design corrections applied in `docs/V1.8_DETAILED_SCHEMA_DESIGN.md` (`§۲.۵` · `§۴.۱` · `§۴.۳` · `§۵.۲` · `§۶.۱`–`§۶.۸` · `§۸.۲` · `§۸.۳` · `§۹.۱` · `§۹.۲` · `§۹.۴` · `§۱۲` · `§۱۴` · `§۱۵` · appendix د)
+  - [x] New report: `docs/V1.8_FINAL_DESIGN_RECONCILIATION.md` (12 sections)
+  - [x] `superseded` redefined as a **derived** state; **Active Approval** defined (`DEC-027`)
+  - [x] Cumulative ceiling: parent-lock on `module_stages` + aggregation **without** `FOR UPDATE` (`DEC-026`)
+  - [x] Trigger strategy: **3 single-row triggers built**, 3 aggregate triggers **DEFERRED** with corrected `TG_OP` design (`DEC-020` · `DEC-028` · `DEC-029`)
+  - [x] Parent-lock doctrine + module atomicity + zero-active-modules rule documented (`DEC-022`..`DEC-024`)
+  - [x] `M-07` moved to its own older batch; `DEC-018` left untouched (`H-2`)
+  - [x] 7 technical notes `T-1`..`T-7` handed to Migration Implementation Review (no owner decision needed)
+  - [x] 🚫 **Zero migrations written/executed, zero application code changed, zero SQL mutation, zero schema mutation, zero data changed**
+
+- [x] 19. Phase V1.8 Migration Implementation (Baseline Reconciliation + Incremental) — ✅ COMPLETE — ✅ `READY FOR PRODUCTION MIGRATION REVIEW`
+  - [x] Phase A — Inventory of all 23 baseline migrations; declared **IMMUTABLE**; **zero** old files modified
+  - [x] Phase B — Real migration history: `tms` 23 rows / `{1: 23}` · `tms_testing` 23 rows / `{1: 23}` (both before V1.8)
+  - [x] Phase C — Live schema: 31 tables · 0 triggers · 0 functions · 0 views · 83 indexes (both DBs)
+  - [x] Phase D — Three-way reconciliation (files ↔ live DB ↔ V1.8 design): fully aligned, no unexplained object
+  - [x] 9 new incremental migrations written; `M-07` isolated in its own **earlier batch**, other 8 in the main batch
+  - [x] `php artisan migrate --pretend` → PASS (full SQL reviewed)
+  - [x] Applied to `tms_testing`: **8 of 9 DONE** (`M-07` → Batch 2 · `M-01`..`M-08` → Batch 3)
+  - [x] `M-09` → ✅ DONE (after the owner authorisation rebuilt `tms_testing` as **UTF8/C**; the whole 32-migration chain then applied)
+  - [x] **Full Test Suite really executed on PostgreSQL 18.6:** `175 passed · 2 deprecated · 504 assertions · 0 failed` (63 of them in `tests/Feature/V18`)
+  - [x] Two real logic bugs found **by the new tests** and fixed (`BUG-1` stage rebalance partial map · `BUG-2` superseded rows excluded from "one pending" and from decisions)
+  - [x] **4 triggers + 3 functions + 22 CHECK constraints** created; **32 behavioural assertions proven with real SQL on PG 18.6**
+  - [x] Domain code: 5 enums · 6 exceptions · 4 models · 4 services + `DatabaseAuditService` (bound) + `document_uploaded` emitted
+  - [x] 59 new test scenarios in `tests/Feature/V18/` (discoverable; execution blocked by `ENV-1`)
+  - [x] `AP-1` design defect found and fixed: `archive`/`restore` gained a same-transaction rebalance argument (R-4)
+  - [x] Real Unit baseline measured: `16 passed · 1 deprecated · 51 assertions`
+  - [x] 🚫 `tms` left byte-for-byte untouched (23 migrations · 31 tables · 0 triggers · `weight` NOT NULL · 0 V1.8 tables)
+  - [x] 🔴 Environment blocker `ENV-1` discovered (`tms_testing` was **WIN1252**), reported with full evidence, then **fixed with the owner's explicit approval** (rebuilt as UTF8/C)
+  - [x] 🚫 `tms` still byte-for-byte untouched after the ENV-1 fix (the `DROP DATABASE` touched the empty test database only)
