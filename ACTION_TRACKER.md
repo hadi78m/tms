@@ -4,6 +4,24 @@
 
 ---
 
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۴ (2026-09-26) - فاز V1.9 CI Run Verification & Final Acceptance
+
+### 📝 خلاصه اقدامات
+
+- **Pre-Commit Gate:** `git diff -- database/migrations` = خالی · migrate:status 32/32 · Full Suite محلی `256/735/0/2` · V19 `53/144` · Pint PASS · npm ci/build PASS · manifest موجود · diff audit (صفر dd/dump/hard-coded ID/accidental mutation).
+- **Commit:** `1c2b079` — 39 فایل (+3649/−8) — فقط فایل‌های V1.9؛ `v19_out.txt` (stale artifact) عمداً commit نشد؛ **صفر migration در commit**.
+- **Push:** `2bed1d5..1c2b079 main -> main` (بدون force).
+- **CI Run 36231957880** (workflow `ci.yml` · run #6 · event push · head_sha = `1c2b079f...`): **conclusion = success** — هر ۲۰ step شامل Gate 1 (tms_testing + PG 18) · Gate 2 (32/0) · manifest gate · Run test suite (T-6 فعال) همگی success.
+- **حکم نهایی: `V1.9 = FINAL ACCEPTED`** — صفر Scope Expansion · صفر Production Mutation · صفر تغییر Migration. گزارش: `docs/V1.9_FINAL_ACCEPTANCE_REPORT.md`.
+
+### 📁 فایل‌ها
+
+- **جدید:** `docs/V1.9_FINAL_ACCEPTANCE_REPORT.md`
+- **به‌روزرسانی:** `ACTION_TRACKER.md` · `MEMORY.md` · `TMS_PROJECT_TRACKER.md`
+- **کد/Migration:** صفر تغییر
+
+---
+
 ## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۴ (2026-09-26) - فاز V1.9 Verification & Hardening (Candidate A)
 
 ### 📝 خلاصه اقدامات
