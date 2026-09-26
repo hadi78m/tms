@@ -53,6 +53,18 @@
                     </a>
                     @endhasanyrole
 
+                    @hasanyrole('admin|project_manager|employer|management|supervisor|viewer')
+                    <a href="{{ route('modules.index') }}" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-50 {{ request()->routeIs('modules.*') || request()->routeIs('stages.*') ? 'bg-slate-100 text-blue-700' : '' }}">
+                        <svg class="w-5 h-5 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        ساختار ماژول‌ها
+                    </a>
+
+                    <a href="{{ route('wbs-phases.index') }}" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-50 {{ request()->routeIs('wbs-phases.*') ? 'bg-slate-100 text-blue-700' : '' }}">
+                        <svg class="w-5 h-5 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        فازهای WBS
+                    </a>
+                    @endhasanyrole
+
                     @role('admin')
                     <div class="pt-4 mt-4 border-t border-slate-200">
                         <p class="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">مدیریت سیستم</p>

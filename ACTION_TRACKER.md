@@ -4,6 +4,66 @@
 
 ---
 
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۴ (2026-09-26) - فاز V1.9 Verification & Hardening (Candidate A)
+
+### 📝 خلاصه اقدامات
+
+- **فاز Verification/Grace فقط اثبات — صفر قابلیت جدید · صفر تغییر Migration · صفر production mutation**:
+  - **معماری:** کنترلرها فقط delegate می‌کنند (ModuleService/ModuleStageService/StageProgressApprovalService/WbsPhaseService) — صفر duplicate rule در HTTP/Blade؛ `ProgressReportService` از `scopeActive()` واحد استفاده می‌کند (بدون تعریف دوم Active).
+  - **Route Audit:** ۱۸ مسیر V1.9 (GET read-only × ۵ · POST mutation × ۱۳) — **صفر مسیر حذف** برای Project/Module/Stage/Phase (DEC-038/039).
+  - **Auth/IDOR:** role middleware + گارد سرویس؛ FormRequest `weight` = prohibited در update ماژول؛ ownership check آیتم↔فاز.
+  - **DEC-040/041:** تجمیع stage-based از مسیر مراحل + شمارش علنی وظایف بی‌stage؛ برچسب «مبلغ تأییدشدهٔ مراحل» — صفر محاسبهٔ مالی (grep تأیید شد).
+  - **تست:** V19 = 53/144 سبز · Full = **`256 passed · 735 assertions · 0 failed · 2 deprecated`** · Pint PASS · `npm ci`+`npm run build` PASS · manifest موجود.
+  - **CI:** `ci.yml` inspected — صفر تغییر لازم؛ Gate 1/2 · 32/0 · manifest gate · tms_testing همه intact.
+- **یافته‌ها:** 0 Blocker · 0 Defect · 2 Warning (W-1 TD-2 Policy class — pre-existing؛ W-2 فیلد اختیاری DEC-013 در فرم Task — خارج از scope DEC-039).
+- **حکم: GREEN — READY FOR CI RUN VERIFICATION.** گزارش: `docs/V1.9_VERIFICATION_HARDENING_REPORT.md`.
+
+### 📁 فایل‌ها
+
+- **جدید:** `docs/V1.9_VERIFICATION_HARDENING_REPORT.md`
+- **به‌روزرسانی:** `ACTION_TRACKER.md` · `MEMORY.md` · `TMS_PROJECT_TRACKER.md`
+- **کد:** صفر تغییر (Verification فقط اثبات بود)
+
+---
+
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۴ (2026-09-26) - فاز V1.9 Implementation — Candidate A
+
+### 📝 خلاصه اقدامات
+
+- **پیاده‌سازی کامل Candidate A** طبق `DEC-039/040/041` — **صفر Migration · صفر تغییر migrations · production دست‌نخورده**:
+  - **Module UI:** Controller + ۲ ویو + ۳ FormRequest — createModules/rebalance/update از طریق `ModuleService` (بدون delete UI — DEC-038/039).
+  - **Stage + Weight UI:** صفحهٔ مرحله با وضعیت قفل (🔒) + بازتوازن جزئی از طریق `ModuleStageService::rebalance` (مجموع ۱۰۰ حفظ می‌شود).
+  - **Stage Approval UI:** propose/adjust/approve/reject/supersede — همه از طریق `StageProgressApprovalService` (قواعد immutable/ceiling/chain در سرویس).
+  - **WBS Checklist UI:** ایجاد فاز (default DEC-017)، آیتم‌های چک‌لیست (add/complete/reopen)، تصمیمات ناظر (complete/not_completed/reopen) از طریق `WbsPhaseService`.
+  - **Progress Report (TD-1 بسته):** `ProgressReportService` — `SUM(approved_amount)` روی Active approvals؛ خواندن legacy `SUM(tasks.weight)` از KPI مرحله‌ای حذف شد؛ برچسب «آماده پرداخت» → **«مبلغ تأییدشدهٔ مراحل»** (DEC-041)؛ وظایف بی‌stage از گزارش مرحله‌ای حذف ولی شمرده‌شده (DEC-040).
+- **تست:** ۵۳ تست جدید در `tests/Feature/V19/` — نتیجهٔ کل: **`256 passed · 735 assertions · 0 failed · 2 deprecated`** (بیس 203/591 دست‌نخورده).
+- **Frontend:** `npm ci` + `npm run build` — manifest موجود.
+
+### 📁 فایل‌ها
+
+- **جدید:** `app/Domain/Services/ProgressReportService.php` · `app/Http/Controllers/Web/{ModuleController, ModuleStageController, StageProgressApprovalController, WbsPhaseController}.php` · ۸ FormRequest در `app/Http/Requests/Web/` · `resources/views/modules/{index,show}.blade.php` · `resources/views/modules/stages/show.blade.php` · `resources/views/wbs-phases/{index,show}.blade.php` · `tests/Feature/V19/*` (۵ فایل + Fixtures) · `docs/V1.9_IMPLEMENTATION_REPORT.md`
+- **تغییریافته:** `routes/web.php` (+18 مسیر role-protected) · `app/Http/Controllers/Web/ReportController.php` · `resources/views/reports/index.blade.php` · `resources/views/layouts/app.blade.php` (ناوبری) · `MEMORY.md` · `TMS_PROJECT_TRACKER.md`
+- **دست‌نخورده:** `database/migrations` (صفر) · CI · `tms` · `tests/Feature/V18` · `app/Domain/Services` موجود (بدون تغییر رفتاری)
+
+---
+
+## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۴ (2026-09-26) - فاز V1.9 Owner Decision Registration (Documentation-Only)
+
+### 📝 خلاصه اقدامات
+
+- **ثبت سه تصمیم قطعی مالک پروژه برای V1.9** — فاز صرفاً مستندسازی؛ **صفر تغییر کد/تست/Migration/دیتابیس**:
+  - `DEC-039` — **DR-1**: دامنهٔ V1.9 = **Candidate A کامل** (Module CRUD · مدیریت Stage · وزن Stage · Stage Approval UI · WBS Checklist UI · گزارش پیشرفت بر پایهٔ `approved_amount`) — صفر Migration؛ Candidate B/C مجاز نیستند.
+  - `DEC-040` — **DR-2**: تسک‌های با `module_stage_id IS NULL` در **گزارش‌های stage-based حذف می‌شوند** (`WHERE module_stage_id IS NOT NULL` در لایهٔ تجمیع) — قاعدهٔ نمایش، نه lifecycle؛ بدون bucket جدید و بدون قاعدهٔ وزن جدید.
+  - `DEC-041` — **DR-4/OQ-07**: برچسب گزارش «آماده پرداخت» → **«مبلغ تأییدشدهٔ مراحل»** — بدون هیچ مجوز محاسبهٔ مالی؛ TMS عملیاتی می‌ماند.
+- **وضعیت دروازه:** دروازهٔ تصمیم V1.9 (DR-1 · DR-2 · DR-4/OQ-07) **PASSED** — پیاده‌سازی V1.9 **هنوز آغاز نشده** و فاز اجرای مجزا لازم دارد.
+
+### 📁 فایل‌ها
+
+- **به‌روزرسانی:** `docs/V1.9_DECISION_REGISTER.md` (علامت‌گذاری RESOLVED + بخش «تصمیمات تأییدشده») · `project_context/ANTIGRAVITY_DECISIONS.md` (`DEC-039`/`DEC-040`/`DEC-041`) · `MEMORY.md` · `TMS_PROJECT_TRACKER.md`
+- **دست‌نخورده:** کل `app/` · `routes/` · `resources/` · `tests/` · `database/migrations` · CI · `tms` · `tms_testing`
+
+---
+
 ## 📅 گزارش تغییرات - ۱۴۰۵/۰۷/۰۱ (2026-09-23) - فاز V1.8 Owner Decision Gate + T-7 CI Cycle + Closure
 
 ### 📝 خلاصه اقدامات
