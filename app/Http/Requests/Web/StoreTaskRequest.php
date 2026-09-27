@@ -65,6 +65,18 @@ class StoreTaskRequest extends FormRequest
             'planned_start_date' => ['nullable', 'date'],
             'planned_due_date' => ['nullable', 'date'],
             'parent_task_id' => ['nullable', 'integer', 'exists:tasks,id'],
+            // DEC-042 (DR-1=A): optional stage link on create. The supervisor
+            // role is enforced in TaskService (business invariant) and at the
+            // HTTP layer; module_id is derived from the stage, never input.
+            'module_stage_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('module_stages', 'id')->where(function ($query) {
+                    $query->whereIn('module_id', function ($sub) {
+                        $sub->select('id')->from('modules')->where('project_id', $this->input('project_id'));
+                    });
+                }),
+            ],
         ];
     }
 
@@ -80,7 +92,8 @@ class StoreTaskRequest extends FormRequest
             weight: (float) $this->input('weight'),
             planned_start_date: $this->input('planned_start_date'),
             planned_due_date: $this->input('planned_due_date'),
-            parent_task_id: $this->input('parent_task_id')
+            parent_task_id: $this->input('parent_task_id'),
+            module_stage_id: $this->filled('module_stage_id') ? (int) $this->input('module_stage_id') : null
         );
     }
 }
