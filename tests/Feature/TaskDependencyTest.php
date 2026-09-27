@@ -62,7 +62,11 @@ it('prevents circular dependencies', function () {
 });
 
 it('can create a subtask with parent_id', function () {
+    // V1.10 (DEC-044 — F-2 FIX NOW): tasks.store is role-protected; this
+    // actor is explicitly a project_manager.
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
     $user = User::factory()->create();
+    $user->assignRole('project_manager');
     $project = Project::factory()->create();
     $parent = Task::factory()->create(['project_id' => $project->id]);
 

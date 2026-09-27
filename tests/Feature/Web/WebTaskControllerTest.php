@@ -54,7 +54,10 @@ class WebTaskControllerTest extends TestCase
 
     public function test_manager_can_access_create_task_page(): void
     {
+        // V1.10 (DEC-044 — F-2 FIX NOW): the create form is role-protected.
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
         $manager = User::factory()->create(['contractor_id' => null]);
+        $manager->assignRole('project_manager');
         $project = Project::factory()->create(['name' => 'Project Alpha']);
 
         $response = $this->actingAs($manager)->get('/tasks/create');

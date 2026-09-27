@@ -68,6 +68,10 @@
                         <p class="font-medium text-slate-800">{{ $task->contractor->name ?? '-' }}</p>
                     </div>
                     <div>
+                        <p class="text-sm text-slate-500 mb-1">مرحلهٔ ماژول (V1.10)</p>
+                        <p class="font-medium text-slate-800">{{ $task->moduleStage?->name ?? 'بدون مرحله' }}</p>
+                    </div>
+                    <div>
                         <p class="text-sm text-slate-500 mb-1">وزن اجرایی</p>
                         <p class="font-medium text-slate-800">{{ $task->weight }}٪</p>
                     </div>
@@ -169,6 +173,47 @@
 
     <!-- سایدبار اطلاعات تکمیلی و عملیات -->
     <div class="space-y-6">
+        {{-- ─── تغییر مرحله (V1.10 · DEC-042/043) ─── فقط ناظر، تا قبل از تأیید نهایی ─── --}}
+        @if(auth()->user()->hasRole('supervisor'))
+            @php
+                $stageLocked = in_array($task->status, ['approved', 'cancelled']);
+                $projectStages = $task->project_id !== null
+                    ? \App\Models\ModuleStage::query()
+                        ->join('modules as m', 'm.id', '=', 'module_stages.module_id')
+                        ->where('m.project_id', $task->project_id)
+                        ->orderBy('m.sort_order')->orderBy('module_stages.sort_order')
+                        ->select('module_stages.*')->get()
+                    : collect();
+            @endphp
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="border-b border-slate-200 px-6 py-4">
+                    <h3 class="font-bold text-slate-800">مرحلهٔ تسک (Task ↔ Stage)</h3>
+                </div>
+                <div class="p-6">
+                    @if($stageLocked)
+                        <p class="text-sm text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+                            🔒 پس از تأیید نهایی / لغو، مرحلهٔ تسک قفل است (DEC-043).
+                        </p>
+                    @else
+                        <form action="{{ route('tasks.stage', $task->id) }}" method="POST" class="space-y-2">
+                            @csrf
+                            <select name="module_stage_id" class="w-full text-sm px-3 py-2 border border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                <option value="">بدون مرحله</option>
+                                @foreach($projectStages as $stage)
+                                    <option value="{{ $stage->id }}" {{ $task->module_stage_id === $stage->id ? 'selected' : '' }}>
+                                        {{ $stage->name }} ({{ $stage->module->name }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="w-full bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+                                ثبت مرحله
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <!-- پیش‌نیازها (Dependencies) -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="border-b border-slate-200 px-6 py-4">

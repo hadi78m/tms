@@ -42,6 +42,35 @@
                     </select>
                 </div>
 
+                @php
+                    /* V1.10 — DEC-042 (DR-1=A): the stage selector is visible
+                       and usable only by supervisors; the service re-checks. */
+                    $canAssignStage = auth()->user()?->hasRole('supervisor');
+                    $selectedStage = old('module_stage_id');
+                @endphp
+                @if($canAssignStage)
+                <!-- مرحله (V1.10 · DEC-042) -->
+                <div class="md:col-span-2">
+                    <label for="module_stage_id" class="block text-sm font-medium text-slate-700 mb-1">مرحلهٔ ماژول (اختیاری)</label>
+                    <select name="module_stage_id" id="module_stage_id"
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
+                        <option value="">بدون مرحله...</option>
+                        @foreach($modules as $module)
+                            @if($module->stages->isNotEmpty())
+                                <optgroup label="{{ $module->name }} ({{ $module->project->name ?? '' }})">
+                                    @foreach($module->stages as $stage)
+                                        <option value="{{ $stage->id }}" {{ $selectedStage == $stage->id ? 'selected' : '' }}>
+                                            {{ $stage->name }} (وزن: {{ $stage->weight }}٪)
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">تعیین مرحله فقط توسط ناظر (Supervisor) مجاز است و پس از ثبت، از صفحهٔ وظیفه قابل تغییر است (تا قبل از تأیید نهایی).</p>
+                </div>
+                @endif
+
                 <!-- فاز WBS -->
                 <div>
                     <label for="wbs_phase_id" class="block text-sm font-medium text-slate-700 mb-1">فاز WBS</label>

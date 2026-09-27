@@ -17,6 +17,7 @@ readonly class CreateTaskData
         public float $weight,
         public ?string $planned_start_date,
         public ?string $planned_due_date,
-        public ?int $parent_task_id
+        public ?int $parent_task_id,
+        public ?int $module_stage_id = null
     ) {}
 }

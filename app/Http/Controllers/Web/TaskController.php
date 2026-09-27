@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Web;
 
 use App\Domain\Exceptions\TaskBlockedException;
+use App\Domain\Exceptions\UnauthorizedTaskOperationException;
 use App\Domain\Services\DocumentService;
 use App\Domain\Services\TaskService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\AddDependencyRequest;
+use App\Http\Requests\Web\SetTaskStageRequest;
 use App\Http\Requests\Web\StoreTaskRequest;
 use App\Models\Project;
 use App\Models\Task;
@@ -46,8 +48,9 @@ class TaskController extends Controller
         $projects = Project::all();
         $wbsPhases = WbsPhase::all();
         $parentId = $request->query('parent_id');
+        $modules = \App\Models\Module::with('stages')->get();
 
-        return view('tasks.create', compact('projects', 'wbsPhases', 'parentId'));
+        return view('tasks.create', compact('projects', 'wbsPhases', 'parentId', 'modules'));
     }
 
     public function store(StoreTaskRequest $request)
@@ -81,6 +84,28 @@ class TaskController extends Controller
         $task->load(['project', 'contractor', 'documents', 'activeAssignment.user', 'wbsPhase', 'slaRecords']);
 
         return view('tasks.show', compact('task'));
+    }
+
+    /**
+     * V1.10 — DEC-042/043: stage reassignment endpoint (supervisor only).
+     * All business rules (role, timing, consistency, audit) live in
+     * TaskService::assignStage; the controller only delegates.
+     */
+    public function setStage(Task $task, SetTaskStageRequest $request)
+    {
+        $user = Auth::user();
+
+        if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
+            abort(403, 'شما دسترسی به این وظیفه ندارید.');
+        }
+
+        try {
+            $this->taskService->assignStage($task, $request->toStageId(), $user);
+
+            return redirect()->route('tasks.show', $task->id)->with('status', 'مرحلهٔ وظیفه با موفقیت به‌روزرسانی شد.');
+        } catch (UnauthorizedTaskOperationException | \InvalidArgumentException $e) {
+            return redirect()->route('tasks.show', $task->id)->with('error', $e->getMessage());
+        }
     }
 
     public function start(Request $request, Task $task)

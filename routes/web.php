@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\ApprovalController;
+use App\Http\Controllers\Web\AuditController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DocumentController;
@@ -28,11 +29,37 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Task routes
-    Route::resource('tasks', TaskController::class);
+    // Task routes. V1.10 (DEC-044 — F-2 FIX NOW): create/store were
+    // previously reachable by ANY authenticated user (Authorization Audit
+    // F-2). role enforcement now matches the V1.1 permission matrix
+    // (create tasks → project_manager/admin via role; supervisor assigned
+    // for stage purposes per DEC-042).
+    Route::middleware('role:admin|project_manager|supervisor|employer')->group(function () {
+        Route::get('tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+        Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
+    });
 
-    // Task sub-routes
-    Route::post('tasks/{task}/assign', [TaskAssignmentController::class, 'store'])->name('tasks.assign');
+    Route::resource('tasks', TaskController::class)->except(['create', 'store']);
+
+    // Task sub-routes. V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now
+    // carries role enforcement matching the `assign tasks` permission matrix.
+    Route::middleware('role:admin|project_manager|supervisor|employer')->group(function () {
+        Route::post('tasks/{task}/assign', [TaskAssignmentController::class, 'store'])->name('tasks.assign');
+    });
+
+    // V1.10 — DEC-042/043: stage reassignment (supervisor only at the HTTP
+    // layer; TaskService::assignStage re-checks the role as a business
+    // invariant — DEC-044 Hybrid).
+    Route::middleware('role:supervisor')->group(function () {
+        Route::post('tasks/{task}/stage', [TaskController::class, 'setStage'])->name('tasks.stage');
+    });
+
+    // V1.10 — DEC-045: read-only Audit Visibility UI (supervisor + employer).
+    // Masking is applied in the view layer; there is no write path anywhere.
+    Route::middleware('role:supervisor|employer')->group(function () {
+        Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+        Route::get('tasks/{task}/audit', [AuditController::class, 'show'])->name('audit.task');
+    });
     Route::post('tasks/{task}/start', [TaskController::class, 'start'])->name('tasks.start');
     Route::post('tasks/{task}/submit', [TaskController::class, 'submit'])->name('tasks.submit');
     Route::post('tasks/{task}/approvals', [ApprovalController::class, 'store'])->name('approvals.store');

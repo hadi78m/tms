@@ -22,6 +22,24 @@ class WebTaskStabilizationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now carries role
+        // enforcement; this suite's "manager" actor must hold a privileged
+        // role for the assignment tests to exercise the service underneath.
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+    }
+
+    private function makePrivilegedManager(): User
+    {
+        $manager = User::factory()->create(['contractor_id' => null]);
+        $manager->assignRole('project_manager');
+
+        return $manager;
+    }
+
     /**
      * ==========================================
      * Fix #1: Task Assignment Tests
@@ -30,7 +48,7 @@ class WebTaskStabilizationTest extends TestCase
     public function test_valid_task_assignment_via_web(): void
     {
         $contractor = SyncedContractor::factory()->create();
-        $manager = User::factory()->create(['contractor_id' => null]);
+        $manager = $this->makePrivilegedManager();
         $worker = User::factory()->create(['contractor_id' => $contractor->id]);
 
         $project = Project::factory()->create(['contractor_id' => $contractor->id]);
@@ -73,7 +91,7 @@ class WebTaskStabilizationTest extends TestCase
     public function test_task_reassignment_to_another_user(): void
     {
         $contractor = SyncedContractor::factory()->create();
-        $manager = User::factory()->create(['contractor_id' => null]);
+        $manager = $this->makePrivilegedManager();
         $worker1 = User::factory()->create(['contractor_id' => $contractor->id]);
         $worker2 = User::factory()->create(['contractor_id' => $contractor->id]);
 
@@ -113,7 +131,7 @@ class WebTaskStabilizationTest extends TestCase
     public function test_idempotent_task_assignment(): void
     {
         $contractor = SyncedContractor::factory()->create();
-        $manager = User::factory()->create(['contractor_id' => null]);
+        $manager = $this->makePrivilegedManager();
         $worker = User::factory()->create(['contractor_id' => $contractor->id]);
 
         $project = Project::factory()->create(['contractor_id' => $contractor->id]);

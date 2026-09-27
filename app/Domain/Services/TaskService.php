@@ -6,9 +6,12 @@ use App\Domain\Contracts\AuditServiceInterface;
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
 use App\Domain\Enums\TaskStatus;
+use App\Domain\Enums\TaskType;
 use App\Domain\Exceptions\CircularDependencyException;
 use App\Domain\Exceptions\TaskBlockedException;
+use App\Domain\Exceptions\UnauthorizedTaskOperationException;
 use App\Domain\Rules\TaskStateTransition;
+use App\Models\ModuleStage;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskDependency;
@@ -28,6 +31,16 @@ class TaskService
         return DB::transaction(function () use ($data, $actor) {
             $project = Project::findOrFail($data->project_id);
 
+            // DEC-042 (DR-1=A): only a supervisor may assign module_stage_id.
+            // The stage linkage is derived from the stage itself (DEC-021
+            // pattern) — never from user-supplied module_id input.
+            $stageAttributes = [];
+
+            if ($data->module_stage_id !== null) {
+                $this->authorizeStageAssignment($actor);
+                $stageAttributes = $this->resolveStageAttributes($data->module_stage_id, $data->project_id);
+            }
+
             $task = Task::create([
                 'project_id' => $data->project_id,
                 'contract_id' => $project->contract_id,
@@ -45,9 +58,19 @@ class TaskService
                 'parent_task_id' => $data->parent_task_id,
                 'status' => 'draft',
                 'created_by' => $actor->id,
-            ]);
+            ] + $stageAttributes);
 
             $this->auditService->log('task_created', $task, $actor, [], $task->toArray());
+
+            if ($data->module_stage_id !== null) {
+                $this->auditService->log('task_stage_assigned', $task, $actor, [], [
+                    'old_stage_id' => null,
+                    'new_stage_id' => $data->module_stage_id,
+                    'old_module_id' => null,
+                    'new_module_id' => $stageAttributes['module_id'],
+                    'source' => 'create',
+                ]);
+            }
 
             return $task;
         });
@@ -80,6 +103,13 @@ class TaskService
                 }
             }
 
+            // DEC-043 (DR-2=A): the stage may be reassigned until the task's
+            // FINAL APPROVAL — terminal states (approved/cancelled) are locked.
+            // Server-side enforcement lives here, in the service, per DEC-044.
+            if (array_key_exists('module_stage_id', $fields)) {
+                $this->assignStage($task, $fields['module_stage_id'], $actor);
+            }
+
             if ($task->isDirty()) {
                 $task->save();
                 $this->auditService->log('task_updated_sensitive_field', $task, $actor, $oldValues, $newValues);
@@ -87,6 +117,55 @@ class TaskService
 
             return $task;
         });
+    }
+
+    /**
+     * DEC-042 (DR-1=A) + DEC-043 (DR-2=A) — the single writer of
+     * task ↔ stage assignment changes after creation.
+     *
+     * Authorization: supervisor only (service guard — the Policy layer is an
+     * additional gate, never the sole enforcement per DEC-044 Hybrid).
+     * Timing: allowed for every non-terminal state; once the task reaches
+     * `approved` (Final Approval) or `cancelled`, the stage is locked.
+     * Consistency: module_id is derived from the stage itself (DEC-021),
+     * and the stage must belong to the task's project.
+     */
+    public function assignStage(Task $task, ?int $stageId, User $actor): Task
+    {
+        $this->authorizeStageAssignment($actor);
+        $this->assertStageChangeAllowed($task);
+
+        $oldStageId = $task->module_stage_id;
+        $oldModuleId = $task->module_id;
+
+        if ($stageId === null) {
+            // DEC-040/DEC-013 (OQ-04=2B): a stage-less task is a valid record.
+            // Clearing the link is a normal reassignment edge.
+            $task->module_stage_id = null;
+            $task->module_id = null;
+        } else {
+            $stageAttributes = $this->resolveStageAttributes($stageId, $task->project_id);
+            $task->module_stage_id = $stageAttributes['module_stage_id'];
+            $task->module_id = $stageAttributes['module_id'];
+        }
+
+        if ($oldStageId === $task->module_stage_id) {
+            // No-op reassignment: do not touch the record, do not emit audit.
+            return $task;
+        }
+
+        $task->save();
+
+        $this->auditService->log('task_stage_assigned', $task, $actor, [
+            'old_stage_id' => $oldStageId,
+            'old_module_id' => $oldModuleId,
+        ], [
+            'new_stage_id' => $task->module_stage_id,
+            'new_module_id' => $task->module_id,
+            'source' => 'update',
+        ]);
+
+        return $task->refresh();
     }
 
     public function submitForReview(Task $task, User $actor): Task
@@ -214,6 +293,65 @@ class TaskService
                 'predecessor_id' => $dependency->predecessor_task_id,
             ], []);
         });
+    }
+
+    /**
+     * DEC-042 (DR-1=A) — service guard: only a supervisor may set or change
+     * the stage link. This is the business-invariant layer of the DEC-044
+     * Hybrid architecture; HTTP-layer enforcement is layered on top of it.
+     */
+    protected function authorizeStageAssignment(User $actor): void
+    {
+        if (! $actor->hasRole('supervisor')) {
+            throw UnauthorizedTaskOperationException::stageAssignmentDenied($actor->getRoleNames()->first() ?? 'none');
+        }
+    }
+
+    /**
+     * DEC-043 (DR-2=A) — a stage change is allowed for every non-terminal
+     * state. `approved` (Final Approval) and `cancelled` lock the stage.
+     */
+    protected function assertStageChangeAllowed(Task $task): void
+    {
+        $status = TaskStatus::tryFrom($task->status);
+
+        if ($status === null) {
+            throw new InvalidArgumentException(sprintf('Unknown task status "%s".', $task->status));
+        }
+
+        if (in_array($status, [TaskStatus::Approved, TaskStatus::Cancelled], true)) {
+            throw UnauthorizedTaskOperationException::stageLockedAfterFinalApproval($status->value);
+        }
+    }
+
+    /**
+     * DEC-021 pattern: the stage is the single source of truth. The stage must
+     * exist, must belong to the task's project, and module_id is derived from
+     * the stage — never from user input.
+     *
+     * @return array{module_stage_id: int, module_id: int}
+     */
+    protected function resolveStageAttributes(int $stageId, int $projectId): array
+    {
+        $stage = ModuleStage::query()
+            ->select(['id', 'module_id'])
+            ->whereKey($stageId)
+            ->first();
+
+        if ($stage === null) {
+            throw new InvalidArgumentException('مرحلهٔ انتخاب‌شده وجود ندارد.');
+        }
+
+        $stage->loadMissing('module:id,project_id');
+
+        if ((int) $stage->module->project_id !== (int) $projectId) {
+            throw new InvalidArgumentException('مرحلهٔ انتخاب‌شده متعلق به پروژهٔ این تسک نیست.');
+        }
+
+        return [
+            'module_stage_id' => (int) $stage->id,
+            'module_id' => (int) $stage->module_id,
+        ];
     }
 
     protected function hasCircularDependency(Task $task, Task $dependsOnTask): bool
