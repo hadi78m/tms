@@ -5,11 +5,10 @@ namespace Tests\Feature\V110;
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
 use App\Domain\Enums\TaskType;
+use App\Domain\Exceptions\UnauthorizedTaskOperationException;
 use App\Domain\Services\TaskService;
 use App\Models\ActivityLog;
-use App\Models\Module;
 use App\Models\Project;
-use App\Models\SyncedContractor;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -149,7 +148,7 @@ class TaskStageAssignmentTest extends TestCase
             try {
                 $this->service()->assignStage($task, $stages[0], $actor);
                 $this->fail("Expected UnauthorizedTaskOperationException for role {$actor->getRoleNames()->first()}");
-            } catch (\App\Domain\Exceptions\UnauthorizedTaskOperationException $e) {
+            } catch (UnauthorizedTaskOperationException $e) {
                 $this->assertDatabaseHas('tasks', ['id' => $task->id, 'module_stage_id' => null]);
             }
         }
@@ -255,7 +254,7 @@ class TaskStageAssignmentTest extends TestCase
         try {
             $this->service()->assignStage($task, $stages[0], $this->supervisor);
             $this->fail('Expected stage to be locked after Final Approval (DEC-043).');
-        } catch (\App\Domain\Exceptions\UnauthorizedTaskOperationException $e) {
+        } catch (UnauthorizedTaskOperationException $e) {
             $this->assertDatabaseHas('tasks', ['id' => $task->id, 'module_stage_id' => null]);
         }
     }
@@ -270,7 +269,7 @@ class TaskStageAssignmentTest extends TestCase
         try {
             $this->service()->assignStage($task, $stages[0], $this->supervisor);
             $this->fail('Expected stage to be locked after cancellation (DEC-043).');
-        } catch (\App\Domain\Exceptions\UnauthorizedTaskOperationException $e) {
+        } catch (UnauthorizedTaskOperationException $e) {
             $this->assertDatabaseHas('tasks', ['id' => $task->id, 'module_stage_id' => null]);
         }
     }

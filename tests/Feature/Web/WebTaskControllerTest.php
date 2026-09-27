@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -55,7 +56,7 @@ class WebTaskControllerTest extends TestCase
     public function test_manager_can_access_create_task_page(): void
     {
         // V1.10 (DEC-044 — F-2 FIX NOW): the create form is role-protected.
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
         $manager = User::factory()->create(['contractor_id' => null]);
         $manager->assignRole('project_manager');
         $project = Project::factory()->create(['name' => 'Project Alpha']);

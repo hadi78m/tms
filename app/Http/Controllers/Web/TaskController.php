@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\AddDependencyRequest;
 use App\Http\Requests\Web\SetTaskStageRequest;
 use App\Http\Requests\Web\StoreTaskRequest;
+use App\Models\Module;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskDependency;
@@ -48,7 +49,7 @@ class TaskController extends Controller
         $projects = Project::all();
         $wbsPhases = WbsPhase::all();
         $parentId = $request->query('parent_id');
-        $modules = \App\Models\Module::with('stages')->get();
+        $modules = Module::with('stages')->get();
 
         return view('tasks.create', compact('projects', 'wbsPhases', 'parentId', 'modules'));
     }
@@ -103,7 +104,7 @@ class TaskController extends Controller
             $this->taskService->assignStage($task, $request->toStageId(), $user);
 
             return redirect()->route('tasks.show', $task->id)->with('status', 'مرحلهٔ وظیفه با موفقیت به‌روزرسانی شد.');
-        } catch (UnauthorizedTaskOperationException | \InvalidArgumentException $e) {
+        } catch (UnauthorizedTaskOperationException|\InvalidArgumentException $e) {
             return redirect()->route('tasks.show', $task->id)->with('error', $e->getMessage());
         }
     }

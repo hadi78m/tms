@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Domain\Services\ProgressReportService;
 use App\Http\Controllers\Controller;
+use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -60,7 +61,7 @@ class ReportController extends Controller
                 : null
         );
 
-        $projects = \App\Models\Project::orderBy('name')->get(['id', 'name']);
+        $projects = Project::orderBy('name')->get(['id', 'name']);
 
         return view('reports.index', [
             'totalWeight' => $totalWeight,

@@ -6,7 +6,6 @@ use App\Domain\Contracts\AuditServiceInterface;
 use App\Domain\DTOs\CreateTaskData;
 use App\Domain\Enums\TaskPriority;
 use App\Domain\Enums\TaskStatus;
-use App\Domain\Enums\TaskType;
 use App\Domain\Exceptions\CircularDependencyException;
 use App\Domain\Exceptions\TaskBlockedException;
 use App\Domain\Exceptions\UnauthorizedTaskOperationException;

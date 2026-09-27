@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -44,7 +45,7 @@ class TaskTypeAndWeightPolicyTest extends TestCase
 
         // V1.10 (DEC-044 — F-2 FIX NOW): tasks.create/store are role-protected;
         // this suite's actor is explicitly a project_manager.
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
         $this->manager = User::factory()->create(['contractor_id' => null]);
         $this->manager->assignRole('project_manager');
         $this->project = Project::factory()->create();

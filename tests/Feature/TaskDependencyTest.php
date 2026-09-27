@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
 
@@ -64,7 +65,7 @@ it('prevents circular dependencies', function () {
 it('can create a subtask with parent_id', function () {
     // V1.10 (DEC-044 — F-2 FIX NOW): tasks.store is role-protected; this
     // actor is explicitly a project_manager.
-    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
     $user = User::factory()->create();
     $user->assignRole('project_manager');
     $project = Project::factory()->create();

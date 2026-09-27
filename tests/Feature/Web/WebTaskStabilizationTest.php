@@ -16,6 +16,7 @@ use App\Models\TaskDependency;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class WebTaskStabilizationTest extends TestCase
@@ -29,7 +30,7 @@ class WebTaskStabilizationTest extends TestCase
         // V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now carries role
         // enforcement; this suite's "manager" actor must hold a privileged
         // role for the assignment tests to exercise the service underneath.
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
     }
 
     private function makePrivilegedManager(): User

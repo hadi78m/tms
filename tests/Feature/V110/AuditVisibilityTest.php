@@ -2,9 +2,14 @@
 
 namespace Tests\Feature\V110;
 
+use App\Domain\DTOs\CreateTaskData;
+use App\Domain\Enums\TaskPriority;
+use App\Domain\Enums\TaskType;
 use App\Domain\Services\StageProgressApprovalService;
+use App\Domain\Services\TaskService;
 use App\Models\ActivityLog;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\V19\Concerns\V19Fixtures;
@@ -98,7 +103,7 @@ class AuditVisibilityTest extends TestCase
     {
         // Any activity row's entity works; use the stage approval entity via task route? No —
         // the task-scoped page filters by the Task morph class. Create a task audit row.
-        $task = \App\Models\Task::create([
+        $task = Task::create([
             'project_id' => $this->project->id,
             'contract_id' => $this->project->contract_id,
             'contractor_id' => $this->project->contractor_id,
@@ -109,14 +114,14 @@ class AuditVisibilityTest extends TestCase
             'created_by' => $this->supervisor->id,
         ]);
 
-        app(\App\Domain\Services\TaskService::class)->create(
-            new \App\Domain\DTOs\CreateTaskData(
+        app(TaskService::class)->create(
+            new CreateTaskData(
                 project_id: $this->project->id,
                 wbs_phase_id: null,
                 title: 'audited task 2',
                 description: null,
-                priority: \App\Domain\Enums\TaskPriority::Normal,
-                task_type: \App\Domain\Enums\TaskType::Development,
+                priority: TaskPriority::Normal,
+                task_type: TaskType::Development,
                 weight: 5.0,
                 planned_start_date: null,
                 planned_due_date: null,
