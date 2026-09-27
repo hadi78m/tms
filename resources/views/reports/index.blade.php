@@ -6,6 +6,37 @@
 @section('content')
 <div class="max-w-6xl mx-auto space-y-6">
 
+    <!-- V1.10 — DEC-046 (5-1 Project Filter + 5-2 Period Filter) -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h2 class="text-lg font-bold text-slate-800">فیلتر گزارش</h2>
+            <p class="text-sm text-slate-500 mt-1">فیلتر دوره بر تاریخ تصمیم تأیید (decided_at) اعمال می‌شود؛ وزن تخصیص‌یافته مستقل از دوره است.</p>
+        </div>
+        <div class="px-6 py-4">
+            <form method="GET" action="{{ route('reports.index') }}" class="flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">پروژه</label>
+                    <select name="project_id" class="text-sm px-3 py-2 border border-slate-300 rounded bg-white">
+                        <option value="">همهٔ پروژه‌ها</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" {{ $filters['project_id'] === (int) $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">از تاریخ (میلادی)</label>
+                    <input type="date" name="from" value="{{ $filters['from'] }}" class="text-sm px-3 py-2 border border-slate-300 rounded" dir="ltr">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">تا تاریخ (میلادی)</label>
+                    <input type="date" name="to" value="{{ $filters['to'] }}" class="text-sm px-3 py-2 border border-slate-300 rounded" dir="ltr">
+                </div>
+                <button type="submit" class="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">اعمال فیلتر</button>
+                <a href="{{ route('reports.index') }}" class="text-sm px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200">حذف فیلترها</a>
+            </form>
+        </div>
+    </div>
+
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
@@ -115,6 +146,16 @@
                 <a href="{{ route('reports.export', ['type' => 'all_tasks']) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition">
                     <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     دانلود CSV
+                </a>
+            </div>
+
+            {{-- V1.10 — DEC-046 (5-3 Stage CSV) --}}
+            <div class="border border-slate-200 rounded-xl p-5 hover:border-blue-300 transition-colors md:col-span-2">
+                <h3 class="font-bold text-slate-800 text-lg mb-2">گزارش مرحله‌محور (CSV)</h3>
+                <p class="text-slate-500 text-sm mb-4">خروجی CSV از پیشرفت مراحل بر اساس «مبلغ تأییدشدهٔ مراحل» — با همان فیلترهای پروژه/دورهٔ اعمال‌شده در گزارش.</p>
+                <a href="{{ route('reports.export', array_filter(['type' => 'stage_progress', 'project_id' => $filters['project_id'], 'from' => $filters['from'], 'to' => $filters['to']])) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    دانلود CSV مراحل
                 </a>
             </div>
         </div>

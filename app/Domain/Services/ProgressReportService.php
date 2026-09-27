@@ -28,11 +28,18 @@ class ProgressReportService
     /**
      * Stage-based progress per Module Stage.
      *
+     * V1.10 (DEC-046): optional 5-2 period filter. The period applies to the
+     * approval DECISION date (decided_at): only approved rows decided inside
+     * the window contribute to the approved sums. Allocation (weights) is a
+     * structure, not an event, and is therefore not period-scoped.
+     *
      * @param  int|null  $projectId  null = all projects (system-wide report)
+     * @param  array{from?: string, to?: string}|null  $period  optional decision-date window (Y-m-d)
      * @return array{
      *     total_allocated: float,
      *     total_approved: float,
      *     excluded_no_stage_tasks: int,
+     *     period: array{from: ?string, to: ?string},
      *     rows: Collection<int, array{
      *         stage: ModuleStage,
      *         approved: float,
@@ -40,8 +47,11 @@ class ProgressReportService
      *     }>
      * }
      */
-    public function stageProgress(?int $projectId = null): array
+    public function stageProgress(?int $projectId = null, ?array $period = null): array
     {
+        $periodFrom = $period['from'] ?? null;
+        $periodTo = $period['to'] ?? null;
+
         // DEC-040 — stage-based aggregation only covers staged tasks.
         $excludedNoStageTasks = Task::query()
             ->when($projectId !== null, fn ($query) => $query->where('project_id', $projectId))
@@ -68,15 +78,19 @@ class ProgressReportService
                 'total_allocated' => 0.0,
                 'total_approved' => 0.0,
                 'excluded_no_stage_tasks' => $excludedNoStageTasks,
+                'period' => ['from' => $periodFrom, 'to' => $periodTo],
                 'rows' => collect(),
             ];
         }
 
         // Active approved amounts per stage, in one aggregate query. Active =
         // approved AND not superseded (StageProgressApproval::scopeActive).
+        // V1.10 (DEC-046 5-2): optional decision-date window on decided_at.
         $approvedByStage = StageProgressApproval::query()
             ->whereIn('module_stage_id', $stageIds)
             ->active()
+            ->when($periodFrom !== null, fn ($q) => $q->where('decided_at', '>=', $periodFrom.' 00:00:00'))
+            ->when($periodTo !== null, fn ($q) => $q->where('decided_at', '<=', $periodTo.' 23:59:59'))
             ->groupBy('module_stage_id')
             ->selectRaw('module_stage_id, SUM(approved_amount) as approved_sum')
             ->pluck('approved_sum', 'module_stage_id');
@@ -105,6 +119,7 @@ class ProgressReportService
             'total_allocated' => round((float) $stages->sum('allocated'), 2),
             'total_approved' => round((float) $stages->sum('approved'), 2),
             'excluded_no_stage_tasks' => $excludedNoStageTasks,
+            'period' => ['from' => $periodFrom, 'to' => $periodTo],
             'rows' => $stages,
         ];
     }
