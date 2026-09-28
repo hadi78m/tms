@@ -38,4 +38,17 @@ class User extends Authenticatable
     {
         return $this->belongsTo(SyncedContractor::class, 'contractor_id');
     }
+
+    /**
+     * V1.11 — V11-01 (DEC-048 / OD-1): full membership history.
+     */
+    public function projectMemberships()
+    {
+        return $this->hasMany(ProjectMembership::class, 'user_id');
+    }
+
+    public function activeProjectMemberships()
+    {
+        return $this->projectMemberships()->whereNull('ended_at');
+    }
 }
