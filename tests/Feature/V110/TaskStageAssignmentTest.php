@@ -52,6 +52,17 @@ class TaskStageAssignmentTest extends TestCase
         $this->manager = $this->makeUserWithRole('project_manager');
         $this->employer = $this->makeUserWithRole('employer');
         $this->contractor = $this->makeUserWithRole('contractor');
+
+        // V1.11 (DEC-054/055 · I-2): the HTTP create/assign paths now enforce
+        // the real permissions via TaskPolicy. Replicate the InitialTmsSeeder
+        // role→permission slice for the privileged actors (tests never run
+        // the seeder; the catalog itself is unchanged).
+        foreach (['create tasks', 'assign tasks', 'manage projects', 'view reports'] as $permissionName) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
+        }
+        \Spatie\Permission\Models\Role::findOrCreate('project_manager', 'web')
+            ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
+        $this->manager->refresh();
     }
 
     private function service(): TaskService
@@ -79,29 +90,33 @@ class TaskStageAssignmentTest extends TestCase
 
     // ------------------------------------------------------------------
     // DEC-042 — create with stage (supervisor only)
+    //
+    // V1.11 UPDATE (DEC-055 — DR-TASK-04 = A Align-down): Task CREATION is
+    // now business-permitted ONLY for admin|project_manager. The service
+    // rule itself (supervisor-only stage link) is UNCHANGED and keeps being
+    // exercised — the HTTP actor below becomes the project_manager, and the
+    // former supervisor-create expectations move to explicit DENIES.
     // ------------------------------------------------------------------
 
-    public function test_supervisor_can_create_task_with_stage(): void
+    public function test_pm_create_with_stage_is_rejected_by_supervisor_only_invariant(): void
     {
         [$module, $stages] = $this->stageIds();
 
-        $response = $this->actingAs($this->supervisor)
-            ->post(route('tasks.store'), $this->createPayload(['module_stage_id' => $stages[0]]))
-            ->assertRedirect(route('tasks.index'));
+        // V1.11 (DEC-055): PM may CREATE tasks, but module_stage_id stays a
+        // supervisor-only field (DEC-042 service guard — never duplicated in
+        // the policy). A PM POSTing a stage link hits the invariant (500 →
+        // error view). The supervisor path to link a stage remains tasks.stage
+        // after creation. No task is persisted.
+        $response = $this->actingAs($this->manager)
+            ->post(route('tasks.store'), $this->createPayload(['module_stage_id' => $stages[0]]));
 
-        $task = Task::where('title', 'task from http')->firstOrFail();
-        $this->assertSame($stages[0], (int) $task->module_stage_id);
-        $this->assertSame($module->id, (int) $task->module_id); // derived, DEC-021
-
-        $this->assertDatabaseHas('activity_logs', [
-            'action' => 'task_stage_assigned',
-            'entity_id' => $task->id,
-        ]);
+        $this->assertTrue(in_array($response->status(), [500, 302]));
+        $this->assertDatabaseMissing('tasks', ['title' => 'task from http']);
     }
 
-    public function test_supervisor_can_create_task_without_stage(): void
+    public function test_pm_can_create_task_without_stage(): void
     {
-        $this->actingAs($this->supervisor)
+        $this->actingAs($this->manager)
             ->post(route('tasks.store'), $this->createPayload())
             ->assertRedirect(route('tasks.index'));
 
@@ -110,13 +125,24 @@ class TaskStageAssignmentTest extends TestCase
         $this->assertNull($task->module_id);
     }
 
+    public function test_supervisor_can_no_longer_create_task_over_http(): void
+    {
+        // DEC-055: supervisor is DENIED on the creation path (was ALLOWED in
+        // V1.10 via the broader role list — intentional, owner-approved).
+        $this->actingAs($this->supervisor)
+            ->post(route('tasks.store'), $this->createPayload())
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('tasks', ['title' => 'task from http']);
+    }
+
     public function test_stage_from_another_project_is_rejected_on_create(): void
     {
         $other = $this->makeProject(2);
         $otherModule = $this->makeSingleModule($other, $this->supervisor);
         $otherStage = $otherModule->stages()->first();
 
-        $this->actingAs($this->supervisor)
+        $this->actingAs($this->manager)
             ->post(route('tasks.store'), $this->createPayload(['module_stage_id' => $otherStage->id]))
             ->assertSessionHasErrors('module_stage_id');
 
@@ -324,18 +350,28 @@ class TaskStageAssignmentTest extends TestCase
         $this->assertDatabaseMissing('tasks', ['title' => 'task from http']);
     }
 
-    public function test_create_and_store_allowed_for_permitted_roles(): void
+    public function test_create_and_store_role_matrix_follows_dec_055(): void
     {
-        foreach ([$this->manager, $this->supervisor, $this->employer] as $actor) {
+        // V1.11 (DEC-055 = A Align-down): admin + PM allowed; supervisor and
+        // employer DENIED (with the unchanged contractor denial).
+        $this->actingAs($this->manager)
+            ->get(route('tasks.create'))
+            ->assertOk();
+
+        $this->actingAs($this->manager)
+            ->post(route('tasks.store'), $this->createPayload(['title' => 'created by '.$this->manager->id]))
+            ->assertRedirect(route('tasks.index'));
+
+        $this->assertDatabaseHas('tasks', ['title' => 'created by '.$this->manager->id]);
+
+        foreach ([$this->supervisor, $this->employer] as $actor) {
             $this->actingAs($actor)
                 ->get(route('tasks.create'))
-                ->assertOk();
+                ->assertForbidden();
 
             $this->actingAs($actor)
-                ->post(route('tasks.store'), $this->createPayload(['title' => 'created by '.$actor->id]))
-                ->assertRedirect(route('tasks.index'));
-
-            $this->assertDatabaseHas('tasks', ['title' => 'created by '.$actor->id]);
+                ->post(route('tasks.store'), $this->createPayload())
+                ->assertForbidden();
         }
     }
 
@@ -365,7 +401,7 @@ class TaskStageAssignmentTest extends TestCase
         $this->assertDatabaseMissing('task_assignments', ['task_id' => $task->id]);
     }
 
-    public function test_assign_allowed_for_permitted_roles(): void
+    public function test_assign_role_matrix_follows_dec_054(): void
     {
         $task = Task::create([
             'project_id' => $this->project->id,
@@ -380,11 +416,14 @@ class TaskStageAssignmentTest extends TestCase
 
         $worker = User::factory()->create(['contractor_id' => $this->project->contractor_id]);
 
-        foreach ([$this->manager, $this->employer] as $actor) {
-            $this->actingAs($actor)
-                ->post(route('tasks.assign', $task->id), ['user_id' => $worker->id])
-                ->assertRedirect(route('tasks.show', $task->id));
-        }
+        // V1.11 (DEC-054 = A Align-down): PM allowed, employer DENIED.
+        $this->actingAs($this->manager)
+            ->post(route('tasks.assign', $task->id), ['user_id' => $worker->id])
+            ->assertRedirect(route('tasks.show', $task->id));
+
+        $this->actingAs($this->employer)
+            ->post(route('tasks.assign', $task->id), ['user_id' => $worker->id])
+            ->assertForbidden();
     }
 
     // ------------------------------------------------------------------

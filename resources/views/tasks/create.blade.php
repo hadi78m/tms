@@ -43,13 +43,17 @@
                 </div>
 
                 @php
-                    /* V1.10 — DEC-042 (DR-1=A): the stage selector is visible
-                       and usable only by supervisors; the service re-checks. */
-                    $canAssignStage = auth()->user()?->hasRole('supervisor');
+                    /* V1.11 — DEC-055 (UI alignment): the Create form is
+                       reachable only by admin|project_manager (route mw +
+                       TaskPolicy::create); supervisors no longer arrive here
+                       and manage the stage link via tasks.stage (DEC-042/043,
+                       supervisor-only) after creation. module_stage_id may
+                       still be POSTed by service callers; the UI simply no
+                       longer renders a supervisor-only selector. */
                     $selectedStage = old('module_stage_id');
                 @endphp
-                @if($canAssignStage)
-                <!-- مرحله (V1.10 · DEC-042) -->
+                @if(isset($modules) && $modules->isNotEmpty() && $selectedStage)
+                <!-- مرحلهٔ انتخاب‌شده (فقط نمایش — تغییر توسط ناظر در tasks.stage) -->
                 <div class="md:col-span-2">
                     <label for="module_stage_id" class="block text-sm font-medium text-slate-700 mb-1">مرحلهٔ ماژول (اختیاری)</label>
                     <select name="module_stage_id" id="module_stage_id"
@@ -67,7 +71,7 @@
                             @endif
                         @endforeach
                     </select>
-                    <p class="mt-1 text-xs text-slate-500">تعیین مرحله فقط توسط ناظر (Supervisor) مجاز است و پس از ثبت، از صفحهٔ وظیفه قابل تغییر است (تا قبل از تأیید نهایی).</p>
+                    <p class="mt-1 text-xs text-slate-500">پس از ثبت، تعیین/تغییر مرحله فقط توسط ناظر (Supervisor) و از صفحهٔ وظیفه انجام می‌شود (تا قبل از تأیید نهایی).</p>
                 </div>
                 @endif
 

@@ -11,7 +11,13 @@ use Spatie\Permission\PermissionRegistrar;
 test('manager can create task with jalali start and due dates', function () {
     // V1.10 (DEC-044 — F-2 FIX NOW): tasks.store now requires one of the
     // privileged roles; the suite user is explicitly a project_manager.
-    Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+    // V1.11 (DEC-055 · I-2): the policy now also enforces the real
+    // `create tasks` permission — replicate the seeder's PM slice.
+    foreach (['create tasks', 'assign tasks', 'manage projects', 'view reports'] as $permissionName) {
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
+    }
+    Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web'])
+        ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
     $manager = User::factory()->create(['contractor_id' => null]);
     $manager->assignRole('project_manager');
     $project = Project::factory()->create();

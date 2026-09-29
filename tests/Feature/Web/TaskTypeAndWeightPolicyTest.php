@@ -45,7 +45,14 @@ class TaskTypeAndWeightPolicyTest extends TestCase
 
         // V1.10 (DEC-044 — F-2 FIX NOW): tasks.create/store are role-protected;
         // this suite's actor is explicitly a project_manager.
-        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        // V1.11 (DEC-055 · I-2): the route+policy now also enforce the real
+        // `create tasks` permission — replicate the seeder's PM slice (the
+        // catalog itself is unchanged).
+        foreach (['create tasks', 'assign tasks', 'manage projects', 'view reports'] as $permissionName) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
+        }
+        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web'])
+            ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
         $this->manager = User::factory()->create(['contractor_id' => null]);
         $this->manager->assignRole('project_manager');
         $this->project = Project::factory()->create();

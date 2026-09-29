@@ -23,6 +23,12 @@ class TaskAssignmentController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
+        // V1.11 (DEC-054 · I-2): resource authorization = permission
+        // `assign tasks` AND Project Scope AND actor contractor isolation —
+        // TaskPolicy::assign. Assignee-side contractor scope and all
+        // assignment invariants stay in TaskAssignmentService.
+        $this->authorize('assign', $task);
+
         try {
             $this->assignmentService->assign(
                 $request->toDto(),

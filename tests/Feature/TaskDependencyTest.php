@@ -65,7 +65,13 @@ it('prevents circular dependencies', function () {
 it('can create a subtask with parent_id', function () {
     // V1.10 (DEC-044 — F-2 FIX NOW): tasks.store is role-protected; this
     // actor is explicitly a project_manager.
-    Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+    // V1.11 (DEC-055 · I-2): the policy now also enforces the real
+    // `create tasks` permission — replicate the seeder's PM slice.
+    foreach (['create tasks', 'assign tasks', 'manage projects', 'view reports'] as $permissionName) {
+        \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
+    }
+    Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web'])
+        ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
     $user = User::factory()->create();
     $user->assignRole('project_manager');
     $project = Project::factory()->create();

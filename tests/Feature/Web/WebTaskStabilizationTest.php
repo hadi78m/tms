@@ -30,7 +30,14 @@ class WebTaskStabilizationTest extends TestCase
         // V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now carries role
         // enforcement; this suite's "manager" actor must hold a privileged
         // role for the assignment tests to exercise the service underneath.
-        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web']);
+        // V1.11 (DEC-054 · I-2): the route+policy also enforce the real
+        // `assign tasks` permission — replicate the seeder's PM slice (the
+        // catalog itself is unchanged).
+        foreach (['create tasks', 'assign tasks', 'manage projects', 'view reports'] as $permissionName) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
+        }
+        Role::firstOrCreate(['name' => 'project_manager', 'guard_name' => 'web'])
+            ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
     }
 
     private function makePrivilegedManager(): User

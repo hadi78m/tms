@@ -31,10 +31,13 @@ Route::middleware('auth')->group(function () {
 
     // Task routes. V1.10 (DEC-044 — F-2 FIX NOW): create/store were
     // previously reachable by ANY authenticated user (Authorization Audit
-    // F-2). role enforcement now matches the V1.1 permission matrix
-    // (create tasks → project_manager/admin via role; supervisor assigned
-    // for stage purposes per DEC-042).
-    Route::middleware('role:admin|project_manager|supervisor|employer')->group(function () {
+    // F-2). V1.11 (DEC-055 — DR-TASK-04 = A Align-down): Task Creation is
+    // business-permitted ONLY for admin + project_manager — the role list is
+    // now aligned with the Business Role Matrix (supervisor/employer were
+    // carried over by the V1.10 implementation and are removed here; the
+    // permission `create tasks` is still enforced in TaskPolicy::create —
+    // middleware stays coarse-grained, permission lives in the Policy).
+    Route::middleware('role:admin|project_manager')->group(function () {
         Route::get('tasks/create', [TaskController::class, 'create'])->name('tasks.create');
         Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
     });
@@ -42,8 +45,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class)->except(['create', 'store']);
 
     // Task sub-routes. V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now
-    // carries role enforcement matching the `assign tasks` permission matrix.
-    Route::middleware('role:admin|project_manager|supervisor|employer')->group(function () {
+    // carries role enforcement. V1.11 (DEC-054 — DR-TASK-03 = A Align-down):
+    // Task Assignment is business-permitted ONLY for admin + project_manager
+    // (supervisor's domain is Stage Assignment — DEC-042/043 — which is a
+    // DIFFERENT concept and stays supervisor-only; the permission
+    // `assign tasks` remains enforced in TaskPolicy::assign).
+    Route::middleware('role:admin|project_manager')->group(function () {
         Route::post('tasks/{task}/assign', [TaskAssignmentController::class, 'store'])->name('tasks.assign');
     });
 

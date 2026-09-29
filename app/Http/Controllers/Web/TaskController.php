@@ -56,6 +56,12 @@ class TaskController extends Controller
 
     public function store(StoreTaskRequest $request)
     {
+        // V1.11 (DEC-055 · I-2): resource authorization = permission
+        // `create tasks` AND Project Scope AND actor contractor isolation —
+        // TaskPolicy::create. Business invariants remain in TaskService.
+        $targetProject = Project::findOrFail($request->input('project_id'));
+        $this->authorize('create', [Task::class, $targetProject]);
+
         $task = $this->taskService->create(
             $request->toDto(),
             Auth::user()
