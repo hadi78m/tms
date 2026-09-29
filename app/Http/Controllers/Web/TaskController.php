@@ -15,6 +15,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskDependency;
 use App\Models\WbsPhase;
+use App\Domain\Rules\ProjectScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,8 @@ class TaskController extends Controller
 {
     public function __construct(
         protected TaskService $taskService,
-        protected DocumentService $documentService
+        protected DocumentService $documentService,
+        protected ProjectScopeService $projectScope
     ) {}
 
     public function index(Request $request)
@@ -31,6 +33,13 @@ class TaskController extends Controller
 
         // Basic query
         $query = Task::with(['project', 'wbsPhase', 'activeAssignment.user']);
+
+        // V1.11 (DEC-049 I-3 · DR-TASK-02=A): Project Scope retrieval filter —
+        // supervisors see only tasks of projects with an ACTIVE supervisor
+        // membership; admin/management unrestricted (scope only); PM/viewer
+        // Q1-preserved (null = untouched). Contractor filter below stays
+        // ADDITIVE — the two layers compose, neither replaces the other.
+        $query = $this->projectScope->applyProjectScope($query, $user);
 
         // Contractor isolation: if user is a contractor, only show their tasks
         if ($user->contractor_id) {
@@ -88,6 +97,12 @@ class TaskController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
+        // V1.11 (DEC-049 I-3): direct-ID enumeration protection — Project
+        // Scope is enforced via TaskPolicy::view (ProjectScopeService), so a
+        // supervisor cannot reach another project's task by guessing the URL.
+        // Same canonical source as the index query — no divergent logic.
+        $this->authorize('view', $task);
+
         $task->load(['project', 'contractor', 'documents', 'activeAssignment.user', 'wbsPhase', 'slaRecords']);
 
         return view('tasks.show', compact('task'));
@@ -106,6 +121,10 @@ class TaskController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
+        // V1.11 (I-3): Project Scope for stage management (role mw + service
+        // invariants unchanged — the policy adds scope ONLY).
+        $this->authorize('manageStages', $task);
+
         try {
             $this->taskService->assignStage($task, $request->toStageId(), $user);
 
@@ -122,6 +141,9 @@ class TaskController extends Controller
         if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
+
+        // V1.11 (I-3): Project Scope for starting a task.
+        $this->authorize('startProgress', $task);
 
         try {
             $this->taskService->startProgress($task, $user);
@@ -143,6 +165,9 @@ class TaskController extends Controller
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
 
+        // V1.11 (I-3): Project Scope for submitting a task.
+        $this->authorize('submitForReview', $task);
+
         try {
             $this->taskService->submitForReview($task, $user);
 
@@ -159,6 +184,9 @@ class TaskController extends Controller
         if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
+
+        // V1.11 (I-3): Project Scope for dependency writes (view-level scope).
+        $this->authorize('view', $task);
 
         try {
             $dependsOnTask = Task::findOrFail($request->input('depends_on_task_id'));
@@ -177,6 +205,9 @@ class TaskController extends Controller
         if ($user->contractor_id && $task->contractor_id !== $user->contractor_id) {
             abort(403, 'شما دسترسی به این وظیفه ندارید.');
         }
+
+        // V1.11 (I-3): Project Scope for dependency writes (view-level scope).
+        $this->authorize('view', $task);
 
         if ($dependency->successor_task_id !== $task->id) {
             abort(404, 'این پیش‌نیاز متعلق به این وظیفه نیست.');

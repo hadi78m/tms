@@ -63,6 +63,19 @@ class TaskStageAssignmentTest extends TestCase
         \Spatie\Permission\Models\Role::findOrCreate('project_manager', 'web')
             ->syncPermissions(['create tasks', 'assign tasks', 'manage projects', 'view reports']);
         $this->manager->refresh();
+
+        // V1.11 (I-3): tasks.stage now composes Project Scope (TaskPolicy::
+        // manageStages). The supervisor here is the LEGITIMATE stage manager
+        // of this project — grant an ACTIVE membership (OD-6-a semantics) so
+        // the stage flows exercise the service invariants, not scope denial.
+        app(\App\Domain\Services\ProjectMembershipService::class)->assignSupervisor(
+            new \App\Domain\DTOs\AssignProjectSupervisorData(
+                project_id: $this->project->id,
+                user_id: $this->supervisor->id,
+                assigned_by: $this->manager->id
+            ),
+            $this->manager
+        );
     }
 
     private function service(): TaskService

@@ -259,12 +259,22 @@ class TaskPermissionWiringTest extends TestCase
     public function test_supervisor_stage_assignment_http_still_works(): void
     {
         // DEC-042/043 untouched: supervisor keeps Stage Assignment.
+        // I-3: tasks.stage composes Project Scope — the supervisor must hold
+        // an ACTIVE membership for this project (OD-6-a) to pass the policy.
         $supervisor = $this->userWithRole('supervisor');
-        $module = \Tests\Feature\V19\Concerns\V19Fixtures::class; // fixtures via service below
-        $actor = $supervisor;
+        $actor = $this->userWithRole('admin');
+        app(\App\Domain\Services\ProjectMembershipService::class)->assignSupervisor(
+            new \App\Domain\DTOs\AssignProjectSupervisorData(
+                project_id: $this->project->id,
+                user_id: $supervisor->id,
+                assigned_by: $actor->id
+            ),
+            $actor
+        );
+
         $moduleModel = app(\App\Domain\Services\ModuleService::class)->createModules($this->project, [
             ['name' => 'Module A', 'code' => 'A', 'weight' => 100],
-        ], $actor)->first();
+        ], $supervisor)->first();
         $stage = $moduleModel->stages()->orderBy('sort_order')->first();
 
         $task = Task::factory()->create([
