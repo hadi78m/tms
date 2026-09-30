@@ -1,0 +1,163 @@
+
+  [39;41;1m FAIL [39;49;22m[39m Tests\Feature\V19\WbsPhaseUiTest[39m
+  [31;1m⨯[39;22m[90m [39m[90mindex and show require auth and role[39m[90m                                                                        [39m [90m2.03s[39m  
+  [31m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[39m  
+  [41;1m FAILED [49;22m [1mTests\Feature\V19\WbsPhaseUiTest[22m [90m>[39m index and show require auth and role                                      
+[39;1m  Expected: [39;22m[31m<!DOCTYPE html>\n
+[39m[31m<html lang="fa" dir="rtl">[39m[31m\n
+[39m[31m<head>[39m[31m\n
+    [39m[31m<meta charset="UTF-8">[39m[31m\n
+    [39m[31m<meta name="viewport" content="width=device-width, initial-scale=1.0">[39m[31m\n
+    [39m[31m<meta name="csrf-token" content="o8yl60KNX4H1Ntfipz6vgCj2wIm5wxFAAvXLEpux">[39m[31m\n
+    [39m[31m<title>[39m[31mفاز WBS - TMS[39m[31m</title>[39m[31m\n
+    \n
+    <!-- Fonts -->\n
+    [39m[31m<link rel="preconnect" href="https://fonts.bunny.net">[39m[31m\n
+    [39m[31m<link href="https://fonts.bunny.net/css?family=vazirmatn:400,500,600,700&display=swap" rel="stylesheet" />[39m[31m\n
+    \n
+    <!-- FontAwesome -->\n
+    [39m[31m<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">[39m[31m\n
+    \n
+    <!-- Persian Datepicker -->\n
+    [39m[31m<link rel="stylesheet" href="http://localhost:8000/css/persianDatepicker/persianDatepicker-default.css">[39m[31m\n
+\n
+    <!-- Scripts -->\n
+    [39m[31m<link rel="preload" as="style" href="http://localhost:8000/build/assets/app-CLd2xlbF.css" />[39m[31m<link rel="modulepreload" as="script" href="http://localhost:8000/build/assets/app-cd51XUGo.js" />[39m[31m<link rel="stylesheet" href="http://localhost:8000/build/assets/app-CLd2xlbF.css" />[39m[31m<script type="module" src="http://localhost:8000/build/assets/app-cd51XUGo.js">[39m[31m</script>[39m[31m    [39m[31m<style>[39m[31m\n
+        body { font-family: 'Vazirmatn', sans-serif; }\n
+    [39m[31m</style>[39m[31m\n
+    [39m[31m</head>[39m[31m\n
+[39m[31m<body class="bg-gray-50 text-gray-800 antialiased font-sans">[39m[31m\n
+    [39m[31m<div class="flex h-screen overflow-hidden">[39m[31m\n
+        \n
+        <!-- Sidebar -->\n
+        [39m[31m<aside class="w-64 bg-slate-800 text-white flex flex-col shadow-lg transition-all duration-300 z-20 hidden md:flex">[39m[31m\n
+            [39m[31m<div class="flex items-center justify-center h-16 border-b border-slate-700">[39m[31m\n
+                [39m[31m<span class="text-xl font-bold tracking-wider uppercase">[39m[31mTMS[39m[31m</span>[39m[31m\n
+            [39m[31m</div>[39m[31m\n
+            \n
+            [39m[31m<nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">[39m[31m\n
+                [39m[31m<a href="http://localhost:8000/dashboard" class="flex items-center px-4 py-3 bg-slate-700 text-white rounded-lg group transition-colors">[39m[31m\n
+                <!-- Navigation Links -->\n
+                [39m[31m<nav class="space-y-1">[39m[31m\n
+                    [39m[31m<a href="http://localhost:8000/dashboard" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-50 ">[39m[31m\n
+                        [39m[31m<svg class="w-5 h-5 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">[39m[31m<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>[39m[31m</svg>[39m[31m\n
+                        پیشخوان\n
+                    [39m[31m</a>[39m[31m\n
+                    \n
+                    [39m[31m<a href="http://localhost:8000/tasks" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-50 ">[39m[31m\n
+                        [39m[31m<svg class="w-5 h-5 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">[39m[31m<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>[39m[31m</svg>[39m[31m\n
+                        مدیریت وظایف\n
+                    [39m[31m</a>[39m[31m\n
+\n
+                                        [39m[31m<a href="http://localhost:8000/reports" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-slate-700 hover:bg-slate-50 ">[39m[31m\n
+                        [39m[31m<svg class="w-5 h-5 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">[39m[31m<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>[39m[31m</svg>[39m[31m\n
+                        گزارش‌ها\n
+                    [39m[31m</a>[39m[31m\n
+                    \n
+                                    [39m[31m</nav>[39m[31m\n
+            [39m[31m</nav>[39m[31m\n
+            \n
+            [39m[31m<div class="p-4 border-t border-slate-700">[39m[31m\n
+                [39m[31m<div class="flex items-center px-4 py-2">[39m[31m\n
+                    [39m[31m<div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold">[39m[31m\n
+                        C\n
+                    [39m[31m</div>[39m[31m\n
+                    [39m[31m<div class="mr-3 text-sm">[39m[31m\n
+                        [39m[31m<p class="font-medium truncate">[39m[31mCaterina Heaney[39m[31m</p>[39m[31m\n
+                        [39m[31m<p class="text-slate-400 text-xs truncate">[39m[31m1752314183[39m[31m</p>[39m[31m\n
+                    [39m[31m</div>[39m[31m\n
+                [39m[31m</div>[39m[31m\n
+                [39m[31m<form method="POST" action="http://localhost:8000/logout" class="mt-2">[39m[31m\n
+                    [39m[31m<input type="hidden" name="_token" value="o8yl60KNX4H1Ntfipz6vgCj2wIm5wxFAAvXLEpux" autocomplete="off">[39m[31m                    [39m[31m<button type="submit" class="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 rounded-lg transition-colors">[39m[31m\n
+                        [39m[31m<i class="fas fa-sign-out-alt w-6 text-center">[39m[31m</i>[39m[31m\n
+                        [39m[31m<span class="mr-2">[39m[31mخروج[39m[31m</span>[39m[31m\n
+                    [39m[31m</button>[39m[31m\n
+                [39m[31m</form>[39m[31m\n
+            [39m[31m</div>[39m[31m\n
+        [39m[31m</aside>[39m[31m\n
+\n
+        <!-- Main Content Wrapper -->\n
+        [39m[31m<div class="flex-1 flex flex-col overflow-hidden relative">[39m[31m\n
+            \n
+            <!-- Top Header -->\n
+            [39m[31m<header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">[39m[31m\n
+                [39m[31m<div class="flex items-center">[39m[31m\n
+                    [39m[31m<button class="md:hidden text-slate-500 hover:text-slate-700 focus:outline-none">[39m[31m\n
+                        [39m[31m<i class="fas fa-bars text-xl">[39m[31m</i>[39m[31m\n
+                    [39m[31m</button>[39m[31m\n
+                    [39m[31m<h2 class="text-lg font-semibold text-slate-800 mr-4 md:mr-0">[39m[31mفاز WBS: [39m[31m</h2>[39m[31m\n
+                [39m[31m</div>[39m[31m\n
+            [39m[31m</header>[39m[31m\n
+\n
+            <!-- Main Content Area -->\n
+            [39m[31m<main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">[39m[31m\n
+                <!-- Flash Messages -->\n
+                                \n
+                \n
+                \n
+                <!-- Page Content -->\n
+                [39m[31m<div class="max-w-4xl mx-auto space-y-6">[39m[31m\n
+    [39m[31m<div class="flex items-center justify-between">[39m[31m\n
+        [39m[31m<h1 class="text-2xl font-bold text-slate-800">[39m[31m</h1>[39m[31m\n
+            [39m[31m</div>[39m[31m\n
+\n
+        \n
+    [39m[31m<div class="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-4 text-sm">[39m[31m\n
+        [39m[31m<div>[39m[31m<span class="text-slate-500">[39m[31mپروژه:[39m[31m</span>[39m[31m -[39m[31m</div>[39m[31m\n
+        [39m[31m<div>[39m[31m<span class="text-slate-500">[39m[31mوضعیت:[39m[31m</span>[39m[31m تکمیل‌نشده[39m[31m</div>[39m[31m\n
+        [39m[31m<div class="col-span-2">[39m[31m<span class="text-slate-500">[39m[31mخروجی مورد انتظار:[39m[31m</span>[39m[31m مشاهدهٔ Checklist[39m[31m</div>[39m[31m\n
+            [39m[31m</div>[39m[31m\n
+\n
+    [39m[31m<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">[39m[31m\n
+        [39m[31m<div class="px-6 py-4 border-b border-slate-200 font-bold text-slate-800">[39m[31mچک‌لیست خروجی‌ها[39m[31m</div>[39m[31m\n
+        [39m[31m<ul class="divide-y divide-slate-100">[39m[31m\n
+                        [39m[31m<li class="px-6 py-8 text-center text-slate-400">[39m[31mآیتمی در چک‌لیست ثبت نشده است.[39m[31m</li>[39m[31m\n
+                    [39m[31m</ul>[39m[31m\n
+    [39m[31m</div>[39m[31m\n
+[39m[31m</div>[39m[31m\n
+            [39m[31m</main>[39m[31m\n
+            \n
+        [39m[31m</div>[39m[31m\n
+    [39m[31m</div>[39m[31m\n
+    \n
+    <!-- jQuery & Persian Datepicker -->\n
+    [39m[31m<script src="http://localhost:8000/js/jquery-3.7.1.min.js">[39m[31m</script>[39m[31m\n
+    [39m[31m<script src="http://localhost:8000/js/persianDatepicker/persianDatepicker.min.js">[39m[31m</script>[39m[31m\n
+    [39m[31m<script>[39m[31m\n
+        $(document).ready(function() {\n
+            if ($.fn.persianDatepicker) {\n
+                $('.datedown').persianDatepicker({\n
+                    formatDate: "YYYY/MM/DD",\n
+                    showGregorianDate: false,\n
+                    autoClose: true\n
+                });\n
+                $('.datetop').persianDatepicker({\n
+                    calendarPosition: { x: 0, y: -350 },\n
+                    formatDate: "YYYY/MM/DD",\n
+                    showGregorianDate: false,\n
+                    autoClose: true\n
+                });\n
+            }\n
+        });\n
+    [39m[31m</script>[39m[31m\n
+    [39m[31m</body>[39m[31m\n
+[39m[31m</html>[39m[31m\n
+[39m[39;1m
+
+  To contain: [39;22m[32mPhase One[39m
+
+  at [32mtests\Feature\V19\WbsPhaseUiTest.php[39m:[32m41[39m
+     37▕ 
+     38▕         $this->actingAs($actor)
+     39▕             ->get(route('wbs-phases.show', $phase))
+     40▕             ->assertOk()
+  ➜  41▕             ->assertSee('Phase One');
+     42▕     }
+     43▕ 
+     44▕     public function test_store_creates_phase_with_default_expected_output(): void
+     45▕     {
+
+
+  [90mTests:[39m    [31;1m1 failed[39;22m[90m (5 assertions)[39m
+  [90mDuration:[39m [39m2.35s[39m
+
