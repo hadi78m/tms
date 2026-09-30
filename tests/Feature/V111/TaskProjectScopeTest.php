@@ -347,4 +347,101 @@ class TaskProjectScopeTest extends TestCase
             ->post(route('tasks.stage', $this->taskB->id), ['module_stage_id' => null])
             ->assertForbidden();
     }
+
+    // ------------------------------------------------------------------
+    // V1.11 I-4 — retrieval-audit coverage (mission §13/§14)
+    // ------------------------------------------------------------------
+
+    /**
+     * I-4 gap fix: addDependency resolves the PREDECESSOR task via
+     * Task::findOrFail with no scope gate. A supervisor of project A must
+     * not be able to probe arbitrary task IDs through the dependency input —
+     * a foreign-project predecessor is a 403, identical in semantics to
+     * show/start/submit (repo convention kept, mission §8). In-scope wiring
+     * keeps working.
+     */
+    public function test_add_dependency_predecessor_id_is_scope_checked(): void
+    {
+        // In-scope predecessor: allowed (same project — service invariant OK).
+        $taskA2 = $this->makeTask($this->projectA, 'Task A2');
+
+        $this->actingAs($this->supervisorS)
+            ->post(route('tasks.dependencies.store', $this->taskA->id), ['depends_on_task_id' => $taskA2->id])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('task_dependencies', [
+            'successor_task_id' => $this->taskA->id,
+            'predecessor_task_id' => $taskA2->id,
+        ]);
+
+        // Cross-project successor (Task B) was already denied by I-3 —
+        // re-verified here as part of the I-4 surface matrix.
+        $this->actingAs($this->supervisorS)
+            ->post(route('tasks.dependencies.store', $this->taskB->id), ['depends_on_task_id' => $this->taskA->id])
+            ->assertForbidden();
+    }
+
+    /**
+     * Direct-ID enumeration via the dependency input (mission §6/§14): the
+     * predecessor Task::findOrFail is itself a retrieval surface — guessing
+     * Task B's ID from project A must be a scope denial, not a service-level
+     * 'same project' exception leak. The 403 must not echo the foreign
+     * task's identity markers.
+     */
+    public function test_dependency_input_does_not_leak_foreign_task_identity(): void
+    {
+        $response = $this->actingAs($this->supervisorS)
+            ->post(route('tasks.dependencies.store', $this->taskA->id), ['depends_on_task_id' => $this->taskB->id])
+            ->assertForbidden();
+
+        $content = $response->getContent();
+        $this->assertStringNotContainsString('Task B', $content);
+        $this->assertStringNotContainsString('Project B', $content);
+    }
+
+    /**
+     * Ended membership revokes dependency wiring too — retrieval scope and
+     * write scope must move together (V11-01 OD-6-a).
+     */
+    public function test_ended_membership_denies_dependency_creation(): void
+    {
+        $taskA2 = $this->makeTask($this->projectA, 'Task A2');
+        app(ProjectMembershipService::class)->endActiveSupervisor($this->projectA, $this->admin);
+
+        $this->actingAs($this->supervisorS)
+            ->post(route('tasks.dependencies.store', $this->taskA->id), ['depends_on_task_id' => $taskA2->id])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('task_dependencies', [
+            'successor_task_id' => $this->taskA->id,
+            'predecessor_task_id' => $taskA2->id,
+        ]);
+    }
+
+    /**
+     * Replacement supervisor inherits dependency wiring scope: after T
+     * replaces S on project A, T can wire dependencies on A's tasks and S
+     * cannot (V11-01 OD-6-d retrieval/write parity).
+     */
+    public function test_replacement_supervisor_moves_dependency_scope(): void
+    {
+        $taskA2 = $this->makeTask($this->projectA, 'Task A2');
+        app(ProjectMembershipService::class)->assignSupervisor(
+            new AssignProjectSupervisorData(project_id: $this->projectA->id, user_id: $this->supervisorT->id, assigned_by: $this->admin->id),
+            $this->admin
+        );
+
+        $this->actingAs($this->supervisorS)
+            ->post(route('tasks.dependencies.store', $this->taskA->id), ['depends_on_task_id' => $taskA2->id])
+            ->assertForbidden();
+
+        $this->actingAs($this->supervisorT)
+            ->post(route('tasks.dependencies.store', $this->taskA->id), ['depends_on_task_id' => $taskA2->id])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('task_dependencies', [
+            'successor_task_id' => $this->taskA->id,
+            'predecessor_task_id' => $taskA2->id,
+        ]);
+    }
 }

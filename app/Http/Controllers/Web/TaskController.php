@@ -16,6 +16,7 @@ use App\Models\Task;
 use App\Models\TaskDependency;
 use App\Models\WbsPhase;
 use App\Domain\Rules\ProjectScopeService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -190,6 +191,20 @@ class TaskController extends Controller
 
         try {
             $dependsOnTask = Task::findOrFail($request->input('depends_on_task_id'));
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        // V1.11 (DEC-049 I-4): the PREDECESSOR task is a second Task retrieval
+        // surface — direct-ID enumeration must not reveal that a guessed task
+        // exists in a foreign project. Scope is enforced through the same
+        // canonical Policy layer as tasks.show; the service-level same-project
+        // invariant stays as the business backstop (never the sole gate).
+        // The authorize call sits OUTSIDE the try below — AuthorizationException
+        // must surface as 403, never be swallowed into a redirect.
+        $this->authorize('view', $dependsOnTask);
+
+        try {
             $this->taskService->addDependency($task, $dependsOnTask, $user);
 
             return back()->with('status', 'پیش‌نیاز با موفقیت اضافه شد.');
