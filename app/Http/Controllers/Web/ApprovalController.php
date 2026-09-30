@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Domain\Enums\ApprovalStatus;
 use App\Domain\Enums\ApprovalType;
+use App\Models\Approval;
 use App\Domain\Enums\TaskStatus;
 use App\Domain\Services\ApprovalService;
 use App\Http\Controllers\Controller;
@@ -24,13 +25,23 @@ class ApprovalController extends Controller
         $status = $request->input('status');
         $comment = $request->input('comment');
 
-        // بررسی مجوز: تایید فنی تنها توسط کاربران دارای مجوز technical_approval
-        if ($approvalType === ApprovalType::Technical->value) {
-            if (! $actor->can('technical_approval')) {
-                return redirect()->route('tasks.show', $task->id)
-                    ->with('error', 'شما مجوز انجام تایید فنی را ندارید.');
-            }
+        // V1.11 Approval Phase 2 (DEC-058/059 · I-2): resource authorization
+        // = ApprovalPolicy (Role + Permission + Project Scope). The former
+        // raw ->can('technical_approval'/'final_approval') checks are fully
+        // covered by the policy's permission layer — no duplicate check.
+        // The Gate resolves ApprovalPolicy via the Approval resource class
+        // (explicit registration); the UNSAVED lookahead instance carries
+        // the target task so the policy scopes against the TARGET project
+        // before any row is written. No controller scope logic is added;
+        // the cross-project HTTP matrix is completed in I-3.
+        $this->authorize(
+            $approvalType === ApprovalType::Final->value ? 'createFinal' : 'createTechnical',
+            new Approval(['task_id' => $task->id])
+        );
 
+        // بررسی مجوز (V1.11 I-2: توسط ApprovalPolicy::createTechnical پوشش داده می‌شود —
+        // Role + permission + Project Scope)
+        if ($approvalType === ApprovalType::Technical->value) {
             if ($task->status !== TaskStatus::UnderReview->value) {
                 return redirect()->route('tasks.show', $task->id)
                     ->with('error', 'تایید فنی تنها در وضعیت «در حال بررسی» ممکن است.');
@@ -45,13 +56,9 @@ class ApprovalController extends Controller
             return redirect()->route('tasks.show', $task->id)->with('status', $message);
         }
 
-        // بررسی مجوز: تایید نهایی تنها توسط کاربران دارای مجوز final_approval
+        // بررسی مجوز (V1.11 I-2: توسط ApprovalPolicy::createFinal پوشش داده می‌شود —
+        // Role + permission + Project Scope)
         if ($approvalType === ApprovalType::Final->value) {
-            if (! $actor->can('final_approval')) {
-                return redirect()->route('tasks.show', $task->id)
-                    ->with('error', 'شما مجوز انجام تایید نهایی را ندارید.');
-            }
-
             if ($task->status !== TaskStatus::SupervisorApproved->value) {
                 return redirect()->route('tasks.show', $task->id)
                     ->with('error', 'تایید نهایی تنها پس از تایید فنی ناظر ممکن است.');

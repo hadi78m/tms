@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\V19;
 
+use App\Domain\DTOs\AssignProjectSupervisorData;
+use App\Domain\Services\ProjectMembershipService;
 use App\Domain\Services\StageProgressApprovalService;
 use App\Models\Project;
 use App\Models\StageProgressApproval;
@@ -45,6 +47,24 @@ class StageApprovalUiTest extends TestCase
 
         $module = $this->makeSingleModule($this->project, $this->supervisor);
         $this->stage = $module->stages()->firstWhere('stage_code', 'analysis');
+
+        // V1.11 Phase 2 · I-2 (DEC-048/OD-6-a fixture adaptation): the stage-
+        // progress write surface is now scope-authorized through the I-1
+        // policy (ProjectScopeService). A supervisor's scope = projects with
+        // an ACTIVE membership — the pre-V1.11 fixture had none. Granting the
+        // active membership here preserves every test's original invariant
+        // target (mode / ceiling / chain / audit — all still service-owned).
+        \Spatie\Permission\Models\Role::findOrCreate('admin', 'web');
+        $admin = User::factory()->create(['contractor_id' => null]);
+        $admin->assignRole('admin');
+        app(ProjectMembershipService::class)->assignSupervisor(
+            new AssignProjectSupervisorData(
+                project_id: $this->project->id,
+                user_id: $this->supervisor->id,
+                assigned_by: $admin->id
+            ),
+            $admin
+        );
     }
 
     private function service(): StageProgressApprovalService

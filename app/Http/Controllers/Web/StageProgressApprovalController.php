@@ -31,9 +31,21 @@ class StageProgressApprovalController extends Controller
 
     /**
      * Propose a progress amount for a stage (or supersede an existing row).
+     *
+     * V1.11 Approval Phase 2 (DEC-056/058 · I-2 · Closure Gate Finding A):
+     * resource authorization = StageProgressApprovalPolicy::propose —
+     * Role boundary stays in the route middleware (authoritative), the policy
+     * adds Project Scope via ProjectScopeService (canonical), and the mode /
+     * business invariants remain in StageProgressApprovalService. No stage-
+     * progress permission exists and none is invented (DEC-059). The Gate
+     * resolves StageProgressApprovalPolicy via the StageProgressApproval
+     * resource class; the UNSAVED lookahead instance carries the target
+     * stage's module_id so the policy scopes before any row is written.
      */
     public function store(ModuleStage $stage, StoreStageProgressApprovalRequest $request): RedirectResponse
     {
+        $this->authorize('propose', new StageProgressApproval(['module_id' => $stage->module_id]));
+
         $actor = Auth::user();
 
         try {
@@ -58,6 +70,9 @@ class StageProgressApprovalController extends Controller
      */
     public function adjust(StageProgressApproval $approval, StoreStageProgressApprovalRequest $request): RedirectResponse
     {
+        // V1.11 (I-2): scope via StageProgressApprovalPolicy (see store()).
+        $this->authorize('adjust', $approval);
+
         try {
             $this->approvalService->adjust($approval, Auth::user(), $request->proposedAmount(), $request->reason());
         } catch (StageApprovalAuthorizationException|InvalidApprovalException|PendingRequestExistsException $e) {
@@ -72,6 +87,10 @@ class StageProgressApprovalController extends Controller
      */
     public function decide(StageProgressApproval $approval, DecideStageProgressApprovalRequest $request): RedirectResponse
     {
+        // V1.11 (I-2): role boundary = role:supervisor mw; the policy adds
+        // Project Scope (supervisor + foreign-project approval = 403).
+        $this->authorize('decide', $approval);
+
         $supervisor = Auth::user();
 
         try {
