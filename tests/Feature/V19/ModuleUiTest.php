@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\V19;
 
+use App\Domain\DTOs\AssignProjectSupervisorData;
 use App\Domain\Services\ModuleService;
+use App\Domain\Services\ProjectMembershipService;
 use App\Models\Module;
 use App\Models\Project;
 use App\Models\User;
@@ -54,7 +56,24 @@ class ModuleUiTest extends TestCase
     {
         // Supervisor IS allowed read access per route definition; use viewer for
         // the negative case of the write-only group instead.
+        //
+        // V1.11 Module Phase · I-2 (DEC-060 fixture adaptation): modules.show is
+        // now scope-authorized through ModulePolicy (ProjectScopeService). A
+        // supervisor's scope = projects with an ACTIVE membership; the pre-
+        // V1.11 fixture had none. Granting the membership preserves this
+        // test's original invariant (supervisor HAS read access to the module
+        // page) — the role boundary itself is unchanged.
         $supervisor = $this->makeUserWithRole('supervisor');
+        $admin = $this->makeUserWithRole('admin');
+
+        app(ProjectMembershipService::class)->assignSupervisor(
+            new AssignProjectSupervisorData(
+                project_id: $this->project->id,
+                user_id: $supervisor->id,
+                assigned_by: $admin->id
+            ),
+            $admin
+        );
 
         $this->actingAs($supervisor)->get(route('modules.show', $this->project))->assertOk();
     }

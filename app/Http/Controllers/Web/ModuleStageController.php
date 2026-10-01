@@ -52,6 +52,13 @@ class ModuleStageController extends Controller
      */
     public function rebalance(Module $module, RebalanceStagesRequest $request): RedirectResponse
     {
+        // V1.11 (DEC-066 · DEC-062 · I-2): ModulePolicy::rebalanceStages — the
+        // route binds a MODULE (modules.stages.rebalance), so the weight
+        // authorization lives on ModulePolicy, not ModuleStagePolicy. Adds the
+        // role mirror + Project Scope; weight invariants stay in
+        // ModuleStageService. NOT I-4 (no ModuleStagePolicy/Stage scope here).
+        $this->authorize('rebalanceStages', $module);
+
         try {
             $this->stageService->rebalance($module, $request->weightsByStageId(), Auth::user());
         } catch (StageWeightLockedException $e) {
