@@ -31,6 +31,12 @@ class ModuleStageController extends Controller
 
     public function show(ModuleStage $stage): View
     {
+        // V1.11 (DEC-061 · DEC-063 · I-4): ModuleStagePolicy::view — Project
+        // Scope via ModuleStage → Module → Project (fail-closed), closing the
+        // I-3 direct-ID enumeration gap. Role boundary stays in the route
+        // middleware; no permission check (DEC-064).
+        $this->authorize('view', $stage);
+
         $stage->load([
             'module.stages.approvals',
             'approvals.proposer',

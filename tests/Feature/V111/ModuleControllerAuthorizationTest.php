@@ -317,8 +317,21 @@ class ModuleControllerAuthorizationTest extends TestCase
 
     public function test_no_module_stage_policy_is_introduced_in_i2(): void
     {
-        $this->assertFalse(class_exists(\App\Policies\ModuleStagePolicy::class));
-        $this->assertFileDoesNotExist(app_path('Policies/ModuleStagePolicy.php'));
+        // V1.11 I-4 (owner-approved): the pin expired when ModuleStagePolicy
+        // was introduced. Updated to the end-state: the policy exists with
+        // EXACTLY the view ability — nothing more (no rebalance/updateWeight
+        // leak from the Module-level rebalance authorization).
+        $this->assertTrue(class_exists(\App\Policies\ModuleStagePolicy::class));
+
+        $methods = collect((new \ReflectionClass(\App\Policies\ModuleStagePolicy::class))
+            ->getMethods(\ReflectionMethod::IS_PUBLIC))
+            ->filter(fn ($m) => ! str_starts_with($m->getName(), '__'))
+            ->map(fn ($m) => $m->getName())
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame(['view'], $methods);
     }
 
     public function test_no_new_module_permission_is_introduced(): void

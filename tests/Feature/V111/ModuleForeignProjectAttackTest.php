@@ -352,10 +352,14 @@ class ModuleForeignProjectAttackTest extends TestCase
         $method = new \ReflectionMethod(ModuleStageController::class, 'rebalance');
         $this->assertSame(Module::class, (string) $method->getParameters()[0]->getType());
 
-        // The ability lives on ModulePolicy; no ModuleStagePolicy exists (I-4).
+        // The ability lives on ModulePolicy; I-4 (owner-approved) added
+        // ModuleStagePolicy but ONLY with a view ability — rebalance
+        // authorization stays module-level and must never leak to a stage
+        // ability (updateWeight etc.).
         $this->assertTrue(method_exists(\App\Policies\ModulePolicy::class, 'rebalanceStages'));
-        $this->assertFalse(class_exists(\App\Policies\ModuleStagePolicy::class));
-        $this->assertFileDoesNotExist(app_path('Policies/ModuleStagePolicy.php'));
+        $this->assertTrue(class_exists(\App\Policies\ModuleStagePolicy::class));
+        $this->assertFalse(method_exists(\App\Policies\ModuleStagePolicy::class, 'rebalanceStages'));
+        $this->assertFalse(method_exists(\App\Policies\ModuleStagePolicy::class, 'updateWeight'));
     }
 
     // ==================================================================
