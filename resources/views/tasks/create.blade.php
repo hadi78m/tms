@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@use('App\Domain\Enums\TaskPriority')
+
 @section('title', 'ایجاد وظیفه جدید')
 @section('header_title', 'ایجاد وظیفه جدید')
 
@@ -94,10 +96,14 @@
                     <label for="priority" class="block text-sm font-medium text-slate-700 mb-1">اولویت <span class="text-red-500">*</span></label>
                     <select name="priority" id="priority" required
                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white">
-                        <option value="low" {{ old('priority') == 'low' ? 'selected' : '' }}>پایین</option>
-                        <option value="medium" {{ old('priority', 'medium') == 'medium' ? 'selected' : '' }}>متوسط</option>
-                        <option value="high" {{ old('priority') == 'high' ? 'selected' : '' }}>بالا</option>
-                        <option value="critical" {{ old('priority') == 'critical' ? 'selected' : '' }}>بحرانی</option>
+                        {{-- مقادیر از TaskPriority خوانده می‌شوند: پیش‌تر مقادیر
+                             medium/critical پیشنهاد می‌شد که هیچ‌کدام مقدار معتبر
+                             enum نبودند و StoreTaskRequest آن‌ها را رد می‌کرد. --}}
+                        @foreach (TaskPriority::cases() as $priorityOption)
+                            <option value="{{ $priorityOption->value }}" {{ old('priority', TaskPriority::Normal->value) === $priorityOption->value ? 'selected' : '' }}>
+                                {{ $priorityOption->label() }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 

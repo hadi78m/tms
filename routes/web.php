@@ -42,6 +42,15 @@ Route::middleware('auth')->group(function () {
         Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
     });
 
+    // Phase 3 — Read-only Kanban Board (Board Design Gate).
+    // A SECOND READ-ONLY VIEW over the same task data. GET-only by
+    // construction: no POST/PUT/PATCH/DELETE for the board exists anywhere.
+    // Scope/isolation reuse the existing tasks.index surfaces verbatim — no
+    // new policy, no new permission. Registered BEFORE the resource so the
+    // literal URI /tasks/board wins over the {task} placeholder (routes
+    // match in declaration order).
+    Route::get('tasks/board', [TaskController::class, 'board'])->name('tasks.board');
+
     Route::resource('tasks', TaskController::class)->except(['create', 'store']);
 
     // Task sub-routes. V1.10 (DEC-044 — F-3 FIX NOW): tasks.assign now

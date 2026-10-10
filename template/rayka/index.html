@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رایکا | سامانه مدیریت تسک توسعه نرم‌افزار</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      cream:{50:'#FDFBF4',100:'#F8F3E7',200:'#EFE6CF',300:'#E0D2AC',400:'#C9B787'},
+      ink:{900:'#1C2A38',700:'#3A4E62',500:'#64798E',400:'#8CA0B3'},
+      sea:{900:'#0B2540',800:'#12395F',700:'#0F4C81',600:'#1A629E',500:'#2E7DB8',100:'#DEEBF6',50:'#F0F6FB'},
+      sun:{500:'#F2B705',600:'#D9A004',100:'#FBF0C4'},
+      tang:{500:'#E8722A',600:'#C95D1B',100:'#FBE4D0'},
+      leaf:{500:'#2E9E63',600:'#218551',100:'#DDF2E5'},
+      berry:{500:'#D14B4B',600:'#B23A3A',100:'#F9DEDE'},
+    },
+    fontFamily: { sans:['Vazirmatn','sans-serif'] },
+    boxShadow: {
+      soft:'0 1px 2px rgba(28,42,56,.05), 0 10px 28px -12px rgba(28,42,56,.14)',
+      lift:'0 18px 48px -12px rgba(11,37,64,.38)',
+    }
+  }}
+}
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+
+<style type="text/tailwindcss">
+  .card{@apply bg-white rounded-2xl border border-cream-200/90 shadow-soft;}
+  .fld{@apply w-full rounded-xl border border-cream-300 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 outline-none focus:border-sea-500 focus:ring-2 focus:ring-sea-500/20 transition;}
+  .btn{@apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition select-none cursor-pointer active:scale-[.98];}
+  .btn-primary{@apply btn bg-sea-700 text-white hover:bg-sea-800;}
+  .btn-sun{@apply btn bg-sun-500 text-sea-900 hover:bg-sun-600 shadow-lg shadow-sun-500/25;}
+  .btn-ghost{@apply btn bg-white border border-cream-300 text-ink-700 hover:border-sea-500 hover:text-sea-700;}
+  .btn-danger{@apply btn bg-berry-500 text-white hover:bg-berry-600;}
+  .iconbtn{@apply w-9 h-9 grid place-items-center rounded-xl transition cursor-pointer;}
+  .chip{@apply inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-bold leading-5;}
+  .cico{@apply w-8 h-8 rounded-lg grid place-items-center flex-none;}
+  .ctitle{@apply flex items-center gap-2.5 text-sm font-extrabold text-ink-900;}
+  .flabel{@apply block text-[12px] font-bold text-ink-700 mb-1.5;}
+</style>
+
+<style>
+  body{
+    background-color:#F6F1E3;
+    background-image:radial-gradient(rgba(29,49,70,.055) 1px, transparent 1.2px);
+    background-size:22px 22px;
+  }
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#D8CBAA;border-radius:8px;border:2px solid #F6F1E3}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .view-anim{animation:fadeUp .45s cubic-bezier(.22,.8,.36,1) both}
+  .rise{animation:fadeUp .5s cubic-bezier(.22,.8,.36,1) both}
+  .modal-pop{animation:popIn .3s cubic-bezier(.22,.8,.36,1)}
+  .toast-in{animation:toastIn .3s cubic-bezier(.22,.8,.36,1)}
+  .pulse-dot{animation:blink 1.8s infinite}
+
+  /* ---- کارت‌های استیکی ---- */
+  .sticky-card{transform:rotate(var(--rot,0deg));transition:transform .25s ease, box-shadow .25s ease;}
+  .sticky-card:hover{transform:rotate(0deg) translateY(-3px);box-shadow:0 16px 30px -12px rgba(28,42,56,.3);}
+  .tape{position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(-2.5deg);width:72px;height:17px;
+        background:rgba(255,255,255,.55);box-shadow:0 1px 3px rgba(28,42,56,.14);border-inline:1px dashed rgba(28,42,56,.1);}
+  .dragging{opacity:.4;transform:rotate(3deg) scale(.97)!important}
+  .drop-hint{outline:2px dashed rgba(15,76,129,.5);outline-offset:-5px;background:rgba(46,125,184,.07)!important}
+  .stamp{border:2px solid rgba(46,158,99,.55);color:#218551;transform:rotate(-8deg);background:rgba(255,255,255,.6)}
+
+  /* ---- سایدبار ---- */
+  .subnav{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,.8,.36,1)}
+  .subnav.open{max-height:280px}
+  .chev{transition:transform .3s}
+  .chev.open{transform:rotate(180deg)}
+
+  /* ---- سوییچ ---- */
+  .sw{width:38px;height:22px;border-radius:999px;background:#D9CBAA;position:relative;transition:background .2s;cursor:pointer;flex:none;display:inline-block}
+  .sw::after{content:'';position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+  .sw.on{background:#2E9E63}
+  .sw.on::after{transform:translateX(-16px)}
+
+  /* ---- چارت‌ها ---- */
+  .donut-seg{transition:stroke-dasharray .9s cubic-bezier(.22,.8,.36,1)}
+  .draw-line{transition:stroke-dashoffset 1.4s ease .15s}
+  .area-fill{opacity:0;transition:opacity .9s ease .5s}
+  .bar-grow{transition:height .8s cubic-bezier(.22,.8,.36,1)}
+  [data-w]{transition:width .8s cubic-bezier(.22,.8,.36,1)}
+</style>
+</head>
+
+<body class="font-sans text-ink-900 antialiased min-h-screen">
+
+  <!-- ═══════════ سایدبار ═══════════ -->
+  <aside id="sidebar" class="fixed top-0 right-0 z-40 h-full w-64 bg-sea-900 text-cream-100 flex flex-col translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-lift">
+    <div class="px-5 pt-6 pb-5 flex items-center gap-3 border-b border-white/10">
+      <div class="w-10 h-10 rounded-xl bg-sun-500 text-sea-900 grid place-items-center font-black text-xl shadow">ر</div>
+      <div>
+        <div class="font-black text-lg leading-5">رایکا</div>
+        <div class="text-[11px] text-cream-200/60 mt-0.5">سامانه مدیریت توسعه</div>
+      </div>
+    </div>
+
+    <nav id="nav" class="flex-1 overflow-y-auto py-4 px-3 space-y-1.5 text-sm"></nav>
+
+    <div class="p-4 border-t border-white/10">
+      <div class="rounded-xl bg-white/5 border border-white/10 p-3.5">
+        <div class="flex justify-between text-[11px] text-cream-200/70 font-bold">
+          <span>اسپرینت جاری</span><span id="sb-days"></span>
+        </div>
+        <div class="mt-2.5 h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <div id="sb-bar" class="h-full bg-sun-500 rounded-full" style="width:0%" data-w="0"></div>
+        </div>
+        <div id="sb-lbl" class="mt-2 text-[11px] text-cream-200/80 font-bold"></div>
+      </div>
+    </div>
+  </aside>
+  <div id="backdrop" class="hidden fixed inset-0 z-30 bg-sea-900/50 backdrop-blur-sm lg:hidden" onclick="closeSidebar()"></div>
+
+  <!-- ═══════════ بدنه اصلی ═══════════ -->
+  <main class="lg:mr-64 min-h-screen flex flex-col">
+
+    <!-- هدر با پس‌زمینه عکس واقعی -->
+    <header class="relative overflow-hidden">
+      <img src="https://picsum.photos/seed/rayka-workspace/1600/420.jpg" alt="فضای کار تیم توسعه" class="absolute inset-0 w-full h-full object-cover saturate-[.4] opacity-45">
+      <div class="absolute inset-0 bg-sea-900/80"></div>
+
+      <div class="relative px-5 lg:px-9 pt-5 pb-7 text-cream-100">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <button class="iconbtn hover:bg-white/10 lg:hidden" onclick="openSidebar()"><i data-lucide="menu" class="w-5 h-5"></i></button>
+            <span class="text-[12px] text-cream-200/70 font-bold">فضای کاری / رایکا / <span id="crumb" class="text-cream-100"></span></span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <div class="hidden sm:flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-[12px] font-bold">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-sun-500"></i><span id="today-fa"></span>
+              <span class="w-px h-4 bg-white/20"></span>
+              <span id="clock" class="tabular-nums tracking-wide"></span>
+            </div>
+
+            <!-- اعلان‌ها -->
+            <div class="relative">
+              <button onclick="toggleNotif(event)" class="iconbtn hover:bg-white/10 relative">
+                <i data-lucide="bell" class="w-[18px] h-[18px]"></i>
+                <span id="notif-badge" class="absolute top-0.5 left-0.5 w-4 h-4 text-[9px] font-black bg-sun-500 text-sea-900 rounded-full grid place-items-center">۳</span>
+              </button>
+              <div id="notif-panel" class="hidden absolute left-0 mt-2 w-80 max-w-[86vw] bg-white rounded-2xl shadow-lift border border-cream-200 overflow-hidden text-ink-900 z-50">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-cream-100 bg-cream-50">
+                  <span class="text-sm font-extrabold">اعلان‌ها</span>
+                  <button onclick="markAllRead()" class="text-[11px] font-bold text-sea-700 hover:underline">علامت‌گذاری همه</button>
+                </div>
+                <div id="notif-list" class="divide-y divide-cream-100"></div>
+              </div>
+            </div>
+
+            <!-- کاربر -->
+            <div class="relative">
+              <button onclick="toggleUserMenu(event)" class="flex items-center gap-2.5 hover:opacity-90 transition">
+                <span id="avatar-me" class="w-9 h-9 rounded-xl bg-leaf-500 text-white grid place-items-center font-black shadow">ن</span>
+                <span class="hidden md:block text-right leading-4">
+                  <span class="block text-[13px] font-bold">نگار رستمی</span>
+                  <span class="block text-[10px] text-cream-200/70 mt-0.5">طراح ارشد محصول</span>
+                </span>
+              </button>
+              <div id="user-panel" class="hidden absolute left-0 mt-2 w-52 bg-white rounded-2xl shadow-lift border border-cream-200 overflow-hidden text-ink-900 z-50 py-1.5">
+                <div class="px-3.5 py-1.5 text-[10px] font-bold text-ink-400">وضعیت من</div>
+                <button onclick="setPresence('#2E9E63','آنلاین')" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-bold hover:bg-cream-50"><span class="w-2.5 h-2.5 rounded-full bg-leaf-500"></span>آنلاین</button>
+                <button onclick="setPresence('#F2B705','مشغول')" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-bold hover:bg-cream-50"><span class="w-2.5 h-2.5 rounded-full bg-sun-500"></span>مشغول</button>
+                <button onclick="setPresence('#8CA0B3','دور از میز')" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-bold hover:bg-cream-50"><span class="w-2.5 h-2.5 rounded-full bg-ink-400"></span>دور از میز</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-7 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 id="page-title" class="text-2xl lg:text-[28px] font-black tracking-tight"></h1>
+            <div class="w-10 h-1 bg-sun-500 rounded-full mt-2.5"></div>
+            <p id="page-sub" class="text-cream-200/80 text-[13px] mt-2.5"></p>
+          </div>
+          <div id="page-actions" class="flex gap-2"></div>
+        </div>
+      </div>
+      <div class="relative h-1 bg-sun-500"></div>
+    </header>
+
+    <div id="view" class="flex-1 p-5 lg:p-7 max-w-[1400px] w-full mx-auto"></div>
+  </main>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed bottom-4 left-4 z-[70] space-y-2.5 w-[min(360px,90vw)]"></div>
+
+<script>
+/* ════════════════════ ابزارهای پایه ════════════════════ */
+const H=3600e3, D=24*H, FA='۰۱۲۳۴۵۶۷۸۹';
+const fa=x=>String(x).replace(/\d/g,d=>FA[d]);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const pad=n=>String(n).padStart(2,'0');
+function rot(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))|0;return ((Math.abs(h)%7)-3)*0.4;}
+function g2j(gy,gm,gd){
+  const gdm=[0,31,59,90,120,151,181,212,243,273,304,334],dv=(a,b)=>~~(a/b);
+  let jy=gy<=1600?0:979; gy-=gy<=1600?621:1600;
+  const gy2=gm>2?gy+1:gy;
+  let days=365*gy+dv(gy2+3,4)-dv(gy2+99,100)+dv(gy2+399,400)-80+gd+gdm[gm-1];
+  jy+=33*dv(days,12053); days%=12053; jy+=4*dv(days,1461); days%=1461;
+  if(days>365){jy+=dv(days-1,365);days=(days-1)%365;}
+  const jm=days<186?1+dv(days,31):7+dv(days-186,30);
+  const jd=1+(days<186?days%31:(days-186)%30);
+  return [jy,jm,jd];
+}
+const JM=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const WEEK=['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
+const jParts=ts=>{const d=new Date(ts);return g2j(d.getFullYear(),d.getMonth()+1,d.getDate());};
+const fmtJ=(ts,time)=>{const [y,m,d]=jParts(ts);const dt=new Date(ts);
+  return `${fa(d)} ${JM[m-1]}${time?`، ساعت ${fa(pad(dt.getHours()))}:${fa(pad(dt.getMinutes()))}`:''}`;};
+const isoDate=ts=>{const d=new Date(ts);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+const isoDT=ts=>{const d=new Date(ts);return `${isoDate(ts)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;};
+function cdShort(ms){
+  const neg=ms<0; ms=Math.abs(ms);
+  const d=Math.floor(ms/D),h=Math.floor(ms%D/H),m=Math.floor(ms%H/6e4);
+  const s=d>0?`${fa(d)} روز`:h>0?`${fa(h)} ساعت`:`${fa(m)} دقیقه`;
+  return neg?`${s} تأخیر`:`${s} مانده`;
+}
+const dlColor=ms=>ms<0?'#D14B4B':ms<12*H?'#E8722A':ms<36*H?'#D9A004':'#64798E';
+function refreshIcons(){if(window.lucide)lucide.createIcons();}
+
+/* ════════════════════ داده‌های پایه ════════════════════ */
+const MEMBERS=[
+  {id:'m1',name:'سارا محمدی',role:'توسعه‌دهنده بک‌اند',color:'#2E7DB8'},
+  {id:'m2',name:'امیر کاظمی',role:'مهندس زیرساخت',color:'#E8722A'},
+  {id:'m3',name:'نگار رستمی',role:'طراح ارشد محصول',color:'#2E9E63'},
+  {id:'m4',name:'پویا احمدی',role:'مهندس DevOps',color:'#D9A004'},
+  {id:'m5',name:'مریم توکلی',role:'کارشناس تضمین کیفیت',color:'#0F4C81'},
+];
+const ME='m3';
+const member=id=>MEMBERS.find(m=>m.id===id)||MEMBERS[0];
+
+const GROUPS={
+  'بک‌اند':{stick:'#FFF6D4',chip:'#8a6d00'},
+  'فرانت‌اند':{stick:'#E1EEF9',chip:'#12507f'},
+  'طراحی':{stick:'#FDF3DE',chip:'#9a6a12'},
+  'زیرساخت':{stick:'#FCE9D8',chip:'#a34c10'},
+  'تضمین کیفیت':{stick:'#E1F4E8',chip:'#1c7448'},
+  'مستندات':{stick:'#FDFBF4',chip:'#64798E'},
+};
+const STATUS={
+  todo:{label:'در انتظار شروع',dot:'#2E7DB8'},
+  inprogress:{label:'در جریان',dot:'#F2B705'},
+  review:{label:'در بازبینی',dot:'#E8722A'},
+  done:{label:'انجام شده',dot:'#2E9E63'},
+};
+const PRIO={'فوری':{c:'#D14B4B',ico:'flame'},'بالا':{c:'#E8722A',ico:'chevrons-up'},'متوسط':{c:'#D9A004',ico:'equals'},'کم':{c:'#2E7DB8',ico:'chevrons-down'}};
+const NOTIFS=[
+  {c:'#E8722A',txt:'تسک «مهاجرت دیتابیس به PostgreSQL 16» برای بررسی آماده شد',t:Date.now()-2*H},
+  {c:'#D14B4B',txt:'هشدار: سهمیه SLA تسک «رفع باگ نشتی حافظه» رو به اتمام است',t:Date.now()-5*H},
+  {c:'#2E9E63',txt:'امیر کاظمی تسک «راه‌اندازی خط CI/CD» را تکمیل کرد',t:Date.now()-9*H},
+];
+
+/* --- داده اولیه تسک‌ها (نسبی نسبت به زمان باز شدن صفحه تا شمارش‌ها زنده باشند) --- */
+function seedTasks(){
+  const n=Date.now();
+  return [
+    {id:'t1',title:'پیاده‌سازی سرویس احراز هویت (OAuth2 + OTP)',group:'بک‌اند',subs:['API','امنیت'],assignee:'m1',priority:'بالا',status:'inprogress',
+     start:n-1.6*D,deadline:n+2.2*D,slaH:56,estimate:24,worked:9,deps:['t8'],completedAt:null,
+     image:'https://picsum.photos/seed/rayka-auth/800/400.jpg',
+     desc:'سرویس احراز هویت با پشتیبانی OAuth2 و ورود دومرحله‌ای پیاده شود. توکن‌های Refresh با چرخش امن صادر و محدودیت نرخ درخواست روی Endpoint فعال باشد.',
+     log:[{t:n-1.6*D,txt:'تسک ایجاد و به سارا محمدی ارجاع شد'},{t:n-1.1*D,txt:'شروع پیاده‌سازی ماژول توکن'}]},
+    {id:'t2',title:'طراحی رابط کاربری صفحه پرداخت',group:'طراحی',subs:['UI','فینتک'],assignee:'m3',priority:'فوری',status:'todo',
+     start:n-0.2*D,deadline:n+1.4*D,slaH:40,estimate:16,worked:0,deps:['t7'],completedAt:null,
+     image:'https://picsum.photos/seed/rayka-pay/800/400.jpg',
+     desc:'سه حالت پرداخت موفق، ناموفق و در انتظار طراحی شود و کامپوننت‌ها به دیزاین‌سیستم فعلی متصل گردند.',
+     log:[{t:n-0.2*D,txt:'تسک ایجاد شد'}]},
+    {id:'t3',title:'رفع باگ نشتی حافظه در سرویس گزارش‌گیری',group:'بک‌اند',subs:['باگ','پرفورمنس'],assignee:'m2',priority:'بالا',status:'inprogress',
+     start:n-2.5*D,deadline:n+0.8*D,slaH:60,estimate:12,worked:8,deps:[],completedAt:null,image:null,
+     desc:'سرویس گزارش در بار بالا حدود ۴۰۰ مگابایت در ساعت حافظه نشت می‌دهد؛ Heap Profile گرفته شود و ریشه مشکل شناسایی و رفع گردد.',
+     log:[{t:n-2.5*D,txt:'تسک ایجاد شد'},{t:n-1.8*D,txt:'نمونه‌برداری از حافظه در محیط Staging'}]},
+    {id:'t4',title:'نگارش تست‌های یکپارچگی سرویس سفارش',group:'تضمین کیفیت',subs:['تست'],assignee:'m5',priority:'متوسط',status:'todo',
+     start:n+1*D,deadline:n+4*D,slaH:90,estimate:20,worked:0,deps:['t1','t5'],completedAt:null,image:null,
+     desc:'سناریوهای ایجاد، پرداخت و لغو سفارش پوشش داده شود؛ حداقل پوشش ۸۰٪ برای مسیرهای بحرانی الزامی است.',
+     log:[{t:n-0.4*D,txt:'تسک ایجاد شد'}]},
+    {id:'t5',title:'مستندسازی API نسخه ۲',group:'مستندات',subs:['API'],assignee:'m4',priority:'کم',status:'review',
+     start:n-3*D,deadline:n+1*D,slaH:80,estimate:10,worked:7,deps:['t7'],completedAt:null,image:null,
+     desc:'تمام Endpoint های نسخه ۲ همراه با نمونه درخواست/پاسخ و کدهای خطا در اسناد عمومی ثبت شود.',
+     log:[{t:n-3*D,txt:'تسک ایجاد شد'},{t:n-0.5*D,txt:'ارسال برای بازبینی فنی'}]},
+    {id:'t6',title:'مهاجرت دیتابیس به PostgreSQL 16',group:'زیرساخت',subs:['DB','DevOps'],assignee:'m2',priority:'فوری',status:'todo',
+     start:n+0.5*D,deadline:n+3*D,slaH:48,estimate:18,worked:0,deps:['t8'],completedAt:null,
+     image:'https://picsum.photos/seed/rayka-db/800/400.jpg',
+     desc:'مهاجرت با حداقل Downtime انجام شود؛ بکاپ کامل پیش از شروع گرفته شده و برنامه Rollback مستند گردد.',
+     log:[{t:n-0.3*D,txt:'تسک ایجاد شد'}]},
+    {id:'t7',title:'بهینه‌سازی کوئری‌های داشبورد گزارش',group:'بک‌اند',subs:['پرفورمنس'],assignee:'m1',priority:'متوسط',status:'done',
+     start:n-6*D,deadline:n-2*D,slaH:96,estimate:14,worked:15,deps:[],completedAt:n-6*D+70*H,image:null,
+     desc:'زمان پاسخ کوئری‌های سنگین از ۲.۴ ثانیه به زیر ۶۰۰ میلی‌ثانیه کاهش یافت؛ ایندکس‌های ترکیبی اضافه شد.',
+     log:[{t:n-6*D,txt:'تسک ایجاد شد'},{t:n-3*D,txt:'تسک تکمیل شد'}]},
+    {id:'t8',title:'راه‌اندازی خط CI/CD پروژه',group:'زیرساخت',subs:['DevOps'],assignee:'m4',priority:'بالا',status:'done',
+     start:n-8*D,deadline:n-5*D,slaH:48,estimate:16,worked:19,deps:[],completedAt:n-8*D+60*H,image:null,
+     desc:'خط یکپارچه‌سازی مداوم با اجرای خودکار تست‌ها و استقرار روی محیط Staging فعال شد.',
+     log:[{t:n-8*D,txt:'تسک ایجاد شد'},{t:n-5.5*D,txt:'تسک تکمیل شد'}]},
+    {id:'t9',title:'پیاده‌سازی نوتیفیکیشن‌های Realtime',group:'فرانت‌اند',subs:['WebSocket','UI'],assignee:'m3',priority:'متوسط',status:'inprogress',
+     start:n-0.9*D,deadline:n+2.8*D,slaH:80,estimate:22,worked:6,deps:['t1'],completedAt:null,
+     image:'https://picsum.photos/seed/rayka-notify/800/400.jpg',
+     desc:'اعلان‌های درون‌برنامه‌ای از طریق WebSocket با صف آفلاین و تلاش مجدد خودکار پیاده‌سازی شود.',
+     log:[{t:n-0.9*D,txt:'تسک ایجاد شد'},{t:n-0.3*D,txt:'اتصال سوکت در محیط توسعه برقرار شد'}]},
+    {id:'t10',title:'بازطراحی صفحه ورود به سامانه',group:'طراحی',subs:['UI'],assignee:'m5',priority:'کم',status:'done',
+     start:n-7*D,deadline:n-3*D,slaH:120,estimate:8,worked:7,deps:[],completedAt:n-7*D+40*H,image:null,
+     desc:'نسخه جدید صفحه ورود با حالت روشن/تاریک و اعتبارسنجی زنده فیلدها پیاده شد.',
+     log:[{t:n-7*D,txt:'تسک ایجاد شد'},{t:n-5*D,txt:'تسک تکمیل شد'}]},
+    {id:'t11',title:'ارتقای پوشش تست واحد به ۸۰٪',group:'تضمین کیفیت',subs:['تست'],assignee:'m5',priority:'متوسط',status:'todo',
+     start:n-0.5*D,deadline:n+6*D,slaH:130,estimate:26,worked:2,deps:['t3'],completedAt:null,image:null,
+     desc:'ماژول‌های پرداخت و گزارش ابتدا پوشش داده شوند و گزارش پوشش به خط CI اضافه گردد.',
+     log:[{t:n-0.5*D,txt:'تسک ایجاد شد'}]},
+  ];
+}
+
+const SLA_POL_SEED={
+  'بک‌اند':{f:24,h:48,m:72,l:120,on:true},
+  'فرانت‌اند':{f:24,h:48,m:72,l:96,on:true},
+  'طراحی':{f:36,h:60,m:84,l:120,on:true},
+  'زیرساخت':{f:12,h:24,m:48,l:72,on:true},
+  'تضمین کیفیت':{f:24,h:60,m:96,l:144,on:true},
+  'مستندات':{f:48,h:72,m:120,l:168,on:false},
+};
+const PROJECT_SEED={name:'رایکا — چرخه توسعه محصول',desc:'سامانه یکپارچه مدیریت تسک‌ها، SLA و پیشرفت تیم توسعه نرم‌افزار.',email:true,inapp:true,weekly:false,alert:true};
+
+/* ════════════════════ وضعیت برنامه ════════════════════ */
+const state={
+  view:'dashboard',
+  tasks:seedTasks(),
+  adminF:{q:'',group:'همه',status:'all'},
+  boardF:{q:'',group:'همه',mine:false},
+  sla:JSON.parse(JSON.stringify(SLA_POL_SEED)),
+  proj:{...PROJECT_SEED},
+  notifRead:false,
+};
+const byId=id=>state.tasks.find(t=>t.id===id);
+
+const VIEWS={
+  dashboard:{t:'داشبورد مدیریتی',s:'نمای کلی سلامت پروژه، پیشرفت تیم و وضعیت SLA'},
+  admin:{t:'مدیریت تسک‌ها',s:'ایجاد، ویرایش و پیکربندی کامل تسک‌ها؛ شامل زیرگروه، وابستگی، تصویر و زمان‌بندی'},
+  board:{t:'بورد تسک‌ها',s:'کارت‌های استیکی را بین ستون‌ها بکشید تا وضعیت به‌روزرسانی شود'},
+  mytasks:{t:'تسک‌های ارجاع‌شده به من',s:'خلاصه کارهایی که روی میز شماست و زمان باقی‌مانده هرکدام'},
+  team:{t:'اعضای تیم',s:'ظرفیت و بار کاری اعضای پروژه رایکا'},
+  sla:{t:'سیاست‌های SLA',s:'سقف زمان مجاز برای هر گروه و سطح اولویت (بر حسب ساعت)'},
+  settings:{t:'تنظیمات پروژه',s:'پیکربندی عمومی فضای کاری و اعلان‌ها'},
+};
+
+const NAV=[
+  {type:'item',id:'dashboard',icon:'layout-dashboard',label:'داشبورد مدیریتی'},
+  {type:'group',icon:'folder-kanban',label:'مدیریت پروژه',children:[
+    {id:'admin',icon:'clipboard-list',label:'تسک‌ها و ایجاد تسک'},
+    {id:'team',icon:'users',label:'اعضای تیم'},
+    {id:'sla',icon:'timer',label:'سیاست‌های SLA'},
+  ]},
+  {type:'group',icon:'square-kanban',label:'فضای کاری من',children:[
+    {id:'board',icon:'kanban',label:'بورد استیکی تسک‌ها'},
+    {id:'mytasks',icon:'list-todo',label:'ارجاع‌شده به من'},
+  ]},
+  {type:'group',icon:'settings',label:'تنظیمات',children:[
+    {id:'settings',icon:'sliders-horizontal',label:'تنظیمات پروژه'},
+  ]},
+];
+
+/* ════════════════════ محاسبات مشتق ════════════════════ */
+function slaOf(t){
+  const slaMs=t.slaH*H;
+  if(t.status==='done'){
+    const p=((t.completedAt||t.start)-t.start)/slaMs;
+    return {pct:p,color:p<=1?'#2E9E63':'#D14B4B',label:p<=1?'تکمیل در SLA':'خارج از SLA'};
+  }
+  const p=Math.max(0,Date.now()-t.start)/slaMs;
+  if(p>=1)   return {pct:p,color:'#D14B4B',label:'نقض SLA'};
+  if(p>=.75) return {pct:p,color:'#E8722A',label:'در خطر'};
+  if(p>=.5)  return {pct:p,color:'#D9A004',label:'پایش'};
+  if(p>0)    return {pct:p,color:'#2E9E63',label:'سالم'};
+  return {pct:0,color:'#2E7DB8',label:'شروع نشده'};
+}
+const stats=()=>{
+  const c={todo:0,inprogress:0,review:0,done:0};
+  state.tasks.forEach(t=>c[t.status]++);
+  return c;
+};
+
+/* ════════════════════ اجزای کوچک UI ════════════════════ */
+const pill=st=>`<span class="chip" style="background:${STATUS[st].dot}1f;color:${STATUS[st].dot}">${STATUS[st].label}</span>`;
+const prioChip=p=>`<span class="chip gap-1" style="background:${PRIO[p].c}14;color:${PRIO[p].c}"><i data-lucide="${PRIO[p].ico}" class="w-3 h-3"></i>${p}</span>`;
+const groupChip=g=>`<span class="chip gap-1.5" style="background:${GROUPS[g].stick}22;color:${GROUPS[g].chip};border:1px solid ${GROUPS[g].chip}22"><span class="w-2 h-2 rounded-full" style="background:${GROUPS[g].chip}"></span>${g}</span>`;
+const subChips=t=>t.subs.map(s=>`<span class="chip bg-ink-900/5 text-ink-700">${esc(s)}</span>`).join('');
+const avatar=(id,cls='w-6 h-6 text-[10px]')=>{const m=member(id);return `<span class="${cls} rounded-full grid place-items-center font-black text-white flex-none" style="background:${m.color}" title="${m.name}">${m.name[0]}</span>`;};
+const slaMini=t=>{const s=slaOf(t);return `
+  <div>
+    <div class="flex justify-between text-[10px] font-bold mb-1"><span style="color:${s.color}">${s.label}</span><span style="color:${s.color}">${fa(Math.round(Math.min(s.pct,1)*100))}٪</span></div>
+    <div class="h-1.5 rounded-full bg-black/10 overflow-hidden"><div class="h-full rounded-full" style="width:${Math.min(s.pct,1)*100}%;background:${s.color}"></div></div>
+  </div>`;};
+const ctitle=(ico,bg,col,txt,extra='')=>`<div class="flex items-center gap-2.5 mb-4">
+  <span class="cico" style="background:${bg};color:${col}"><i data-lucide="${ico}" class="w-4 h-4"></i></span>
+  <h3 class="font-extrabold text-[15px]">${txt}</h3><span class="mr-auto"></span>${extra}</div>`;
+
+/* ════════════════════ Toast ════════════════════ */
+function toast(msg,type='ok'){
+  const map={ok:['circle-check','#2E9E63','#DDF2E5'],info:['info','#0F4C81','#DEEBF6'],warn:['triangle-alert','#D9A004','#FBF0C4'],bad:['octagon-alert','#D14B4B','#F9DEDE']};
+  const [ic,col,bg]=map[type];
+  const el=document.createElement('div');
+  el.className='toast-in flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 shadow-lift';
+  el.style.borderColor=col+'40';
+  el.innerHTML=`<span class="w-7 h-7 rounded-lg grid place-items-center flex-none" style="background:${bg};color:${col}"><i data-lucide="${ic}" class="w-4 h-4"></i></span><span class="text-[13px] font-bold text-ink-900 leading-5">${msg}</span>`;
+  document.getElementById('toast-root').appendChild(el); refreshIcons();
+  setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),320)},3400);
+}
+
+/* ════════════════════ سایدبار و ناوبری ════════════════════ */
+function renderNav(){
+  document.getElementById('nav').innerHTML=NAV.map(g=>{
+    if(g.type==='item'){
+      const a=state.view===g.id;
+      return `<a href="javascript:void(0)" onclick="setView('${g.id}')" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] transition ${a?'bg-white/10 text-white font-extrabold shadow-inner':'text-cream-200/80 font-bold hover:text-white hover:bg-white/5'}">
+        <i data-lucide="${g.icon}" class="w-4 h-4"></i>${g.label}</a>`;
+    }
+    const open=g.children.some(c=>c.id===state.view);
+    return `<div>
+      <button onclick="toggleGroup(this,'${g.label}')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-cream-200/85 hover:bg-white/5 transition">
+        <span class="flex items-center gap-2.5"><i data-lucide="${g.icon}" class="w-4 h-4"></i><span class="font-bold text-[13px]">${g.label}</span></span>
+        <i data-lucide="chevron-down" class="w-4 h-4 chev ${open?'open':''}"></i>
+      </button>
+      <div class="subnav ${open?'open':''}">
+        <div class="mt-1 mr-5 pr-4 border-r border-white/10 space-y-0.5">
+          ${g.children.map(c=>{
+            const a=state.view===c.id;
+            return `<a href="javascript:void(0)" onclick="setView('${c.id}')" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] transition border-r-2 ${a?'bg-white/10 text-white font-extrabold border-sun-500':'text-cream-200/70 font-bold hover:text-white hover:bg-white/5 border-transparent'}">
+              <i data-lucide="${c.icon}" class="w-4 h-4"></i>${c.label}</a>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  refreshIcons();
+}
+function toggleGroup(btn){
+  btn.querySelector('.chev').classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+const openSidebar=()=>{document.getElementById('sidebar').classList.remove('translate-x-full');document.getElementById('backdrop').classList.remove('hidden');};
+const closeSidebar=()=>{document.getElementById('sidebar').classList.add('translate-x-full');document.getElementById('backdrop').classList.add('hidden');};
+
+function setView(v){
+  state.view=v; closeSidebar();
+  const m=VIEWS[v];
+  document.getElementById('page-title').textContent=m.t;
+  document.getElementById('page-sub').textContent=m.s;
+  document.getElementById('crumb').textContent=m.t;
+  document.getElementById('page-actions').innerHTML = v==='admin'
+    ? `<button onclick="openTaskModal()" class="btn-sun"><i data-lucide="plus" class="w-4 h-4"></i>تسک جدید</button>`
+    : v==='board' ? `<button onclick="setView('mytasks')" class="btn text-white border border-white/25 hover:bg-white/10"><i data-lucide="list-todo" class="w-4 h-4"></i>نمای فهرستی</button>`
+    : v==='mytasks' ? `<button onclick="setView('board')" class="btn text-white border border-white/25 hover:bg-white/10"><i data-lucide="square-kanban" class="w-4 h-4"></i>رفتن به بورد</button>` : '';
+  renderNav(); renderCurrent(); refreshIcons(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderCurrent(){
+  const vc=document.getElementById('view');
+  vc.classList.remove('view-anim'); void vc.offsetWidth; vc.classList.add('view-anim');
+  ({dashboard:renderDashboard,admin:renderAdmin,board:renderBoard,mytasks:renderMyTasks,team:renderTeam,sla:renderSla,settings:renderSettings})[state.view]();
+  animateIn(); refreshIcons();
+}
+
+/* ════════════════════ هدر: ساعت، اعلان، کاربر ════════════════════ */
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent=`${fa(pad(d.getHours()))}:${fa(pad(d.getMinutes()))}:${fa(pad(d.getSeconds()))}`;
+  const [y,m,dd]=g2j(d.getFullYear(),d.getMonth()+1,d.getDate());
+  document.getElementById('today-fa').textContent=`${WEEK[d.getDay()]} ${fa(dd)} ${JM[m-1]} ${fa(y)}`;
+}
+function renderNotifs(){
+  document.getElementById('notif-list').innerHTML=NOTIFS.map(n=>`
+    <div class="flex gap-2.5 px-4 py-3 hover:bg-cream-50 transition">
+      <span class="w-2 h-2 rounded-full mt-1.5 flex-none" style="background:${n.c}"></span>
+      <div><div class="text-[12.5px] font-bold leading-5">${n.txt}</div>
+      <div class="text-[10px] text-ink-400 mt-1">${cdShort(Date.now()-n.t).replace(' مانده',' پیش').replace(' تأخیر',' پیش')}</div></div>
+    </div>`).join('');
+}
+function toggleNotif(e){e.stopPropagation();document.getElementById('user-panel').classList.add('hidden');document.getElementById('notif-panel').classList.toggle('hidden');}
+function toggleUserMenu(e){e.stopPropagation();document.getElementById('notif-panel').classList.add('hidden');document.getElementById('user-panel').classList.toggle('hidden');}
+function markAllRead(){document.getElementById('notif-badge').classList.add('hidden');state.notifRead=true;toast('همه اعلان‌ها خوانده شد','info');}
+function setPresence(color,label){
+  document.getElementById('avatar-me').style.background=color;
+  document.getElementById('user-panel').classList.add('hidden');
+  toast(`وضعیت شما به «${label}» تغییر یافت`,'info');
+}
+document.addEventListener('click',()=>{document.getElementById('notif-panel').classList.add('hidden');document.getElementById('user-panel').classList.add('hidden');});
+
+/* ════════════════════ چارت‌های SVG دست‌ساز ════════════════════ */
+function donutSVG(parts){
+  const total=parts.reduce((s,p)=>s+p.value,0)||1, C=2*Math.PI*46;
+  let acc=0;
+  const segs=parts.map((p,i)=>{
+    const len=p.value/total*C, off=-acc; acc+=len;
+    return `<circle r="46" cx="60" cy="60" fill="none" stroke="${p.color}" stroke-width="13" class="donut-seg"
+      data-arr="${Math.max(len-2.5,0).toFixed(2)} ${C}" stroke-dasharray="0 ${C}"
+      stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 60 60)" style="transition-delay:${i*140}ms"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 120 120" class="w-full h-full">${segs}</svg>`;
+}
+function areaSVG(series,target){
+  const W=600,Ht=200,PX=10,PT=16,PB=30;
+  const max=Math.max(...series,target||0)*1.18, n=series.length;
+  const pts=series.map((v,i)=>({x:PX+i*(W-2*PX)/(n-1),y:PT+(1-v/max)*(Ht-PT-PB)}));
+  let d=`M${pts[0].x},${pts[0].y}`;
+  for(let i=0;i<n-1;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(n-1,i+2)];
+    d+=`C${(p1.x+(p2.x-p0.x)/6).toFixed(1)},${(p1.y+(p2.y-p0.y)/6).toFixed(1)} ${(p2.x-(p3.x-p1.x)/6).toFixed(1)},${(p2.y-(p3.y-p1.y)/6).toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  const ty=PT+(1-target/max)*(Ht-PT-PB);
+  const grid=[.25,.5,.75].map(g=>{const gy=PT+g*(Ht-PT-PB);
+    return `<line x1="${PX}" y1="${gy}" x2="${W-PX}" y2="${gy}" stroke="#EFE6CF" stroke-dasharray="4 5" stroke-width="1"/>`;}).join('');
+  const last=pts[n-1];
+  return `<svg viewBox="0 0 ${W} ${Ht}" class="w-full">
+    ${grid}
+    <line x1="${PX}" y1="${ty}" x2="${W-PX}" y2="${ty}" stroke="#F2B705" stroke-width="2" stroke-dasharray="7 6" opacity=".85"/>
+    <path d="${d} L${last.x},${Ht-PB} L${pts[0].x},${Ht-PB} Z" fill="#2E7DB8" class="area-fill" opacity="0" fill-opacity=".12"/>
+    <path d="${d}" fill="none" stroke="#0F4C81" stroke-width="2.5" stroke-linecap="round" class="draw-line"/>
+    <circle cx="${last.x}" cy="${last.y}" r="5" fill="#2E9E63" class="pulse-dot"/>
+    <circle cx="${last.x}" cy="${last.y}" r="2.5" fill="#fff"/>
+    <text x="${PX}" y="${Ht-8}" font-size="11" fill="#8CA0B3">۱۴ روز پیش</text>
+    <text x="${W-PX}" y="${Ht-8}" font-size="11" fill="#8CA0B3" text-anchor="end">امروز</text>
+  </svg>`;
+}
+function barsSVG(data){
+  const max=Math.max(...data.map(d=>d.v),1);
+  return `<div class="flex items-end gap-2 lg:gap-3 h-44">
+    ${data.map((d,i)=>`
+    <div class="flex-1 flex flex-col items-center gap-1.5 group h-full justify-end">
+      <div class="text-[11px] font-black ${i===data.length-1?'text-sun-600':'text-sea-700'} opacity-0 group-hover:opacity-100 transition">${fa(d.v)}</div>
+      <div class="w-full rounded-t-lg bar-grow ${i===data.length-1?'bg-sun-500 group-hover:bg-sun-600':'bg-sea-500/85 group-hover:bg-sea-600'}" data-h="${(d.v/max*100).toFixed(1)}" style="height:0%"></div>
+      <div class="text-[10.5px] text-ink-500 font-bold">${d.l}</div>
+    </div>`).join('')}
+  </div>`;
+}
+function animateIn(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('[data-w]').forEach(el=>el.style.width=el.dataset.w+'%');
+    document.querySelectorAll('.bar-grow').forEach((b,i)=>{b.style.transitionDelay=(i*70)+'ms';b.style.height=b.dataset.h+'%';});
+    document.querySelectorAll('.donut-seg').forEach(c=>c.setAttribute('stroke-dasharray',c.dataset.arr));
+    document.querySelectorAll('.draw-line').forEach(p=>{const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;p.getBoundingClientRect();p.style.strokeDashoffset='0';});
+    document.querySelectorAll('.area-fill').forEach(a=>{a.style.opacity='1';a.setAttribute('fill-opacity','.12');});
+  }));
+}
+
+/* ════════════════════ نمای داشبورد ════════════════════ */
+const WEEKLY=[{l:'شنبه',v:3},{l:'یکشنبه',v:4},{l:'دوشنبه',v:2},{l:'سه‌شنبه',v:5},{l:'چهارشنبه',v:3},{l:'پنجشنبه',v:2},{l:'جمعه',v:1}];
+const TREND=[1,2,2,3,2,4,3,4,5,4,6,5,7,8];
+
+function renderDashboard(){
+  const c=stats(), total=state.tasks.length, donePct=Math.round(c.done/total*100);
+  const risky=state.tasks.filter(t=>t.status!=='done'&&slaOf(t).pct>=.75).length;
+  const segs=[
+    {k:'done',v:c.done,col:STATUS.done.dot},{k:'review',v:c.review,col:STATUS.review.dot},
+    {k:'inprogress',v:c.inprogress,col:STATUS.inprogress.dot},{k:'todo',v:c.todo,col:STATUS.todo.dot},
+  ];
+  const dlList=state.tasks.filter(t=>t.status!=='done'&&t.deadline-Date.now()<5*D).sort((a,b)=>a.deadline-b.deadline).slice(0,4);
+  const risk=state.tasks.filter(t=>t.status!=='done').map(t=>({t,s:slaOf(t)})).sort((a,b)=>b.s.pct-a.s.pct).slice(0,5);
+  const load=MEMBERS.map(m=>{const a=state.tasks.filter(t=>t.assignee===m.id&&t.status!=='done').length;
+    const d=state.tasks.filter(t=>t.assignee===m.id&&t.status==='done').length;return {m,a,d};});
+  const maxLoad=Math.max(...load.map(x=>x.a),1);
+
+  document.getElementById('view').innerHTML=`
+  <div class="grid grid-cols-12 gap-4 lg:gap-5">
+
+    <!-- نوار KPI یکپارچه -->
+    <div class="col-span-12 card p-5 lg:p-6 rise">
+      <div class="flex flex-wrap xl:flex-nowrap items-center gap-x-8 gap-y-5">
+        <div class="text-center px-4 border-l border-cream-200">
+          <div class="text-4xl font-black text-sea-800">${fa(total)}</div>
+          <div class="text-[11px] text-ink-500 font-bold mt-1">کل تسک‌های پروژه</div>
+        </div>
+        <div class="flex-1 min-w-[280px]">
+          <div class="flex justify-between items-center text-xs font-bold mb-2">
+            <span class="text-ink-700">وضعیت کلی پروژه</span>
+            <span class="text-leaf-600">${fa(donePct)}٪ تکمیل شده</span>
+          </div>
+          <div class="h-4 flex rounded-full overflow-hidden bg-cream-100 border border-cream-200">
+            ${segs.map(s=>s.v?`<div data-w="${(s.v/total*100).toFixed(1)}" style="width:0%;background:${s.col}" title="${STATUS[s.k].label}: ${fa(s.v)}"></div>`:'').join('')}
+          </div>
+          <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 text-[11.5px] font-bold">
+            ${segs.map(s=>`<button onclick="goStatus('${s.k}')" class="flex items-center gap-1.5 text-ink-700 hover:text-sea-700 transition">
+              <span class="w-2.5 h-2.5 rounded-full" style="background:${s.col}"></span>${STATUS[s.k].label}
+              <span class="text-ink-400">${fa(s.v)} مورد</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="flex gap-7">
+          <div class="text-center">
+            <div class="text-2xl font-black text-leaf-600">${fa(c.done)}</div><div class="text-[10.5px] text-ink-500 font-bold mt-0.5">انجام شده</div></div>
+          <div class="text-center">
+            <div class="text-2xl font-black text-sun-600">${fa(c.inprogress+c.review)}</div><div class="text-[10.5px] text-ink-500 font-bold mt-0.5">در جریان</div></div>
+          <div class="text-center">
+            <div class="text-2xl font-black ${risky?'text-tang-600':'text-ink-700'}">${fa(risky)}</div><div class="text-[10.5px] text-ink-500 font-bold mt-0.5">در خطر SLA</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- دونات وضعیت -->
+    <div class="col-span-12 lg:col-span-4 card p-5 rise" style="animation-delay:.06s">
+      ${ctitle('chart-pie','#DEEBF6','#0F4C81','توزیع وضعیت تسک‌ها')}
+      <div class="flex items-center gap-5">
+        <div class="relative w-36 h-36 flex-none">
+          ${donutSVG(segs.map(s=>({value:s.v,color:s.col})))}
+          <div class="absolute inset-0 grid place-items-center">
+            <div class="text-center"><div class="text-2xl font-black text-sea-800">${fa(total)}</div><div class="text-[10px] text-ink-400 font-bold">تسک</div></div>
+          </div>
+        </div>
+        <div class="flex-1 space-y-2.5">
+          ${segs.map(s=>`<button onclick="goStatus('${s.k}')" class="w-full flex items-center gap-2 group">
+            <span class="w-2.5 h-2.5 rounded-full" style="background:${s.col}"></span>
+            <span class="text-[12px] font-bold text-ink-700 group-hover:text-sea-700">${STATUS[s.k].label}</span>
+            <span class="mr-auto text-[12px] font-black text-ink-900">${fa(Math.round(s.v/total*100))}٪</span>
+            <span class="text-[11px] text-ink-400">${fa(s.v)}</span></button>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- روند ۱۴ روزه -->
+    <div class="col-span-12 lg:col-span-8 card p-5 rise" style="animation-delay:.12s">
+      ${ctitle('chart-line','#DEEBF6','#0F4C81','روند تکمیل تسک — ۱۴ روز گذشته',
+        `<div class="flex items-center gap-4 text-[10.5px] font-bold text-ink-500">
+          <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-sea-700 rounded"></span>تکمیل واقعی</span>
+          <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-sun-500 rounded" style="background:repeating-linear-gradient(90deg,#F2B705 0 4px,transparent 4px 7px)"></span>هدف روزانه (۵)</span>
+        </div>`)}
+      ${areaSVG(TREND,5)}
+    </div>
+
+    <!-- میله‌ای هفتگی -->
+    <div class="col-span-12 lg:col-span-7 card p-5 rise" style="animation-delay:.18s">
+      ${ctitle('chart-column','#FBF0C4','#D9A004','تکمیل روزانه — هفته جاری')}
+      ${barsSVG(WEEKLY)}
+      <div class="mt-3 pt-3 border-t border-cream-100 text-[11.5px] text-ink-500 font-bold flex justify-between">
+        <span>میانگین روزانه: <span class="text-sea-700">${fa((WEEKLY.reduce((s,d)=>s+d.v,0)/7).toFixed(1))}</span> تسک</span>
+        <span>پربازده‌ترین روز: <span class="text-sea-700">سه‌شنبه</span></span>
+      </div>
+    </div>
+
+    <!-- ریسک SLA -->
+    <div class="col-span-12 lg:col-span-5 card p-5 rise" style="animation-delay:.24s">
+      ${ctitle('timer','#FBE4D0','#C95D1B','مصرف سهمیه SLA — تسک‌های فعال')}
+      <div class="space-y-3.5">
+        ${risk.map(({t,s})=>`
+        <div onclick="openDetail('${t.id}')" class="cursor-pointer group">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="text-[12px] font-bold text-ink-900 truncate max-w-[55%] group-hover:text-sea-700 transition">${esc(t.title)}</span>
+            <span class="mr-auto text-[10.5px] font-black" style="color:${s.color}">${s.pct>=1?'تأخیر ':''}${fa(Math.round(Math.min(s.pct,1)*100))}٪</span>
+            <span class="text-[10px] font-bold" style="color:${dlColor(t.deadline-Date.now())}" data-cd="${t.deadline}">${cdShort(t.deadline-Date.now())}</span>
+          </div>
+          <div class="h-2 rounded-full bg-cream-100 border border-cream-200 overflow-hidden">
+            <div data-w="${(Math.min(s.pct,1)*100).toFixed(1)}" style="width:0%;height:100%;background:${s.color};border-radius:99px"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- ددلاین‌های نزدیک -->
+    <div class="col-span-12 lg:col-span-7 card p-5 rise" style="animation-delay:.3s">
+      ${ctitle('calendar-days','#DDF2E5','#218551','ددلاین‌های نزدیک',`<button onclick="setView('admin')" class="text-[11px] font-bold text-sea-700 hover:underline">مشاهده همه</button>`)}
+      <div class="divide-y divide-cream-100">
+        ${dlList.length?dlList.map(t=>`
+        <div onclick="openDetail('${t.id}')" class="flex items-center gap-3 py-2.5 cursor-pointer group">
+          <span class="w-2.5 h-2.5 rounded-full flex-none" style="background:${STATUS[t.status].dot}"></span>
+          <span class="text-[12.5px] font-bold text-ink-900 truncate group-hover:text-sea-700 transition">${esc(t.title)}</span>
+          <span class="mr-auto text-[11px] text-ink-400 font-bold flex-none">${fmtJ(t.deadline)}</span>
+          <span class="chip flex-none" style="background:${dlColor(t.deadline-Date.now())}14;color:${dlColor(t.deadline-Date.now())}" data-cd="${t.deadline}">${cdShort(t.deadline-Date.now())}</span>
+        </div>`).join('')
+        :'<div class="py-6 text-center text-[12px] text-ink-400 font-bold">ددلاین نزدیکی باقی نمانده است</div>'}
+      </div>
+    </div>
+
+    <!-- بار کاری تیم -->
+    <div class="col-span-12 lg:col-span-5 card p-5 rise" style="animation-delay:.36s">
+      ${ctitle('users','#DDF2E5','#218551','بار کاری اعضای تیم',`<button onclick="setView('team')" class="text-[11px] font-bold text-sea-700 hover:underline">جزئیات</button>`)}
+      <div class="space-y-3.5">
+        ${load.map(({m,a,d})=>`
+        <div class="flex items-center gap-3">
+          ${avatar(m.id,'w-8 h-8 text-[12px]')}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[12px] font-bold text-ink-900">${m.name}</span>
+              <span class="text-[10.5px] font-bold text-ink-500">${fa(a)} فعال / ${fa(d)} انجام</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-cream-100 overflow-hidden">
+              <div data-w="${(a/maxLoad*100).toFixed(0)}" style="width:0%;height:100%;background:${m.color};border-radius:99px"></div>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function goStatus(k){state.adminF={q:'',group:'همه',status:k};setView('admin');}
+
+/* ════════════════════ نمای ادمین ════════════════════ */
+function renderAdmin(){
+  document.getElementById('view').innerHTML=`
+  <div class="card p-3.5 mb-4 flex flex-wrap items-center gap-2.5 rise">
+    <div class="relative flex-1 min-w-[200px] max-w-xs">
+      <i data-lucide="search" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-ink-400"></i>
+      <input oninput="state.adminF.q=this.value;renderAdminRows()" class="fld pr-9" placeholder="جستجو در عنوان تسک‌ها…">
+    </div>
+    <select onchange="state.adminF.group=this.value;renderAdminRows()" class="fld w-auto">
+      <option>همه</option>${Object.keys(GROUPS).map(g=>`<option>${g}</option>`).join('')}
+    </select>
+    <div id="admin-chips" class="flex flex-wrap gap-1.5"></div>
+    <button onclick="openTaskModal()" class="btn-primary mr-auto"><i data-lucide="plus" class="w-4 h-4"></i>تسک جدید</button>
+  </div>
+  <div class="card overflow-hidden rise" style="animation-delay:.08s">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[980px]">
+        <thead><tr class="text-right text-[11px] text-ink-500 bg-cream-100/70 border-b border-cream-200">
+          ${['تسک','گروه / زیرگروه','مسئول','ددلاین','SLA','اولویت','وضعیت',''].map(h=>`<th class="px-4 py-3 font-bold whitespace-nowrap">${h}</th>`).join('')}
+        </tr></thead>
+        <tbody id="admin-rows"></tbody>
+      </table>
+    </div>
+  </div>`;
+  renderAdminChips(); renderAdminRows();
+}
+function renderAdminChips(){
+  const c=stats();
+  const items=[['all','همه',state.tasks.length],...Object.entries(STATUS).map(([k,v])=>[k,v.label,c[k]])];
+  document.getElementById('admin-chips').innerHTML=items.map(([k,l,n])=>`
+    <button onclick="state.adminF.status='${k}';renderAdminChips();renderAdminRows()"
+      class="chip px-3 py-1.5 border transition cursor-pointer ${state.adminF.status===k?'bg-sea-700 text-white border-sea-700':'bg-white text-ink-700 border-cream-300 hover:border-sea-500'}">${l} <span class="opacity-70">(${fa(n)})</span></button>`).join('');
+}
+function renderAdminRows(){
+  const f=state.adminF;
+  const list=state.tasks.filter(t=>
+    (f.status==='all'||t.status===f.status)&&
+    (f.group==='همه'||t.group===f.group)&&
+    (!f.q||t.title.includes(f.q)));
+  document.getElementById('admin-rows').innerHTML=list.length?list.map(t=>{
+    const s=slaOf(t), cd=t.deadline-Date.now(), m=member(t.assignee);
+    return `<tr class="border-b border-cream-100 hover:bg-cream-50/70 transition group">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2.5">
+          ${t.image?`<img src="${t.image}" class="w-10 h-10 rounded-lg object-cover border border-cream-200 flex-none">`:''}
+          <div class="font-bold text-ink-900 max-w-[280px] truncate text-[13px] group-hover:text-sea-700 transition">${esc(t.title)}</div>
+        </div>
+      </td>
+      <td class="px-4 py-3"><div class="flex flex-col items-start gap-1">${groupChip(t.group)}<div class="flex gap-1">${subChips(t)}</div></div></td>
+      <td class="px-4 py-3"><div class="flex items-center gap-2">${avatar(t.assignee)}<span class="text-[12px] font-bold whitespace-nowrap">${m.name}</span></div></td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <div class="text-[12px] font-bold text-ink-900">${fmtJ(t.deadline)}</div>
+        <div class="text-[10.5px] font-bold mt-0.5" style="color:${t.status==='done'?'#8CA0B3':dlColor(cd)}" data-cd="${t.deadline}">${t.status==='done'?'تکمیل شد':cdShort(cd)}</div>
+      </td>
+      <td class="px-4 py-3 min-w-[120px]">${slaMini(t)}</td>
+      <td class="px-4 py-3">${prioChip(t.priority)}</td>
+      <td class="px-4 py-3">${pill(t.status)}</td>
+      <td class="px-3 py-3">
+        <div class="flex items-center gap-1">
+          <button onclick="openTaskModal('${t.id}')" class="iconbtn text-ink-500 hover:bg-sea-100 hover:text-sea-700" title="ویرایش"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+          <button onclick="openDelete('${t.id}')" class="iconbtn text-ink-500 hover:bg-berry-100 hover:text-berry-600" title="حذف"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="8" class="px-4 py-10 text-center text-ink-400 font-bold text-[13px]">موردی مطابق فیلترهای انتخابی یافت نشد</td></tr>`;
+  refreshIcons();
+}
+
+/* ════════════════════ بورد استیکی کاربر ════════════════════ */
+function renderBoard(){
+  const donePct=Math.round(stats().done/state.tasks.length*100);
+  document.getElementById('view').innerHTML=`
+  <div class="card p-4 mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 rise">
+    <div class="flex items-center gap-2.5 flex-none">
+      <span class="cico bg-sea-100 text-sea-700"><i data-lucide="gauge" class="w-4 h-4"></i></span>
+      <span class="text-[13px] font-extrabold text-ink-900">وضعیت کلی پروژه</span>
+    </div>
+    <div id="b-status" class="flex-1 min-w-[220px]"></div>
+    <div class="flex items-center gap-2">
+      <button onclick="state.boardF.mine=!state.boardF.mine;renderBoardFilters();renderBoardCards()" class="flex items-center gap-2 text-[12px] font-bold ${state.boardF.mine?'text-sea-700':'text-ink-500'}">
+        <span class="sw ${state.boardF.mine?'on':''}"></span>فقط تسک‌های من
+      </button>
+    </div>
+  </div>
+  <div class="card p-3.5 mb-4 flex flex-wrap items-center gap-2 rise" style="animation-delay:.06s">
+    <div class="relative flex-1 min-w-[190px] max-w-xs">
+      <i data-lucide="search" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-ink-400"></i>
+      <input oninput="state.boardF.q=this.value;renderBoardCards()" class="fld pr-9" placeholder="جستجو در بورد…">
+    </div>
+    <div id="b-filters" class="flex flex-wrap gap-1.5"></div>
+  </div>
+  <div id="b-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 rise" style="animation-delay:.12s"></div>`;
+  renderBoardStatus(); renderBoardFilters(); renderBoardCards();
+}
+function renderBoardStatus(){
+  const c=stats(), total=state.tasks.length;
+  const segs=[['done',STATUS.done.dot],['review',STATUS.review.dot],['inprogress',STATUS.inprogress.dot],['todo',STATUS.todo.dot]];
+  document.getElementById('b-status').innerHTML=`
+    <div class="flex justify-between text-[11px] font-bold mb-1.5">
+      <span class="text-ink-500">${fa(c.done)} از ${fa(total)} تسک تکمیل شده</span>
+      <span class="text-leaf-600">${fa(Math.round(c.done/total*100))}٪</span>
+    </div>
+    <div class="h-3 flex rounded-full overflow-hidden bg-cream-100 border border-cream-200">
+      ${segs.map(([k,col])=>c[k]?`<div data-w="${(c[k]/total*100).toFixed(1)}" style="width:0%;background:${col}"></div>`:'').join('')}
+    </div>`;
+  animateIn();
+}
+function renderBoardFilters(){
+  document.getElementById('b-filters').innerHTML=['همه',...Object.keys(GROUPS)].map(g=>`
+    <button onclick="state.boardF.group='${g}';renderBoardFilters();renderBoardCards()"
+      class="chip px-3 py-1.5 border transition cursor-pointer ${state.boardF.group===g?'bg-sea-700 text-white border-sea-700':'bg-white text-ink-700 border-cream-300 hover:border-sea-500'}">${g}</button>`).join('');
+}
+function stickyCard(t){
+  const s=slaOf(t), cd=t.deadline-Date.now(), isDone=t.status==='done';
+  return `<div class="sticky-card relative rounded-lg p-3 pt-4 cursor-grab active:cursor-grabbing ${isDone?'opacity-90':''}"
+    draggable="true" style="--rot:${rot(t.id)}deg;background:${GROUPS[t.group].stick};border:1px solid rgba(28,42,56,.08);box-shadow:0 6px 16px -8px rgba(28,42,56,.25)"
+    ondragstart="dragStart(event,'${t.id}')" ondragend="dragEnd(event)" onclick="openDetail('${t.id}')">
+    <div class="tape"></div>
+    ${isDone?`<span class="stamp absolute top-2 left-2 text-[9.5px] font-black px-1.5 py-0.5 rounded">تایید شد</span>`:''}
+    <div class="text-[13px] font-extrabold text-ink-900 leading-6 mb-1.5 ${isDone?'line-through decoration-leaf-600 decoration-2':''}">${esc(t.title)}</div>
+    <div class="flex flex-wrap gap-1 mb-2.5">${groupChip(t.group)}${subChips(t)}</div>
+    <div class="flex items-center gap-1.5 text-[11px] font-bold mb-2" style="color:${isDone?'#8CA0B3':dlColor(cd)}">
+      <i data-lucide="clock" class="w-3.5 h-3.5"></i><span data-cd="${t.deadline}">${isDone?'تکمیل شد':cdShort(cd)}</span>
+    </div>
+    ${slaMini(t)}
+    <div class="mt-2.5 pt-2 border-t border-black/10 flex items-center justify-between">
+      ${avatar(t.assignee)}
+      <span class="flex items-center gap-2.5 text-ink-500">
+        ${t.deps.length?`<span class="flex items-center gap-1 text-[10.5px] font-bold" title="وابستگی‌ها"><i data-lucide="link-2" class="w-3 h-3"></i>${fa(t.deps.length)}</span>`:''}
+        <span class="w-2.5 h-2.5 rounded-full" style="background:${PRIO[t.priority].c}" title="اولویت ${t.priority}"></span>
+      </span>
+    </div>
+  </div>`;
+}
+function renderBoardCards(){
+  const f=state.boardF;
+  const list=state.tasks.filter(t=>
+    (!f.mine||t.assignee===ME)&&
+    (f.group==='همه'||t.group===f.group)&&
+    (!f.q||t.title.includes(f.q)));
+  document.getElementById('b-grid').innerHTML=Object.entries(STATUS).map(([k,v])=>{
+    const items=list.filter(t=>t.status===k);
+    return `<div ondragover="colOver(event)" ondragleave="colLeave(event)" ondrop="colDrop(event,'${k}')"
+      class="rounded-2xl bg-cream-100/70 border border-cream-200 flex flex-col transition">
+      <div class="px-3.5 pt-3.5 pb-2 flex items-center justify-between">
+        <span class="flex items-center gap-2 text-[13px] font-extrabold text-ink-700">
+          <span class="w-2.5 h-2.5 rounded-full ${k==='inprogress'?'pulse-dot':''}" style="background:${v.dot}"></span>${v.label}
+        </span>
+        <span class="text-[11px] font-black bg-white border border-cream-200 rounded-lg px-2 py-0.5">${fa(items.length)}</span>
+      </div>
+      <div class="px-2.5 pb-3 pt-2 flex-1 space-y-4 min-h-[200px]">
+        ${items.map((t,i)=>`<div class="rise" style="animation-delay:${i*60}ms">${stickyCard(t)}</div>`).join('')}
+        ${items.length?'':`<div class="text-center text-[11px] text-ink-400 font-bold pt-6">کارت را به اینجا بکشید</div>`}
+      </div>
+    </div>`;
+  }).join('');
+  refreshIcons();
+}
+function dragStart(ev,id){ev.dataTransfer.setData('text/plain',id);ev.dataTransfer.effectAllowed='move';ev.currentTarget.classList.add('dragging');}
+function dragEnd(ev){ev.currentTarget.classList.remove('dragging');document.querySelectorAll('.drop-hint').forEach(el=>el.classList.remove('drop-hint'));}
+function colOver(ev){ev.preventDefault();ev.currentTarget.classList.add('drop-hint');}
+function colLeave(ev){if(!ev.currentTarget.contains(ev.relatedTarget))ev.currentTarget.classList.remove('drop-hint');}
+function colDrop(ev,st){ev.preventDefault();ev.currentTarget.classList.remove('drop-hint');const id=ev.dataTransfer.getData('text/plain');if(id)moveTask(id,st);}
+
+/* ════════════════════ ارجاع‌شده به من ════════════════════ */
+function renderMyTasks(){
+  const mine=state.tasks.filter(t=>t.assignee===ME);
+  const act=mine.filter(t=>t.status!=='done');
+  document.getElementById('view').innerHTML=`
+  <div class="card p-4 mb-4 flex flex-wrap items-center gap-5 rise">
+    <div class="flex items-center gap-2.5"><span class="cico bg-leaf-100 text-leaf-600"><i data-lucide="list-todo" class="w-4 h-4"></i></span>
+      <span class="text-[13px] font-extrabold">${fa(act.length)} تسک فعال از ${fa(mine.length)} تسک ارجاع‌شده به شما</span></div>
+    <div class="flex-1 min-w-[200px]">
+      <div class="h-2 rounded-full bg-cream-100 border border-cream-200 overflow-hidden">
+        <div data-w="${(mine.filter(t=>t.status==='done').length/Math.max(mine.length,1)*100).toFixed(0)}" style="width:0%;height:100%;background:#2E9E63;border-radius:99px"></div>
+      </div>
+    </div>
+    <span class="text-[12px] font-bold text-ink-500">میانگین پیشرفت شخصی شما در پروژه</span>
+  </div>
+  <div class="space-y-3">
+    ${mine.map((t,i)=>{const s=slaOf(t),cd=t.deadline-Date.now();return `
+    <div class="card p-4 flex flex-wrap items-center gap-x-5 gap-y-3 rise" style="animation-delay:${i*70}ms">
+      <div class="flex-1 min-w-[210px]">
+        <div class="font-extrabold text-[13.5px] text-ink-900">${esc(t.title)}</div>
+        <div class="flex flex-wrap gap-1 mt-1.5">${groupChip(t.group)}${subChips(t)}${prioChip(t.priority)}</div>
+      </div>
+      <div class="text-center px-4 border-l border-cream-200">
+        <div class="text-base font-black" style="color:${t.status==='done'?'#8CA0B3':dlColor(cd)}" data-cd="${t.deadline}">${t.status==='done'?'—':cdShort(cd)}</div>
+        <div class="text-[10px] text-ink-400 font-bold mt-0.5">زمان باقی‌مانده</div>
+      </div>
+      <div class="w-40">${slaMini(t)}</div>
+      <div class="flex items-center gap-2">
+        ${pill(t.status)}
+        ${t.status==='todo'?`<button onclick="moveTask('${t.id}','inprogress')" class="btn-primary !py-1.5 !px-3 !text-[12px]"><i data-lucide="play" class="w-3.5 h-3.5"></i>شروع کار</button>`
+         :t.status==='inprogress'?`<button onclick="moveTask('${t.id}','review')" class="btn-sun !py-1.5 !px-3 !text-[12px]"><i data-lucide="send" class="w-3.5 h-3.5"></i>تحویل بازبینی</button>`:''}
+        <button onclick="openDetail('${t.id}')" class="iconbtn bg-white border border-cream-300 text-ink-600 hover:border-sea-500 hover:text-sea-700"><i data-lucide="eye" class="w-4 h-4"></i></button>
+      </div>
+    </div>`;}).join('')}
+  </div>`;
+}
+
+/* ════════════════════ اعضای تیم ════════════════════ */
+function renderTeam(){
+  const rows=MEMBERS.map(m=>{
+    const a=state.tasks.filter(t=>t.assignee===m.id&&t.status!=='done').length;
+    const d=state.tasks.filter(t=>t.assignee===m.id&&t.status==='done').length;
+    return {m,a,d};
+  });
+  const maxA=Math.max(...rows.map(r=>r.a),1);
+  document.getElementById('view').innerHTML=`
+  <div class="card overflow-hidden rise">
+    <div class="px-5 py-4 border-b border-cream-200 bg-cream-50 flex items-center gap-2.5">
+      <span class="cico bg-sea-100 text-sea-700"><i data-lucide="users" class="w-4 h-4"></i></span>
+      <span class="text-sm font-extrabold">ترکیب تیم و بار کاری</span>
+      <span class="mr-auto text-[11px] font-bold text-ink-400">${fa(MEMBERS.length)} عضو فعال</span>
+    </div>
+    <div class="divide-y divide-cream-100">
+      ${rows.map(({m,a,d},i)=>`
+      <div class="px-5 py-4 flex flex-wrap items-center gap-x-5 gap-y-3 hover:bg-cream-50/70 transition rise" style="animation-delay:${i*60}ms">
+        <div class="flex items-center gap-3 min-w-[190px]">
+          <div class="relative">${avatar(m.id,'w-11 h-11 text-base')}
+            <span class="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-leaf-500 border-2 border-white"></span></div>
+          <div><div class="font-extrabold text-[13.5px]">${m.name}</div><div class="text-[11px] text-ink-500 font-bold mt-0.5">${m.role}</div></div>
+        </div>
+        <div class="flex-1 min-w-[180px]">
+          <div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-ink-500">بار کاری فعلی</span><span style="color:${m.color}">${fa(a)} تسک فعال</span></div>
+          <div class="h-2 rounded-full bg-cream-100 overflow-hidden"><div data-w="${(a/maxA*100).toFixed(0)}" style="width:0%;height:100%;background:${m.color};border-radius:99px"></div></div>
+        </div>
+        <div class="flex gap-6 text-center">
+          <div><div class="text-lg font-black text-leaf-600">${fa(d)}</div><div class="text-[10px] text-ink-400 font-bold">تکمیل‌شده</div></div>
+          <div><div class="text-lg font-black text-sea-700">${fa(Math.round(d/Math.max(a+d,1)*100))}٪</div><div class="text-[10px] text-ink-400 font-bold">نرخ موفقیت</div></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ════════════════════ سیاست‌های SLA ════════════════════ */
+function renderSla(){
+  const GK=Object.keys(GROUPS), PK=[['f','فوری'],['h','بالا'],['m','متوسط'],['l','کم']];
+  document.getElementById('view').innerHTML=`
+  <div class="card p-4 mb-4 flex items-center gap-3 rise">
+    <span class="cico bg-sun-100 text-sun-600"><i data-lucide="info" class="w-4 h-4"></i></span>
+    <span class="text-[12.5px] font-bold text-ink-700 leading-5">سقف SLA بر حسب ساعت، از لحظه شروع تسک محاسبه می‌شود؛ عبور از سقف به‌عنوان «نقض SLA» در داشبورد ثبت می‌گردد.</span>
+  </div>
+  <div class="card overflow-hidden rise" style="animation-delay:.08s">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px] text-sm">
+        <thead><tr class="text-right text-[11px] text-ink-500 bg-cream-100/70 border-b border-cream-200">
+          <th class="px-5 py-3 font-bold">گروه کاری</th>
+          ${PK.map(([k,l])=>`<th class="px-3 py-3 font-bold text-center">اولویت ${l}</th>`).join('')}
+          <th class="px-5 py-3 font-bold text-center">فعال</th>
+        </tr></thead>
+        <tbody>${GK.map((g,gi)=>`
+          <tr class="border-b border-cream-100 hover:bg-cream-50/70 transition">
+            <td class="px-5 py-3"><div class="flex items-center gap-2 font-bold text-[13px]"><span class="w-2.5 h-2.5 rounded-full" style="background:${GROUPS[g].chip}"></span>${g}</div></td>
+            ${PK.map(([k])=>`<td class="px-3 py-3 text-center">
+              <input id="sl-${gi}-${k}" type="number" min="1" value="${state.sla[g][k]}" class="fld !w-20 text-center font-bold"></td>`).join('')}
+            <td class="px-5 py-3 text-center"><button onclick="this.firstElementChild.classList.toggle('on')" class="sw ${state.sla[g].on?'on':''}"></button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="px-5 py-4 border-t border-cream-200 bg-cream-50 flex justify-end gap-2">
+      <button onclick="saveSla()" class="btn-primary"><i data-lucide="check" class="w-4 h-4"></i>ذخیره سیاست‌ها</button>
+    </div>
+  </div>`;
+}
+function saveSla(){
+  const GK=Object.keys(GROUPS), PK=['f','h','m','l'];
+  GK.forEach((g,gi)=>{PK.forEach(k=>{const v=+document.getElementById(`sl-${gi}-${k}`).value;if(v>0)state.sla[g][k]=v;});});
+  toast('سیاست‌های SLA با موفقیت ذخیره شد','ok');
+}
+
+/* ════════════════════ تنظیمات پروژه ════════════════════ */
+function renderSettings(){
+  const p=state.proj;
+  const cb=(k,l)=>`<label class="flex items-center gap-2.5 cursor-pointer group">
+    <input type="checkbox" id="st-${k}" ${p[k]?'checked':''} class="w-4 h-4 accent-sea-700 rounded">
+    <span class="text-[13px] font-bold text-ink-700 group-hover:text-sea-700">${l}</span></label>`;
+  document.getElementById('view').innerHTML=`
+  <div class="grid grid-cols-12 gap-4 lg:gap-5">
+    <div class="col-span-12 lg:col-span-7 card p-5 lg:p-6 rise">
+      ${ctitle('sliders-horizontal','#DEEBF6','#0F4C81','پیکربندی عمومی')}
+      <div class="space-y-4 max-w-md">
+        <div><label class="flabel">نام پروژه</label><input id="st-name" class="fld" value="${esc(p.name)}"></div>
+        <div><label class="flabel">توضیح کوتاه</label><textarea id="st-desc" rows="3" class="fld resize-none">${esc(p.desc)}</textarea></div>
+        <div class="pt-2 space-y-3">
+          <div class="text-[12px] font-black text-ink-700 border-b border-cream-200 pb-2">روش‌های اطلاع‌رسانی</div>
+          ${cb('inapp','اعلان درون‌برنامه‌ای')}${cb('email','ارسال ایمیل برای ددلاین‌ها')}${cb('weekly','گزارش هفتگی پیشرفت')}${cb('alert','هشدار فوری نقض SLA')}
+        </div>
+      </div>
+      <div class="mt-6"><button onclick="saveSettings()" class="btn-primary"><i data-lucide="check" class="w-4 h-4"></i>ذخیره تنظیمات</button></div>
+    </div>
+    <div class="col-span-12 lg:col-span-5 rise" style="animation-delay:.08s">
+      <div class="card p-5 lg:p-6 border-berry-500/30">
+        ${ctitle('triangle-alert','#F9DEDE','#B23A3A','ناحیه حساس')}
+        <p class="text-[12.5px] font-bold text-ink-500 leading-6">بازنشانی، تمام تسک‌ها و تغییرات شما را به داده نمونه اولیه برمی‌گرداند. این عمل قابل بازگشت نیست.</p>
+        <button onclick="resetDemo()" class="btn-danger mt-4"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>بازنشانی داده‌های نمونه</button>
+      </div>
+    </div>
+  </div>`;
+}
+function saveSettings(){
+  state.proj={name:v('st-name'),desc:v('st-desc'),inapp:document.getElementById('st-inapp').checked,
+    email:document.getElementById('st-email').checked,weekly:document.getElementById('st-weekly').checked,alert:document.getElementById('st-alert').checked};
+  toast('تنظیمات پروژه ذخیره شد','ok');
+}
+function resetDemo(){
+  state.tasks=seedTasks(); state.sla=JSON.parse(JSON.stringify(SLA_POL_SEED)); state.proj={...PROJECT_SEED};
+  toast('داده‌های نمونه بازنشانی شد','info'); renderCurrent(); updateSidebarSprint();
+}
+
+/* ════════════════════ مودال‌ها ════════════════════ */
+let draft=null;
+const v=id=>document.getElementById(id)?.value??'';
+function openModal(html,size='max-w-2xl'){
+  document.getElementById('modal-root').innerHTML=`
+  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-6" onmousedown="if(event.target===this)closeModal()">
+    <div class="absolute inset-0 bg-sea-900/45 backdrop-blur-[2px]" style="animation:fadeUp .25s both"></div>
+    <div class="relative ${size} w-full modal-pop bg-cream-50 rounded-2xl shadow-lift border border-cream-200 max-h-[92vh] flex flex-col overflow-hidden">${html}</div>
+  </div>`;
+  document.body.style.overflow='hidden'; refreshIcons();
+}
+function closeModal(){document.getElementById('modal-root').innerHTML='';document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+const mHead=t=>`<div class="flex items-center justify-between px-5 lg:px-6 py-4 border-b border-cream-200 bg-white flex-none">
+  <h3 class="font-black text-[16px] text-ink-900">${t}</h3>
+  <button onclick="closeModal()" class="iconbtn hover:bg-cream-100 text-ink-500"><i data-lucide="x" class="w-4.5 h-4.5"></i></button></div>`;
+
+/* ---- فرم ایجاد / ویرایش تسک (ادمین) ---- */
+function openTaskModal(id=null){
+  const t=id?byId(id):null;
+  draft=t?{...t,subs:[...t.subs],deps:[...t.deps]}
+    :{id:null,title:'',desc:'',group:'بک‌اند',subs:[],deps:[],img:null,priority:'متوسط',assignee:ME,
+      start:Date.now(),deadline:Date.now()+3*D,estimate:8,slaH:48};
+  const seg=Object.keys(PRIO).map(p=>`<button type="button" onclick="setDraftPrio('${p}')" data-p="${p}"
+    class="flex-1 rounded-xl border px-2 py-2 text-[12px] font-bold transition ${draft.priority===p?'text-white border-transparent shadow':'text-ink-500 border-cream-300 bg-white hover:border-sea-500'}"
+    ${draft.priority===p?`style="background:${PRIO[p].c}"`:''}>${p}</button>`).join('');
+  const depsList=state.tasks.filter(x=>x.id!==draft.id).map(x=>`
+    <button type="button" onclick="toggleDep('${x.id}')" data-dep="${x.id}"
+      class="flex items-center gap-2 rounded-xl border px-3 py-2 text-[12px] font-bold transition
+      ${draft.deps.includes(x.id)?'bg-sea-50 border-sea-500 text-sea-700':'bg-white border-cream-300 text-ink-700 hover:border-sea-500'}">
+      <span class="w-2 h-2 rounded-full flex-none" style="background:${STATUS[x.status].dot}"></span>
+      <span class="truncate max-w-[220px]">${esc(x.title)}</span>
+      <i data-lucide="link-2" class="w-3.5 h-3.5 mr-auto opacity-60"></i></button>`).join('');
+
+  openModal(`${mHead(t?'ویرایش تسک':'ایجاد تسک جدید')}
+  <div class="p-5 lg:p-6 overflow-y-auto flex-1">
+    <div class="grid md:grid-cols-2 gap-x-5 gap-y-4">
+      <div class="md:col-span-2"><label class="flabel">عنوان تسک <span class="text-berry-500">*</span></label>
+        <input id="f-title" class="fld" value="${esc(draft.title)}" placeholder="مثلاً: پیاده‌سازی سرویس جستجوی پیشرفته"></div>
+      <div class="md:col-span-2"><label class="flabel">توضیحات</label>
+        <textarea id="f-desc" rows="3" class="fld resize-none" placeholder="شرح کامل نیازمندی، معیار پذیرش و نکات فنی…">${esc(draft.desc)}</textarea></div>
+      <div><label class="flabel">گروه اصلی</label>
+        <select id="f-group" class="fld">${Object.keys(GROUPS).map(g=>`<option ${draft.group===g?'selected':''}>${g}</option>`).join('')}</select></div>
+      <div><label class="flabel">مسئول اجرا</label>
+        <select id="f-assignee" class="fld">${MEMBERS.map(m=>`<option value="${m.id}" ${draft.assignee===m.id?'selected':''}>${m.name} — ${m.role}</option>`).join('')}</select></div>
+      <div class="md:col-span-2"><label class="flabel">اولویت</label><div class="flex gap-2" id="f-prio">${seg}</div></div>
+      <div><label class="flabel">تاریخ شروع</label><input id="f-start" type="date" class="fld" value="${isoDate(draft.start)}"></div>
+      <div><label class="flabel">ددلاین تحویل <span class="text-berry-500">*</span></label><input id="f-deadline" type="datetime-local" class="fld" value="${isoDT(draft.deadline)}"></div>
+      <div><label class="flabel">تخمین انجام (ساعت)</label><input id="f-est" type="number" min="1" class="fld" value="${draft.estimate}"></div>
+      <div><label class="flabel">سهمیه SLA (ساعت)</label><input id="f-sla" type="number" min="1" class="fld" value="${draft.slaH}"></div>
+      <div class="md:col-span-2"><label class="flabel">زیرگروه‌ها</label>
+        <div id="sub-chips" class="flex flex-wrap gap-1.5 min-h-[36px] rounded-xl border border-cream-300 bg-white p-2"></div>
+        <div class="flex gap-2 mt-2">
+          <input id="sub-in" class="fld flex-1" placeholder="نام زیرگروه جدید… سپس Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSubChip();}">
+          <button type="button" onclick="addSubChip()" class="btn-ghost"><i data-lucide="plus" class="w-4 h-4"></i>افزودن</button>
+        </div></div>
+      <div class="md:col-span-2"><label class="flabel">وابستگی به تسک‌های دیگر</label>
+        <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">${depsList}</div></div>
+      <div class="md:col-span-2"><label class="flabel">تصویر پیوست تسک</label>
+        <div id="img-prev" class="h-40 rounded-xl border-2 border-dashed border-cream-300 bg-white overflow-hidden"></div>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <label class="btn-ghost cursor-pointer"><i data-lucide="upload" class="w-4 h-4"></i>بارگذاری تصویر
+            <input type="file" accept="image/*" class="hidden" onchange="pickImage(this)"></label>
+          <button type="button" onclick="sampleImage()" class="btn-ghost"><i data-lucide="image-plus" class="w-4 h-4"></i>تصویر نمونه</button>
+          <button type="button" onclick="clearImage()" class="btn-ghost !text-ink-500"><i data-lucide="trash-2" class="w-4 h-4"></i>حذف تصویر</button>
+        </div></div>
+    </div>
+    <p id="f-err" class="hidden mt-4 text-[12px] font-bold text-berry-600 flex items-center gap-1.5"><i data-lucide="triangle-alert" class="w-4 h-4"></i><span></span></p>
+  </div>
+  <div class="px-5 lg:px-6 py-4 border-t border-cream-200 bg-cream-100/60 flex gap-2 flex-none">
+    <button onclick="saveTask()" class="btn-primary"><i data-lucide="check" class="w-4 h-4"></i>${t?'ذخیره تغییرات':'ایجاد تسک'}</button>
+    <button onclick="closeModal()" class="btn-ghost">انصراف</button>
+  </div>`,'max-w-3xl');
+  renderSubChips(); renderImgPrev();
+}
+function renderSubChips(){
+  document.getElementById('sub-chips').innerHTML=draft.subs.length
+    ?draft.subs.map(s=>`<span class="chip gap-1 bg-sea-50 text-sea-700 border border-sea-500/30 py-1">${esc(s)}<button type="button" onclick="removeSub('${esc(s)}')" class="hover:text-berry-600"><i data-lucide="x" class="w-3 h-3"></i></button></span>`).join('')
+    :`<span class="text-[11px] text-ink-400 font-bold self-center">زیرگروهی افزوده نشده است</span>`;
+  refreshIcons();
+}
+function addSubChip(){const i=document.getElementById('sub-in');const s=i.value.trim();if(s&&!draft.subs.includes(s))draft.subs.push(s);i.value='';renderSubChips();}
+function removeSub(s){draft.subs=draft.subs.filter(x=>x!==s);renderSubChips();}
+function toggleDep(id){const i=draft.deps.indexOf(id);i>-1?draft.deps.splice(i,1):draft.deps.push(id);
+  const b=document.querySelector(`[data-dep="${id}"]`);
+  b.classList.toggle('bg-sea-50');b.classList.toggle('border-sea-500');b.classList.toggle('text-sea-700');b.classList.toggle('bg-white');b.classList.toggle('border-cream-300');b.classList.toggle('text-ink-700');}
+function setDraftPrio(p){draft.priority=p;document.querySelectorAll('#f-prio [data-p]').forEach(b=>{
+  const on=b.dataset.p===p;b.style.background=on?PRIO[b.dataset.p].c:'';b.style.color=on?'#fff':'';b.classList.toggle('text-white',on);b.classList.toggle('text-ink-500',!on);b.classList.toggle('border-transparent',on);b.classList.toggle('shadow',on);});}
+function renderImgPrev(){
+  document.getElementById('img-prev').innerHTML=draft.img
+    ?`<img src="${draft.img}" class="w-full h-full object-cover">`
+    :`<div class="h-full grid place-items-center text-ink-400 gap-1.5"><i data-lucide="image" class="w-7 h-7"></i><span class="text-[11px] font-bold">تصویری انتخاب نشده</span></div>`;
+  refreshIcons();
+}
+function pickImage(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{draft.img=e.target.result;renderImgPrev();toast('تصویر بارگذاری شد','info');};r.readAsDataURL(f);}
+function sampleImage(){draft.img=`https://picsum.photos/seed/rayka-${Math.floor(Math.random()*900+100)}/800/400.jpg`;renderImgPrev();toast('یک تصویر نمونه انتخاب شد','info');}
+function clearImage(){draft.img=null;renderImgPrev();}
+function saveTask(){
+  const err=document.getElementById('f-err');
+  const show=m=>{err.classList.remove('hidden');err.querySelector('span').textContent=m;};
+  draft.title=v('f-title').trim(); draft.desc=v('f-desc').trim();
+  draft.group=v('f-group'); draft.assignee=v('f-assignee');
+  draft.estimate=+v('f-est')||4; draft.slaH=+v('f-sla')||24;
+  draft.start=v('f-start')?new Date(v('f-start')+'T09:00').getTime():Date.now();
+  draft.deadline=v('f-deadline')?new Date(v('f-deadline')).getTime():Date.now()+3*D;
+  if(!draft.title)return show('عنوان تسک الزامی است');
+  if(isNaN(draft.deadline))return show('ددلاین تحویل را مشخص کنید');
+  if(draft.deadline<=draft.start)return show('ددلاین باید بعد از تاریخ شروع باشد');
+  err.classList.add('hidden');
+  if(draft.id){
+    const t=byId(draft.id);Object.assign(t,draft,{subs:[...draft.subs],deps:[...draft.deps]});
+    t.log.push({t:Date.now(),txt:'تسک توسط مدیر پروژه ویرایش شد'});
+    toast('تغییرات تسک ذخیره شد','ok');
+  }else{
+    state.tasks.unshift({...draft,id:'t'+Date.now(),subs:[...draft.subs],deps:[...draft.deps],
+      status:'todo',worked:0,completedAt:null,log:[{t:Date.now(),txt:'تسک ایجاد و وارد بوم پروژه شد'}]});
+    toast('تسک جدید با موفقیت ایجاد شد','ok');
+  }
+  closeModal(); renderCurrent(); updateSidebarSprint();
+}
+function openDelete(id){
+  const t=byId(id);
+  openModal(`${mHead('حذف تسک')}
+  <div class="p-6">
+    <div class="flex items-start gap-3">
+      <span class="cico !w-11 !h-11 bg-berry-100 text-berry-600 flex-none"><i data-lucide="triangle-alert" class="w-5 h-5"></i></span>
+      <div><div class="font-extrabold text-[14px] mb-1">حذف «${esc(t.title)}»</div>
+      <p class="text-[12.5px] text-ink-500 font-bold leading-6">این تسک همراه با تمام زمان‌بندی، وابستگی‌ها و تاریخچه‌اش حذف خواهد شد و قابل بازگشت نیست.</p></div>
+    </div>
+  </div>
+  <div class="px-6 py-4 border-t border-cream-200 bg-cream-100/60 flex gap-2 flex-none">
+    <button onclick="deleteTask('${id}')" class="btn-danger"><i data-lucide="trash-2" class="w-4 h-4"></i>حذف قطعی</button>
+    <button onclick="closeModal()" class="btn-ghost">انصراف</button>
+  </div>`,'max-w-md');
+}
+function deleteTask(id){
+  state.tasks=state.tasks.filter(t=>t.id!==id);
+  state.tasks.forEach(t=>t.deps=t.deps.filter(d=>d!==id));
+  closeModal(); toast('تسک حذف شد','bad'); renderCurrent(); updateSidebarSprint();
+}
+
+/* ---- مودال جزئیات (کاربر) ---- */
+function openDetail(id){
+  const t=byId(id); if(!t)return;
+  const m=member(t.assignee), s=slaOf(t), cd=t.deadline-Date.now();
+  const deps=t.deps.map(d=>byId(d)).filter(Boolean);
+  const blocked=t.status!=='done'&&deps.some(d=>d.status!=='done');
+  const stat=(ico,col,bg,label,val,sub='')=>`
+    <div class="rounded-xl border border-cream-200 bg-white p-3">
+      <div class="flex items-center gap-1.5 text-[10.5px] text-ink-500 font-bold mb-1"><i data-lucide="${ico}" class="w-3.5 h-3.5" style="color:${col}"></i>${label}</div>
+      <div class="text-[13px] font-black text-ink-900">${val}</div>
+      ${sub?`<div class="text-[10px] mt-1 text-ink-400 font-bold">${sub}</div>`:''}
+    </div>`;
+  openModal(`${mHead('جزئیات تسک')}
+  <div class="p-5 lg:p-6 overflow-y-auto flex-1 space-y-4">
+    ${t.image?`<img src="${t.image}" class="w-full h-44 object-cover rounded-xl border border-cream-200">`:''}
+    <div>
+      <div class="font-black text-lg text-ink-900 leading-7">${esc(t.title)}</div>
+      <div class="flex flex-wrap gap-1.5 mt-2.5">${groupChip(t.group)}${subChips(t)}${prioChip(t.priority)}${pill(t.status)}</div>
+    </div>
+    ${blocked?`<div class="flex items-start gap-2.5 rounded-xl bg-sun-100 border border-sun-500/40 px-3.5 py-2.5 text-[12px] font-bold text-ink-900">
+      <i data-lucide="triangle-alert" class="w-4 h-4 text-sun-600 mt-0.5 flex-none"></i>این تسک به موارد ناتمام وابسته است؛ پیش از شروع، وضعیت وابستگی‌ها را بررسی کنید.</div>`:''}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      ${stat('calendar-days','#0F4C81','#DEEBF6','ددلاین تحویل',fmtJ(t.deadline))}
+      ${stat('timer',t.status==='done'?'#8CA0B3':dlColor(cd),'#F8F3E7','زمان باقی‌مانده',t.status==='done'?'تکمیل شد':cdShort(cd))}
+      ${stat('user-round',m.color,'#F8F3E7','مسئول اجرا',m.name)}
+      ${stat('clipboard-list','#218551','#DDF2E5','کارکرد ثبت‌شده',`${fa(t.worked)} از ${fa(t.estimate)} ساعت`,
+        `<div class="h-1.5 rounded-full bg-cream-100 overflow-hidden mt-1"><div style="width:${Math.min(t.worked/t.estimate*100,100).toFixed(0)}%;height:100%;background:#2E9E63;border-radius:99px"></div></div>`)}
+    </div>
+    ${deps.length?`<div><div class="flabel">وابستگی‌ها</div><div class="flex flex-wrap gap-1.5">
+      ${deps.map(d=>`<button onclick="openDetail('${d.id}')" class="chip gap-1.5 border border-cream-300 bg-white hover:border-sea-500 transition cursor-pointer py-1">
+        <span class="w-2 h-2 rounded-full" style="background:${STATUS[d.status].dot}"></span>${esc(d.title)}</button>`).join('')}</div></div>`:''}
+    <div class="rounded-xl border border-cream-200 bg-white p-3.5">
+      <div class="flex justify-between text-[11px] font-bold mb-2"><span style="color:${s.color}">${s.label}</span>
+        <span style="color:${s.color}">${fa(Math.round(Math.min(s.pct,1)*100))}٪ از سهمیه ${fa(t.slaH)} ساعته مصرف شده</span></div>
+      <div class="h-2.5 rounded-full bg-cream-100 border border-cream-200 overflow-hidden">
+        <div style="width:${Math.min(s.pct,1)*100}%;height:100%;background:${s.color};border-radius:99px"></div></div>
+    </div>
+    <div>
+      <label class="flabel">توضیحات تسک (قابل ویرایش)</label>
+      <textarea id="d-desc" rows="4" class="fld resize-none leading-6">${esc(t.desc)}</textarea>
+      <button onclick="saveDesc('${id}')" class="btn-ghost mt-2 !py-1.5 !text-[12px]"><i data-lucide="check" class="w-3.5 h-3.5"></i>ذخیره توضیحات</button>
+    </div>
+    <div>
+      <label class="flabel">تغییر وضعیت</label>
+      <div class="flex gap-1.5">
+        ${Object.entries(STATUS).map(([k,val])=>`<button onclick="setTaskStatus('${id}','${k}')"
+          class="flex-1 rounded-xl border px-1 py-2 text-[11.5px] font-bold transition cursor-pointer
+          ${t.status===k?'text-white shadow border-transparent':'text-ink-500 border-cream-300 bg-white hover:border-sea-500'}"
+          ${t.status===k?`style="background:${val.dot}"`:''}>${val.label}</button>`).join('')}
+      </div>
+    </div>
+    <div>
+      <label class="flabel">ثبت کارکرد جدید</label>
+      <div class="flex gap-2 max-w-xs">
+        <input id="d-work" type="number" min="0.5" step="0.5" class="fld" placeholder="مثلاً ۲.۵ (ساعت)">
+        <button onclick="logWork('${id}')" class="btn-primary flex-none"><i data-lucide="plus" class="w-4 h-4"></i>ثبت</button>
+      </div>
+    </div>
+    <div class="rounded-xl bg-cream-100/70 border border-cream-200 p-3.5">
+      <div class="text-[11px] font-black text-ink-700 mb-2 flex items-center gap-1.5"><i data-lucide="history" class="w-3.5 h-3.5"></i>تاریخچه رویدادها</div>
+      <div class="space-y-1.5">${[...t.log].reverse().slice(0,5).map(l=>`
+        <div class="flex items-center gap-2 text-[11px] font-bold text-ink-600">
+          <span class="w-1.5 h-1.5 rounded-full bg-sea-500 flex-none"></span><span>${l.txt}</span>
+          <span class="mr-auto text-ink-400">${fmtJ(l.t,true)}</span></div>`).join('')}</div>
+    </div>
+  </div>`,'max-w-3xl');
+}
+function saveDesc(id){
+  const t=byId(id); const d=document.getElementById('d-desc').value.trim();
+  if(!d)return toast('متن توضیحات نمی‌تواند خالی باشد','warn');
+  t.desc=d; t.log.push({t:Date.now(),txt:'توضیحات تسک ویرایش شد'});
+  toast('توضیحات ذخیره شد','ok'); openDetail(id); renderCurrentSilent();
+}
+function logWork(id){
+  const t=byId(id); const h=parseFloat(document.getElementById('d-work').value);
+  if(!h||h<=0)return toast('یک مقدار ساعت معتبر وارد کنید','warn');
+  t.worked+=h; t.log.push({t:Date.now(),txt:`${fa(h)} ساعت کارکرد روی تسک ثبت شد`});
+  toast(`${fa(h)} ساعت کارکرد ثبت شد`,'ok'); openDetail(id); renderCurrentSilent();
+}
+function setTaskStatus(id,st){moveTask(id,st);if(document.getElementById('d-desc'))openDetail(id);}
+function moveTask(id,st){
+  const t=byId(id); if(!t||t.status===st)return;
+  t.status=st;
+  if(st==='done')t.completedAt=Date.now(); else t.completedAt=null;
+  t.log.push({t:Date.now(),txt:`وضعیت به «${STATUS[st].label}» تغییر یافت`});
+  if(st==='done')toast(`تسک «${esc(t.title)}» تکمیل شد — ${slaOf(t).pct<=1?'در محدوده SLA':'خارج از SLA'}`,'ok');
+  else toast(`وضعیت به «${STATUS[st].label}» تغییر یافت`,'info');
+  renderCurrentSilent(); updateSidebarSprint();
+}
+function renderCurrentSilent(){
+  if(state.view==='board'){renderBoardStatus();renderBoardCards();refreshIcons();}
+  else if(state.view!=='dashboard')renderCurrent();
+  else renderCurrent();
+}
+
+/* ════════════════════ اسپرینت سایدبار و راه‌اندازی ════════════════════ */
+function updateSidebarSprint(){
+  const c=stats(), total=state.tasks.length, pct=Math.round(c.done/total*100);
+  const bar=document.getElementById('sb-bar');
+  bar.dataset.w=pct;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>bar.style.width=pct+'%'));
+  document.getElementById('sb-lbl').textContent=`${fa(pct)}٪ ظرفیت اسپرینت مصرف شد`;
+  document.getElementById('sb-days').textContent=`${fa(5)} روز مانده`;
+}
+
+renderNav(); renderNotifs(); setView('dashboard'); updateSidebarSprint();
+tickClock(); setInterval(tickClock,1000);
+renderNotifs();
+setInterval(()=>{document.querySelectorAll('[data-cd]').forEach(el=>{el.textContent=cdShort(+el.dataset.cd-Date.now());});},20000);
+</script>
+</body>
+</html>

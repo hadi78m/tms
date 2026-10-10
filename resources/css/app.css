@@ -20,7 +20,8 @@
 
 @layer base {
     body {
-      font-family: "IRANSans", sans-serif;
+      /* پشتهٔ یکپارچهٔ فونت پروژه — مطابق tailwind.config.js */
+      font-family: "Vazirmatn", "IRANSans", "Figtree", ui-sans-serif, system-ui, sans-serif;
     }
 }
 

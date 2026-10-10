@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\V19;
 
+use App\Domain\DTOs\AssignProjectSupervisorData;
+use App\Domain\Services\ProjectMembershipService;
 use App\Domain\Services\WbsPhaseService;
 use App\Models\Project;
 use App\Models\User;
@@ -34,6 +36,21 @@ class WbsChecklistUiTest extends TestCase
         $this->project = $this->makeProject(1);
         $this->manager = $this->makeUserWithRole('project_manager');
         $this->supervisor = $this->makeUserWithRole('supervisor');
+
+        // V1.11 WBS I-1 (WBS-02/03): supervisor WBS access now requires an
+        // ACTIVE supervisor membership (ProjectScopeService). These tests pin
+        // the DECISION MECHANICS (complete / not_completed / reopen), not the
+        // scope matrix — the scope matrix lives in V111\WbsPhasePolicyTest /
+        // WbsAuthorizationWiringTest. The membership grant preserves the
+        // original intent of each test unchanged.
+        app(ProjectMembershipService::class)->assignSupervisor(
+            new AssignProjectSupervisorData(
+                project_id: $this->project->id,
+                user_id: $this->supervisor->id,
+                assigned_by: $this->supervisor->id
+            ),
+            $this->supervisor
+        );
     }
 
     public function test_index_requires_authentication(): void

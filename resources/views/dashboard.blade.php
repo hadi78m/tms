@@ -1,87 +1,86 @@
 @extends('layouts.app')
 
+@use('App\Support\TaskBoard\BoardColumns')
+
 @section('title', 'داشبورد')
 @section('header_title', 'داشبورد کاربری')
 
 @section('content')
+{{-- Phase 5B-2 — Visual Migration.
+     تنها زبان بصری عوض شده است: Panel/Badge/Avatar و توکن‌های طراحی.
+     هیچ metric، query، متن، مجوز یا قاعدهٔ کسب‌وکاری تغییر نکرده است. --}}
 <div class="space-y-6">
 
     <!-- Welcome Section -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">خوش آمدید، {{ auth()->user()->name }}!</h2>
-        <p class="text-slate-600">در اینجا خلاصه‌ای از وضعیت وظایف شما نمایش داده شده است.</p>
-    </div>
+    <x-ui.panel>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="min-w-0">
+                <h2 class="text-lg font-extrabold text-ink">خوش آمدید، {{ auth()->user()->name }}!</h2>
+                <p class="mt-1 text-sm leading-relaxed text-ink-muted">در اینجا خلاصه‌ای از وضعیت وظایف شما نمایش داده شده است.</p>
+            </div>
+            <x-ui.avatar :name="auth()->user()->name" size="lg" />
+        </div>
+    </x-ui.panel>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
         <!-- My Tasks Card -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div>
-                <p class="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">
+        <x-ui.panel body-class="flex items-center justify-between gap-4">
+            <div class="min-w-0">
+                <p class="text-xs font-bold text-ink-muted">
                     {{ auth()->user()->contractor_id ? 'وظایف من' : 'وظایف نیازمند بررسی' }}
                 </p>
-                <h3 class="text-3xl font-bold text-slate-800">{{ $myTasksCount }}</h3>
+                <p class="mt-1 text-3xl font-extrabold tabular-nums text-ink">{{ $myTasksCount }}</p>
             </div>
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl">
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-ui-md bg-primary/10 text-lg text-primary ring-1 ring-primary/20" aria-hidden="true">
                 <i class="fas {{ auth()->user()->contractor_id ? 'fa-tasks' : 'fa-clipboard-check' }}"></i>
-            </div>
-        </div>
+            </span>
+        </x-ui.panel>
 
         <!-- Breached SLA Card -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div>
-                <p class="text-sm font-medium text-slate-500 uppercase tracking-wider mb-1">نقض زمانبندی (SLA)</p>
-                <h3 class="text-3xl font-bold text-red-600">{{ $breachedSlapCount }}</h3>
+        <x-ui.panel body-class="flex items-center justify-between gap-4">
+            <div class="min-w-0">
+                <p class="text-xs font-bold text-ink-muted">نقض زمان‌بندی (SLA)</p>
+                <p class="mt-1 text-3xl font-extrabold tabular-nums text-danger-600">{{ $breachedSlapCount }}</p>
             </div>
-            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-xl">
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-ui-md bg-danger-100 text-lg text-danger-600 ring-1 ring-danger-200" aria-hidden="true">
                 <i class="fas fa-exclamation-triangle"></i>
-            </div>
-        </div>
+            </span>
+        </x-ui.panel>
 
         <!-- Shortcut Card -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center items-start hover:shadow-md transition-shadow group">
-            <p class="text-sm font-medium text-slate-500 uppercase tracking-wider mb-2">دسترسی سریع</p>
-            <a href="{{ route('tasks.index') }}" class="text-blue-600 font-semibold group-hover:text-blue-800 flex items-center">
+        <x-ui.panel body-class="flex flex-col items-start justify-center gap-2">
+            <p class="text-xs font-bold text-ink-muted">دسترسی سریع</p>
+            <a href="{{ route('tasks.index') }}"
+               class="group inline-flex items-center gap-1.5 rounded-ui text-sm font-bold text-primary transition hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 برو به کارتابل وظایف
-                <i class="fas fa-arrow-left mr-2 transform group-hover:-translate-x-1 transition-transform"></i>
+                <i class="fas fa-arrow-left ms-1 transform transition-transform group-hover:-translate-x-1" aria-hidden="true"></i>
             </a>
-        </div>
+        </x-ui.panel>
 
     </div>
 
     <!-- Status Distribution -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-lg font-bold text-slate-800 mb-4">توزیع وضعیت وظایف</h3>
+    <x-ui.panel title="توزیع وضعیت وظایف">
+        {{-- برچسب وضعیت فقط از منبع واحد ارائه (BoardColumns) خوانده می‌شود.
+             کلیدهای قدیمی pending/completed/rejected هرگز از وضعیت‌های
+             واقعی دامنه نبودند؛ اکنون ۹ وضعیت واقعی با برچسب فارسی
+             و رنگ معنایی درست نمایش داده می‌شوند. --}}
         @if(empty($statusDistribution))
-            <p class="text-slate-500 text-sm">هیچ وظیفه‌ای برای نمایش وجود ندارد.</p>
+            <x-ui.empty-state title="هیچ وظیفه‌ای برای نمایش وجود ندارد." />
         @else
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                @php
-                    $statusTranslations = [
-                        'pending' => 'در انتظار',
-                        'in_progress' => 'در حال انجام',
-                        'completed' => 'ارسال شده',
-                        'approved' => 'تایید شده',
-                        'rejected' => 'رد شده',
-                    ];
-                    $statusColors = [
-                        'pending' => 'bg-slate-100 text-slate-700',
-                        'in_progress' => 'bg-blue-100 text-blue-700',
-                        'completed' => 'bg-purple-100 text-purple-700',
-                        'approved' => 'bg-green-100 text-green-700',
-                        'rejected' => 'bg-red-100 text-red-700',
-                    ];
-                @endphp
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                 @foreach($statusDistribution as $status => $count)
-                    <div class="flex items-center justify-between p-3 rounded-lg {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-700' }}">
-                        <span class="text-sm font-medium">{{ $statusTranslations[$status] ?? $status }}</span>
-                        <span class="text-lg font-bold">{{ $count }}</span>
+                    @php $statusView = BoardColumns::statusView((string) $status); @endphp
+                    <div class="flex items-center justify-between gap-3 rounded-ui border border-line-subtle bg-surface-inset p-3">
+                        <x-ui.badge :variant="$statusView['variant']" dot>{{ $statusView['label'] }}</x-ui.badge>
+                        <span class="text-lg font-extrabold tabular-nums text-ink">{{ $count }}</span>
                     </div>
                 @endforeach
             </div>
         @endif
-    </div>
+    </x-ui.panel>
 
 </div>
 @endsection

@@ -1,5 +1,150 @@
 # Antigravity Changelog
 
+## 2026-10-07 — Phase 5B-6 Visual Migration (Modules + Stages)
+
+### نوع تغییر
+- [ ] Added (کد)
+- [x] **Modified (presentation — ۲ ویو)**
+- [ ] Deleted
+- [x] **Refactored (فقط زبان بصری `modules/show` و `modules/stages/show` به Design System)**
+- [x] **Added (Test — `tests/Feature/Ui/Phase5B6UiTest.php`)**
+- [ ] Fixed
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation**
+
+### خلاصه
+- **Gate A (Discovery):** سه کاندید سنجیده شد — `modules/stages/show` (۲۳۰ خط · ۵۰ slate · ۲۸ رنگ قدیمی) · `modules/show` (۱۲۰ · ۲۸ · ۱۲) · `modules/index` (۵۱ · ۱۰ · ۴). **انتخاب: دو صفحهٔ اول** (بیشترین حذف legacy در چارچوب سقف ۲–۳ صفحه) · `modules/index` **deferred** (کمترین شدت + صرفاً فهرست خواندنی؛ تنها legacy باقی‌ماندهٔ این زیرسیستم).
+- **دامنه:** `resources/views/modules/stages/show.blade.php` + `resources/views/modules/show.blade.php` فقط (Hard Scope Phase 5B-6). هیچ PHP/Route/Policy/Request/Service/Model/DB تغییر نکرد.
+- **قراردادهای کشف‌شده (بی‌تغییر):** GET `modules.stages.show`/`modules.show` · POST `modules.stages.rebalance` · POST `stages.progress-approvals.{store,adjust,decide}` · POST `modules.{store,update,rebalance}` · middlewareهای `role:` سه‌گانه · policyهای `ModuleStagePolicy::view` و `ModulePolicy::viewProject/update/rebalance/rebalanceStages` · **صفر `@can` در Blade** (مرز فقط middleware+policy در کنترلر).
+- **صفر JS hook** در هر دو صفحه (grep `@push|<script|id=|data-|wire:` → صفر)؛ فقط `<details>/<summary>` بومی که عیناً حفظ شد.
+- **حفظ فرم‌ها:** `weights[{id}]` (۹ مرحله/ماژول · step/min/max · `disabled` فقط وقتی قفل) · `proposed_amount`/`reason` (max = وزن مرحله) · `decision=approve|reject` مخفی · `supersedes_approval_id` مخفی · `modules[i][name|code|weight]` + `project_id` مخفی · `name/code/description` فرم inline · `@csrf` همه جا · اکشن/route/required/maxlength/مقادیر عیناً.
+- **وضعیت‌ها:** نشان‌های تأیید با **همان برچسب فارسی قبلی** (`در انتظار تصمیم`/`تأییدشده`/`ردشده`/`باطل‌شده (تاریخچه)`) فقط به variantهای `warning/success/danger/muted` ترجمه شدند — **هیچ واژگان یا نگاشت وضعیت جدیدی اختراع نشد**. وضعیت وظایف از نگاشت مرجع `BoardColumns::statusView` خوانده می‌شود (قبلاً خام رندر می‌شد).
+- **وزن/درصد:** `number_format` عین مقادیر کنترلر (`$stage->weight`, `$approvedWeight`, `$remainingWeight`, `$isWeightLocked`, `sum(weight)` + آستانهٔ `abs(x-100)<0.01`) — **صفر بازمحاسبه**.
+- **حفظ سطوح عنوان:** h1 صفحه + h2های محلی (`توزیع وزن مراحل ماژول`، `ثبت پیشنهاد پیشرفت مرحله`، `تعریف ساختار ماژول`، `ماژول‌های فعال`، `بازتوازن وزن ماژول‌ها`) از طریق `x-slot:header` (پنل پیش‌فرض h3 نشد). Heading Architecture (app-header) دست‌نخورده.
+- **صفر کامپوننت جدید** — `x-ui.panel`/`badge`/`key-val`/`empty-state` + توکن‌ها فقط.
+- **رگرسیون:** کل مجموعه `2 deprecated · 738 passed (2914 assertions) · 0 failed` (بیس 724 + ۱۴ تست جدید = **صفر regression**) · سوییت‌های Module/Stage موجود 137 passed · Pint PASS · build PASS (app-Bnd3FIHE.css · توکن‌های جدید شامل `bg-warning-500/600`، `ring-warning-500`، `hover:bg-line` با `grep -F` تأیید شدند).
+- **Browser QA:** `Browser QA NOT EXECUTED — valid authenticated credentials unavailable.`
+- **حکم:** `READY FOR PHASE 5B-7`.
+
+
+## 2026-10-07 — Phase 5B-5 Visual Migration (Users Create + Edit)
+
+### نوع تغییر
+- [ ] Added (کد)
+- [x] **Modified (presentation — ۲ ویو)**
+- [ ] Deleted
+- [x] **Refactored (فقط زبان بصری `users/create` و `users/edit` به Design System)**
+- [x] **Added (Test — `tests/Feature/Ui/Phase5B5UiTest.php`)**
+- [ ] Fixed
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation**
+
+### خلاصه
+- **دامنه:** `resources/views/users/create.blade.php` + `resources/views/users/edit.blade.php` فقط (Hard Scope Phase 5B-5). هیچ PHP/Route/Policy/Request تغییر نکرد.
+- **Primitive‌های reuse شده:** `x-ui.panel` (با `x-slot:header` برای حفظ سطح h1) + توکن‌ها. **صفر کامپوننت جدید**.
+- **توکن‌ها:** `border-line{-strong}` · `surface-base/inset` · `ink/-muted/-subtle` · `primary` · `danger` (خطا) · `info/success` (کارت‌های نقش — همان نگاشت 5B-3) · `radius-ui` · `shadow-ui-soft`. حذف کامل slate/blue/rose/purple/emerald از هر دو صفحه (صفر باقی‌مانده، grep-verified).
+- **حفظ‌شده (بی‌تغییر):** `POST users.store` · `POST` + `@method('PUT')` → `users.update` · `@csrf` · تمام name/id (`contractor-wrapper`, `.role-checkbox`, `report-*` ندارد) · required/maxlength/minlength · `@error` + `old()` (fallback به مقادیر کاربر در edit) · منطق checked نقش‌ها و نمایش contractor wrapper · **بلوک `@push('scripts')` عیناً** (hook زنده) · `role:admin` middleware · برچسب‌های فارسی · سطوح h1/h2 صفحه.
+- **a11y (داخل scope):** `aria-describedby` شرطی برای پیام خطا + `id="*-error"` · `aria-hidden` روی ۳ آیکون FA · focus-visible روی دکمه‌ها · فاصله‌گذاری منطقی RTL (`ms-`/`gap-`).
+- **رگرسیون:** کل مجموعه `2 deprecated · 724 passed (2768 assertions) · 0 failed` (بیس 711 + ۱۳ تست جدید = **صفر regression**) · Pint PASS · build PASS (app-C3kpr45Z.css · توکن‌های جدید با `grep -F` تأیید شدند).
+- **یافتهٔ تستی ریشه‌یابی‌شده:** `assertSessionHasErrors` بلافاصله بعد از POST با `serialization=json` session، کیسهٔ خطا را به شیء تبدیل می‌کند و `marshalErrorBag` در GET بعدی کیسهٔ خالی می‌گذارد (علت شکست اولیهٔ تست اعتبارسنجی — باگ تست/فریم‌ورک، نه اپ؛ تست با اتکا به خروجی رندرشده بازنویسی شد و جریان واقعی POST→GET رندر خطاها را تأیید کرد).
+- **Browser QA:** `NOT EXECUTED — valid authenticated credentials unavailable.`
+- **حکم:** `READY FOR PHASE 5B-6`.
+
+
+## 2026-10-07 — Phase 5B-4 Visual Migration (Reports)
+
+### نوع تغییر
+- [ ] Added (کد)
+- [x] **Modified (presentation — ۱ ویو)**
+- [ ] Deleted
+- [x] **Refactored (فقط زبان بصری `reports/index` به Design System)**
+- [x] **Added (Test — `tests/Feature/Ui/Phase5B4UiTest.php`)**
+- [ ] Fixed
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation**
+
+### خلاصه
+- **دامنه (Hard Scope):** `resources/views/reports/index.blade.php` فقط — بالاترین تراکم legacy در survey (۵۲ `slate-*` + ۱۰ رنگ قدیمی). هیچ صفحه/کنترلر/روت/پالیسی دیگری لمس نشد.
+- **Primitive‌های reuse شده:** `x-ui.panel` (با `x-slot:header`/`x-slot:footer`) · `x-ui.empty-state` · توکن‌ها. **صفر کامپوننت جدید** (badge/status-indicator در این صفحه کاربرد نداشتند — وضعیت/اولویتی نمایش داده نمی‌شود).
+- **توکن‌ها:** `border-line/-subtle` · `surface-base/inset` · `ink/-muted/-subtle` · `primary/success/danger/warning` · `radius-ui` · `shadow-ui-soft`. حذف کامل slate/blue/green/red/amber از صفحه.
+- **حفظ‌شده (بی‌تغییر):** فرم GET + نام فیلدها (`project_id`/`from`/`to`) + selected-state + reset · لینک‌های `reports.export` (سه type + `array_filter` پارامترهای فیلتر) · لینک `modules.stages.show` · شرط‌های `$stageProgress` · تمام `number_format`/محاسبات/معناشناسی داده · تمام برچسب‌های فارسی (شامل پین‌های V110) · صفر `@can` درون Blade · **سطوح عنوان h2×3/h3×3 عیناً حفظ شد** (استفاده از header slot پنل به‌جای `title`) — Heading Architecture/Option B دست‌نخورده · h1 صفحه DEFER (نیازمند app-header).
+- **صفر chart/JS hook:** صفحه هیچ `id=`/`<script>`/event handler ندارد — چیزی برای حفظ یا حذف مبهم وجود نداشت.
+- **a11y:** `for=`/`id=` برای سه فیلد فیلتر · `aria-hidden` روی آیکون‌های تزئینی · focus-visible روی دکمه/لینک‌ها.
+- **رگرسیون:** کل مجموعه `2 deprecated · 711 passed (2633 assertions) · 0 failed` (بیس 699 + ۱۲ تست جدید = **صفر regression**) · Pint ✅ · build ✅ (app-i4r-HJ14.css · توکن‌های جدید با `grep -F` تأیید شدند).
+- **Manual browser QA:** `NOT EXECUTED — environment limitation` (صفحه پشت `auth` → 302؛ بدون credential؛ بدون user/seed/mutation).
+- **حکم:** `READY FOR PHASE 5B-5`.
+
+
+## 2026-10-06 — Phase 5B-3 Visual Migration (Wave 2) *(backfilled — در ACTION_TRACKER/MEMORY/SESSION_LOG ثبت شده بود)*
+
+### نوع تغییر
+- [ ] Added (کد)
+- [x] **Modified (presentation — ۳ ویو)**
+- [ ] Deleted
+- [x] **Refactored (فقط زبان بصری ویو‌ها به Design System)**
+- [x] **Added (Test — `tests/Feature/Ui/Phase5B3UiTest.php`)**
+- [ ] Fixed
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation**
+
+### خلاصه
+- **دامنه:** `users/index.blade.php` · `wbs-phases/index.blade.php` · `settings/index.blade.php` — انتخاب مبتنی بر سنجش شواهد (۱۶ صفحه legacy شمرده شد).
+- **Primitive‌های reuse شده:** `x-ui.panel` · `x-ui.badge` (admin=primary, supervisor=info, contractor=success · فعال/غیرفعال=success/danger · وضعیت چک‌لیست=warning/success/danger) · `x-ui.avatar` · `x-ui.empty-state` · توکن‌ها + `rtl:` variant برای toggleها. **صفر کامپوننت جدید**.
+- **حفظ‌شده:** فرم حذف کاربر (`@method('DELETE')` + confirm + guard خودِ ادمین) · فرم ایجاد WBS (۵ نام فیلد/required/maxlength) · تنظیمات (action + نام ۳ checkbox + پیش‌فرض‌های checked) · صفر route/permission جدید.
+- **رگرسیون:** کل مجموعه `2 deprecated · 699 passed (2546 assertions) · 0 failed` (بیس 690 + ۹ تست جدید = **صفر regression**) · Pint ✅ · build ✅ (app-CuLaWWO4.css).
+- **Manual browser QA:** `NOT EXECUTED — environment limitation`.
+- **حکم:** `READY FOR PHASE 5B-4`.
+
+
+## 2026-10-06 — Phase 5B-2 Visual Migration (Dashboard + Task Index + Task Detail)
+
+### نوع تغییر
+- [ ] Added (کد)
+- [x] **Modified (presentation — ۳ ویو)**
+- [ ] Deleted
+- [x] **Refactored (فقط زبان بصری ویو‌ها به Design System)**
+- [x] **Added (Test — `tests/Feature/Ui/Phase5B2UiTest.php`)**
+- [ ] Fixed
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation**
+
+### خلاصه
+- **دامنه:** `dashboard.blade.php` · `tasks/index.blade.php` · `tasks/show.blade.php`. مرجع درون‌مخزنی: `tasks/board.blade.php` (Phase 3).
+- **Primitive‌های reuse شده:** `x-ui.panel` · `x-ui.badge` · `x-ui.avatar` · `x-ui.key-val` · `x-ui.empty-state`. **صفر کامپوننت جدید** و **صفر God Component**.
+- **توکن‌ها:** `border-line/-subtle/-strong` · `surface-page/base/inset` · `ink/-muted/-subtle` · `success/warning/danger/info/primary` · `radius-ui-*` · `shadow-ui-soft`. حذف کامل `slate/red/green/yellow/blue/purple` پراکنده از سه صفحه (`purple` → `primary`/`success` فقط در دو کارتابل تأیید).
+- **Accessibility:** label associative در فرم فیلتر (از قبل موجود، حفظ شد) + `for=` اضافه‌شده برای دو textarea تأیید (`technical-rework-comment`, `final-rework-comment`) · `aria-hidden` روی آیکون‌های تزئینی · `aria-label="حذف پیش‌نیاز"` روی دکمهٔ فقط-آیکون · دکمه‌های لینک‌نما به focus-visible ring مجهز شدند.
+- **حفظ‌شده (بی‌تغییر):** route/controller/query · server-side filters · pagination · query string · authorization & project scope · `@can`/`hasRole` · name/id فیلدها · شرط‌های وضعیت · `.datedown` (hook تقویم) · تمام متن‌های فارسی · حذفِ لینک شکستهٔ دانلود.
+- **رگرسیون:** کل مجموعه `2 deprecated · 690 passed (2426 assertions) · 0 failed` (بیس 673 + ۱۷ تست جدید = **صفر regression**) · Pint ✅ · build ✅.
+- **Manual browser QA:** `NOT EXECUTED — environment limitation` (صفحه‌ها پشت `auth`؛ 302؛ بدون credential).
+- **حکم:** `READY FOR PHASE 5B-3`.
+
+
+## 2026-10-06 — Phase 5B-1 Final Review & Cleanup
+
+### نوع تغییر
+- [x] **Fixed (حذف initializer مرده — ۱ فایل JS)**
+- [ ] Added
+- [x] **Modified (فقط `resources/js/app.js`)**
+- [ ] Deleted (هیچ دارایی/وابستگی حذف نشد)
+- [ ] Refactored
+- [ ] Configuration
+- [ ] Database (**صفر تغییر**)
+- [x] **Documentation (ثبت وضعیت در همین سند + Session Log + `ACTION_TRACKER.md` + `MEMORY.md`)**
+
+### خلاصه
+- **Select2:** با شواهد قطعی اثبات شد dead است — نه در `package.json`/`package-lock.json`، نه در هیچ layout/entrypoint بارگذاری می‌شود، **صفر view کلاس `.select2` دارد**؛ تنها اشاره‌ها initializer در `resources/js/app.js` و CSS RTL در `resources/css/app.css`. ⇒ **فقط initializer مرده حذف شد** (بلاک `$(document).ready(...select2...)`). دارایی ردیابی‌شدهٔ `public/js/select2/4.1.0/select2.min.js` و CSS `.select2-container` **دست‌نخورده** ماندند (حدس حذف نشد).
+- **FontAwesome:** **بدون تغییر** — بارگذاری دوگانه (npm `7.3.1` + CDN `6.5.1`) تأیید شد، اما واگرایی نسخهٔ major حذف را ناایمن می‌کند.
+- **Datepicker:** **بدون تغییر** — مصرف‌کنندهٔ واقعی تأیید شد (`tasks/create` ×۲، `tasks/show` ×۱ + wiring در `layouts/app.blade.php`).
+- **BoardColumns:** `cohesive — no refactor required` (فقط grouping + presentation؛ صفر write surface؛ ۱۸ call site مستندشده).
+- **Manual browser QA:** `NOT EXECUTED — environment limitation` (عدم دسترسی به session احرازشده + عدم امکان screenshot). قراردادهای focus فقط در سطح markup/test تأیید شدند.
+- **Regression:** Full suite `2 deprecated · 673 passed (2279 assertions) · 0 failed` = برابر بیس · Pint ✅ · `npm run build` ✅ (باندل بدون `select2`).
+
+
 ## 2026-09-22 — فاز V1.8 Remaining Hardening (R-3 + T-6)
 
 ### نوع تغییر
@@ -1181,3 +1326,24 @@ BLOCKED — BUSINESS DECISION REQUIRED
 - 🔴 **۲ نقص منطقی که خود تست‌ها کشف کردند و رفع شدند:** `BUG-1` (بازتوازن Stage با map جزئی غیرممکن بود) · `BUG-2` (ردیف‌های superseded از «یک pending» و مسیر تصمیم استثنا نمی‌شدند)
 - `tms` (توسعه/Production-like) **بیت‌به‌بیت دست‌نخورده** — هیچ مهاجرتی روی آن اجرا نشد.
 
+
+## Phase 5B-7A — Audit Visual Migration (فقط بصری)
+- `resources/views/audit/index.blade.php`: انتقال زبان بصری به Design System — `x-ui.panel` (header + badge «فقط-خواندنی»)، فرم فیلتر GET با label و focus-visible توکن‌دار، جدول ۷ ستونی با `scope="col"` + `<caption class="sr-only">`، `x-ui.avatar` ستون کاربر، overflow با `break-words` برای تغییرات، `x-ui.empty-state` در `@empty`، نگه‌داری pagination. معناشناسی: route/فیلدها/selected-state/۷ ستون/ماسک DEC-045/ترتیب/pagination دست‌نخورده.
+- `tests/Feature/Ui/Phase5B7UiTest.php`: +۲ تست — حفظ ۷ ستون و empty-state (بدون دست‌کاری DB به دلیل immutable بودن `activity_logs`).
+- تست‌ها: `AuditVisibilityTest` 7/7 PASS · `Phase5B7UiTest` بخش audit 7/7 PASS · Suite کامل: **754 passed · 1 failed (WBS show radio — pre-existing خارج از محدوده 5B-7A) · 2 deprecated**. `pint --dirty` PASS. `npm run build` OK.
+- Browser QA (supervisor 1111111111 روی dev DB): دسکتاپ ۱۴۴۰، موبایل ۳۹۰ (overflow-x فعال)، RTL، ارسال فیلتر GET — سالم. ردیف داده‌ای در dev DB نبود؛ ماسک/pagination فقط با تست پوشش داده شد (بدون تغییر DB).
+
+## Phase 5B-7B — WBS Phase Show Visual Migration
+- `resources/views/wbs-phases/show.blade.php`: تکمیل مهاجرت بصری — `x-ui.key-val` برای پروژه/خروجی، badge نقطه‌دار وضعیت، badge تکمیل‌شده در آیتم چک‌لیست، `fieldset/legend` برای رادیوهای تصمیم، focus-visible توکن‌دار، اصلاح تایپو «هذا»→«این» و پاک‌سازی کامنت خراب فاز قبل.
+- **رفخرفت عملکردی بازگشتی موج قبلی:** رادیوهای تصمیم در working tree بی‌قید `disabled` شده بودند (فرم تصمیم کاملاً مرده)؛ رفتار شرطی HEAD بازگردانده شد: pending → complete/not_completed فعال، reopen غیرفعال؛ غیر pending → برعکس. هیچ اختیار جدیدی اضافه/حذف نشد.
+- `tests/Feature/Ui/Phase5B7UiTest.php`: تست شکننده (`\/>` regex) با بررسی صفت‌به‌صفت disabled در هر دو حالت pending/completed بازنویسی شد (مستقل از نحو بستن تگ).
+- تست‌ها: baseline V110+WBS: 115 پاس · Phase5B7+Checklist: 27 پاس · Suite کامل: **755 passed · 0 failed · 2 deprecated**. `pint --dirty` PASS · `npm run build` OK.
+- Browser QA (admin 0123456789، فاز ۱ pending): دسکتاپ/موبایل سالم، fieldset/legend و disabled state رندر درست. محدودیت: دیتابیس توسعه (`tms`) جدول `project_memberships` را ندارد → view با حساب supervisor خطای 500 policy می‌دهد (drift اسکیمای قدیمی، موروثی و بی‌ربط به این فاز — نیازمند تصمیم مالک برای `php artisan migrate` روی dev).
+
+## Phase 5B-8 — WBS Decision UI Authorization Audit + Modules Index Migration
+- **Part A (ممیزی):** فرم تصمیم WBS در HEAD بدون هیچ guard رندر می‌شد — Admin و سایر نقش‌های خواندنی، فرم تصمیم را به‌عنوان اقدام موجود می‌دیدند (POST سمت سرور همیشه 403 بود). **اصلاح ارائه‌ای:** پنل تصمیم با `@can('decide', $phase)` در `resources/views/wbs-phases/show.blade.php` محافظت شد — فقط مصرف `WbsPhasePolicy::decide` موجود؛ صفر قانون مجوز جدید، صفر تغییر policy/route/controller/service.
+- **Part B:** `resources/views/modules/index.blade.php` به Design System منتقل شد (slate/old → 0/0): panel با h2 پروژه، لینک `modules.show` توکن‌دار، کارت‌های ماژول با `x-ui.badge` (وزن `number_format` عیناً)، هر دو حالت خالی با `x-ui.empty-state` و همان متن‌ها. صفحه همچنان read-only (صفر فرم/JS/query/pagination)؛ فیلتر ProjectScope کنترلر دست‌نخورده.
+- `tests/Feature/Ui/Phase5B8UiTest.php` (جدید): ۹ تست/۳۵ assertion — حضور UI تصمیم برای supervisor عضو فعال · غیاب UI تصمیم برای Admin · 403 شدن POST غیرمجاز با state دست‌نخورده · سلامت بخش‌های غیرتصمیم برای Admin · قراردادهای modules/index (لینک/وزن/مراحل/۲ empty-state/h1 واحد).
+- تست‌ها: WBS فوکوس 97 passed (409) · Modules+Audit 70 passed (202) · Suite کامل: **764 passed · 3035 assertions · 0 failed · 2 deprecated** (بیس 755 + 9). `pint --dirty --test` PASS · `npm run build` PASS (app-B0fDkaaL.css).
+- Browser QA (Admin 0123456789، dev server127.0.0.1:8000): modules/index دسکتاپ+موبایل 390 سالم، بدون overflow؛ wbs-phases/1 دسکتاپ 1440+موبایل: فرم تصمیم در DOM غایب (0 رادیو)، صفر خطای console/network. **Supervisor QA انجام نشد** — drift اسکیمای شناخته‌شده: `project_memberships` در dev DB `tms` نیست (بدون migrate گزارش شد). نکته: یک آیتم چک‌لیست حین QA توسط عامل دیگر/کاربر روی dev DB ایجاد شد؛ phase همچنان pending و هیچ mutation دیگری رخ نداد.
+- **Gate: `READY FOR PHASE 5B-9`.**

@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* شیری / کاغذ */
+  --color-cream-50: #fcf9f2;
+  --color-cream-100: #f7f0e1;
+  --color-cream-200: #f0e7d3;
+  --color-line: #e2d6be;
+  --color-sand: #6f6553;
+  --color-sand-dark: #57503f;
+
+  /* آبی */
+  --color-ink-950: #071b36;
+  --color-ink-900: #0b2545;
+  --color-ink-800: #103561;
+  --color-ink-700: #123e73;
+  --color-ink-500: #1e6fd9;
+  --color-ink-400: #4b8fea;
+  --color-ink-300: #8fbaf0;
+  --color-ink-100: #dcebfb;
+
+  /* زرد / نارنجی / سبز */
+  --color-gold-500: #f2b705;
+  --color-gold-300: #f8d34d;
+  --color-flame-500: #e4572e;
+  --color-flame-300: #f3906d;
+  --color-jade-600: #17864f;
+  --color-jade-400: #2fb673;
+  --color-jade-100: #d8f0e3;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-cream-100);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01";
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: var(--color-gold-500);
+    color: var(--color-ink-950);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink-500);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .paper {
+    background-image:
+      linear-gradient(to bottom, rgba(226, 214, 190, 0.55) 1px, transparent 1px),
+      linear-gradient(to left, rgba(226, 214, 190, 0.4) 1px, transparent 1px);
+    background-size: 100% 34px, 34px 100%;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.09;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    /* ارقام لاتین از پلکس‌مونو، ارقام فارسی از وزیرمتن خوانده شوند */
+    font-family: "IBM Plex Mono", "Vazirmatn", ui-monospace, monospace;
+  }
+  .micro {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .rail-shadow {
+    box-shadow: -18px 0 44px rgba(7, 27, 54, 0.16);
+  }
+  .card-lift {
+    box-shadow:
+      0 1px 0 rgba(11, 37, 69, 0.06),
+      0 10px 24px -18px rgba(11, 37, 69, 0.5);
+  }
+}
+
+/* اسکرول‌بار */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sand);
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

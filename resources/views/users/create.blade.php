@@ -4,86 +4,97 @@
 @section('header_title', 'تعریف و ثبت کاربر جدید')
 
 @section('content')
+{{-- Phase 5B-5 — Visual Migration (افزودن کاربر).
+     فقط زبان بصری به Design System منتقل شده است: route/متد/نام فیلدها/idها
+     (`contractor-wrapper`, `.role-checkbox`)، required/maxlength/minlength،
+     @error/old()، منطق نمایش انتخاب پیمانکار و بلوک JS عیناً حفظ شده‌اند. --}}
 <div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <div>
-                <h1 class="text-lg font-bold text-slate-800">مشخصات کاربر جدید</h1>
-                <p class="text-xs text-slate-500 mt-1">اطلاعات هویتی، سطوح دسترسی و ارتباط با پیمانکار را وارد نمایید</p>
-            </div>
-            <a href="{{ route('users.index') }}" class="text-sm text-slate-600 hover:text-slate-800 flex items-center">
-                <i class="fas fa-arrow-right ml-1"></i>
-                بازگشت به فهرست
-            </a>
-        </div>
+    <x-ui.panel>
+        <x-slot:header>
+            <header class="flex flex-wrap items-center justify-between gap-3 border-b border-line-subtle px-5 py-3.5">
+                <div>
+                    <h1 class="text-lg font-bold text-ink">مشخصات کاربر جدید</h1>
+                    <p class="mt-1 text-xs text-ink-muted">اطلاعات هویتی، سطوح دسترسی و ارتباط با پیمانکار را وارد نمایید</p>
+                </div>
+                <a href="{{ route('users.index') }}" class="inline-flex items-center gap-1 rounded-ui px-2 py-1 text-sm font-bold text-ink-muted transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    بازگشت به فهرست
+                </a>
+            </header>
+        </x-slot:header>
 
-        <form action="{{ route('users.store') }}" method="POST" class="p-6 space-y-6">
+        <form action="{{ route('users.store') }}" method="POST" class="space-y-6">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Name -->
                 <div>
-                    <label for="name" class="block text-sm font-medium text-slate-700 mb-1">
-                        نام و نام خانوادگی <span class="text-rose-500">*</span>
+                    <label for="name" class="block text-sm font-bold text-ink mb-1">
+                        نام و نام خانوادگی <span class="text-danger-500" aria-hidden="true">*</span>
                     </label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                           class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-rose-500 @enderror"
-                           placeholder="مثال: علی محمدی">
+                           class="w-full rounded-ui px-3.5 py-2 text-sm text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 {{ $errors->has('name') ? 'border border-danger-500' : 'border border-line-strong' }}"
+                           placeholder="مثال: علی محمدی"
+                           @error('name') aria-describedby="name-error" @enderror>
                     @error('name')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                        <p id="name-error" class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- National Code -->
                 <div>
-                    <label for="national_code" class="block text-sm font-medium text-slate-700 mb-1">
-                        کد ملی (۱۰ رقم) <span class="text-rose-500">*</span>
+                    <label for="national_code" class="block text-sm font-bold text-ink mb-1">
+                        کد ملی (۱۰ رقم) <span class="text-danger-500" aria-hidden="true">*</span>
                     </label>
                     <input type="text" name="national_code" id="national_code" value="{{ old('national_code') }}" required maxlength="10"
-                           class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('national_code') border-rose-500 @enderror"
-                           placeholder="0123456789">
-                    <p class="text-xs text-slate-400 mt-1">نام کاربری به صورت خودکار برابر با کد ملی خواهد بود.</p>
+                           class="w-full rounded-ui px-3.5 py-2 text-sm font-mono text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 {{ $errors->has('national_code') ? 'border border-danger-500' : 'border border-line-strong' }}"
+                           placeholder="0123456789"
+                           @error('national_code') aria-describedby="national_code-help national_code-error" @enderror>
+                    <p id="national_code-help" class="mt-1 text-xs text-ink-subtle">نام کاربری به صورت خودکار برابر با کد ملی خواهد بود.</p>
                     @error('national_code')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                        <p id="national_code-error" class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Mobile -->
                 <div>
-                    <label for="mobile" class="block text-sm font-medium text-slate-700 mb-1">
-                        شماره همراه (۱۱ رقم) <span class="text-rose-500">*</span>
+                    <label for="mobile" class="block text-sm font-bold text-ink mb-1">
+                        شماره همراه (۱۱ رقم) <span class="text-danger-500" aria-hidden="true">*</span>
                     </label>
                     <input type="text" name="mobile" id="mobile" value="{{ old('mobile') }}" required maxlength="11"
-                           class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('mobile') border-rose-500 @enderror"
-                           placeholder="09123456789">
+                           class="w-full rounded-ui px-3.5 py-2 text-sm font-mono text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 {{ $errors->has('mobile') ? 'border border-danger-500' : 'border border-line-strong' }}"
+                           placeholder="09123456789"
+                           @error('mobile') aria-describedby="mobile-error" @enderror>
                     @error('mobile')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                        <p id="mobile-error" class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">
+                    <label for="email" class="block text-sm font-bold text-ink mb-1">
                         پست الکترونیک (ایمیل)
                     </label>
                     <input type="email" name="email" id="email" value="{{ old('email') }}"
-                           class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-rose-500 @enderror"
-                           placeholder="user@example.com">
+                           class="w-full rounded-ui px-3.5 py-2 text-sm font-mono text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 {{ $errors->has('email') ? 'border border-danger-500' : 'border border-line-strong' }}"
+                           placeholder="user@example.com"
+                           @error('email') aria-describedby="email-error" @enderror>
                     @error('email')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                        <p id="email-error" class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Password -->
                 <div>
-                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">
-                        کلمه عبور <span class="text-rose-500">*</span>
+                    <label for="password" class="block text-sm font-bold text-ink mb-1">
+                        کلمه عبور <span class="text-danger-500" aria-hidden="true">*</span>
                     </label>
                     <input type="password" name="password" id="password" required minlength="6"
-                           class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('password') border-rose-500 @enderror"
-                           placeholder="حداقل ۶ کاراکتر">
+                           class="w-full rounded-ui px-3.5 py-2 text-sm font-mono text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 {{ $errors->has('password') ? 'border border-danger-500' : 'border border-line-strong' }}"
+                           placeholder="حداقل ۶ کاراکتر"
+                           @error('password') aria-describedby="password-error" @enderror>
                     @error('password')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                        <p id="password-error" class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -91,27 +102,27 @@
                 <div class="flex items-center pt-6">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ old('is_active', '1') ? 'checked' : '' }}>
-                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        <span class="mr-3 text-sm font-medium text-slate-700">حساب کاربری فعال باشد</span>
+                        <div class="w-11 h-6 bg-line-strong peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <span class="ms-3 text-sm font-bold text-ink">حساب کاربری فعال باشد</span>
                     </label>
                 </div>
             </div>
 
-            <hr class="border-slate-100">
+            <hr class="border-line-subtle">
 
             <!-- Roles Section -->
             <div>
-                <label class="block text-sm font-bold text-slate-800 mb-2">
-                    نقش‌های دسترسی سامانه <span class="text-rose-500">*</span>
+                <label class="block text-sm font-bold text-ink mb-2">
+                    نقش‌های دسترسی سامانه <span class="text-danger-500" aria-hidden="true">*</span>
                 </label>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     @foreach ($roles as $role)
                         @php
                             $roleBadgeColor = match($role->name) {
-                                'admin' => 'border-purple-200 bg-purple-50/50 hover:bg-purple-50 text-purple-900',
-                                'supervisor' => 'border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-blue-900',
-                                'contractor' => 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-900',
-                                default => 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 text-slate-900',
+                                'admin' => 'border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary',
+                                'supervisor' => 'border-info-200 bg-info-50 hover:bg-info-100 text-info-700',
+                                'contractor' => 'border-success-200 bg-success-50 hover:bg-success-100 text-success-700',
+                                default => 'border-line bg-surface-inset/60 hover:bg-surface-inset text-ink',
                             };
                             $roleTitle = match($role->name) {
                                 'admin' => 'مدیر ارشد (Admin)',
@@ -120,26 +131,26 @@
                                 default => $role->name,
                             };
                         @endphp
-                        <label class="relative flex items-center p-3.5 border rounded-xl cursor-pointer transition-colors {{ $roleBadgeColor }}">
-                            <input type="checkbox" name="roles[]" value="{{ $role->name }}" 
-                                   class="role-checkbox h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                        <label class="relative flex items-center p-3.5 border rounded-ui cursor-pointer transition-colors {{ $roleBadgeColor }}">
+                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                   class="role-checkbox h-4 w-4 rounded border-line-strong text-primary focus:ring-2 focus:ring-primary/40"
                                    {{ is_array(old('roles')) && in_array($role->name, old('roles')) ? 'checked' : '' }}>
-                            <span class="mr-3 text-xs font-semibold">{{ $roleTitle }}</span>
+                            <span class="ms-3 text-xs font-semibold">{{ $roleTitle }}</span>
                         </label>
                     @endforeach
                 </div>
                 @error('roles')
-                    <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Contractor Selection (Visible only when contractor role is selected) -->
             <div id="contractor-wrapper" class="{{ is_array(old('roles')) && in_array('contractor', old('roles')) ? '' : 'hidden' }}">
-                <label for="contractor_id" class="block text-sm font-medium text-slate-700 mb-1">
+                <label for="contractor_id" class="block text-sm font-bold text-ink mb-1">
                     اتصال به شرکت پیمانکار
                 </label>
                 <select name="contractor_id" id="contractor_id"
-                        class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full rounded-ui border border-line-strong bg-surface-base px-3.5 py-2 text-sm text-ink shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30">
                     <option value="">-- انتخاب شرکت پیمانکار --</option>
                     @foreach ($contractors as $contractor)
                         <option value="{{ $contractor->id }}" {{ old('contractor_id') == $contractor->id ? 'selected' : '' }}>
@@ -147,24 +158,24 @@
                         </option>
                     @endforeach
                 </select>
-                <p class="text-xs text-slate-400 mt-1">در صورت انتخاب نقش پیمانکار، اتصال به شرکت پیمانکار الزامی است.</p>
+                <p class="mt-1 text-xs text-ink-subtle">در صورت انتخاب نقش پیمانکار، اتصال به شرکت پیمانکار الزامی است.</p>
                 @error('contractor_id')
-                    <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-danger-500">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Submit Button -->
-            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                <a href="{{ route('users.index') }}" class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            <div class="flex flex-wrap justify-end gap-3 border-t border-line-subtle pt-4">
+                <a href="{{ route('users.index') }}" class="inline-flex items-center rounded-ui border border-line-strong bg-surface-base px-5 py-2.5 text-sm font-bold text-ink-muted transition hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     انصراف
                 </a>
-                <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
-                    <i class="fas fa-check ml-1.5"></i>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-ui bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-ui-soft transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                    <i class="fas fa-check" aria-hidden="true"></i>
                     ثبت و ذخیره کاربر
                 </button>
             </div>
         </form>
-    </div>
+    </x-ui.panel>
 </div>
 
 @push('scripts')

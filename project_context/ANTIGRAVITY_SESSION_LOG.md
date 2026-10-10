@@ -1,5 +1,200 @@
 # Antigravity Session Log
 
+# Session 2026-10-07 — Phase 5B-6 Visual Migration (Modules + Stages)
+
+## هدف جلسه
+- مهاجرت بصری ناحیهٔ Modules/Stages با ساختار دو-دریچه‌ای: **Gate A (Discovery + Contract Inventory)** سپس **Gate B (Visual Migration)** — با اصل حاکم «شباهت بصری ≠ معادلیت معنایی»؛ صفر تغییر در Controller/Request/Policy/Service/Route/DB/قواعد lifecycle/approval وزن.
+
+## Gate A — Discovery (شواهد)
+- سه ویو: `modules/stages/show` (۲۳۰ خط · ۵۰ slate · ۲۸ رنگ قدیمی) · `modules/show` (۱۲۰ · ۲۸ · ۱۲) · `modules/index` (۵۱ · ۱۰ · ۴) · `resources/views/stages/` خالی.
+- **Routes:** خواندنی `modules.index`/`modules.show`/`modules.stages.show` در گروه `role:admin|project_manager|employer|management|supervisor|viewer` · نوشتنی `modules.store/rebalance/update` + `modules.stages.rebalance` در `role:admin|project_manager|employer` · `stages.progress-approvals.store/adjust` در `role:admin|project_manager|employer|supervisor` و `decide` در `role:supervisor`.
+- **Policies (فقط خواندن):** `ModuleStagePolicy::view` (زنجیره ModuleStage→Module→Project→ProjectScope، fail-closed، بدون permission — DEC-064) · `ModulePolicy::viewProject/create/update/rebalance/rebalanceStages` (DEC-066). **هیچ `@can`/`@role` در ویوها نیست** ⇒ مرز authorization کاملاً در middleware/کنترلر است و مهاجرت presentation نمی‌تواند آن را بشکند.
+- **JS:** grep صفر برای `@push|<script|id=|data-|wire:|x-data` ⇒ **هیچ hook زنده‌ای وجود ندارد**؛ فقط `<details>/<summary>` بومی (بدون رفتار وابسته).
+- **تست‌های موجود (پین قرارداد):** `StageWeightUiTest` (302 مهمان/403 قرارداد contractor/نمایش نام مرحله/بازتوازن+قفل+audit) · `StageApprovalUiTest` (store/adjust/decide/supersede روی سرویس) · `ModuleUiTest` (302/403/200 + store/rebalance/update از طریق سرویس + ۹ مرحله) · `V111` `ModulePolicyTest`/`ModuleStagePolicyTest`/`ModuleStageScopeWiringTest`/`ModuleControllerAuthorizationTest`/`ModuleForeignProjectAttackTest`/`StageProgressApprovalPolicyTest`/`ApprovalAuthorizationWiringTest` · `LayoutShellTest` (برچسب سایدبار، نه این ویوها) · `Phase5B4UiTest` لینک `modules.stages.show` را از صفحهٔ reports پین می‌کند (نه از این صفحات).
+
+### جدول موجودی کاندیدا
+| صفحه | شدت legacy | Read/Write | پیچیدگی JS | پیچیدگی Auth | ریسک مهاجرت |
+|---|---|---|---|---|---|
+| `modules/stages/show` | بالا (۵۰/۲۸) | Read + ۴ فرم POST (بازتوازن وزن، پیشنهاد، اصلاح، تصمیم+جایگزینی) | صفر (details بومی) | middleware سه‌گانه + `ModuleStagePolicy::view` | **متوسط** — حجم فرم‌ها زیاد ولی قراردادشان صریح و بدون JS |
+| `modules/show` | متوسط (۲۸/۱۲) | Read + ۳ فرم POST (store/update/rebalance) | صفر | `ModulePolicy::viewProject/update/rebalance` | **متوسط-پایین** |
+| `modules/index` | پایین (۱۰/۴) | خواندنی + یک لینک | صفر | scope filter در کنترلر | پایین — **deferred** |
+
+### دامنهٔ انتخابی
+- **انتخاب:** `modules/stages/show` + `modules/show` (هدف مرجح Gate A + والد مستقیمش؛ ۸۸٪ از کل legacy این زیرسیستم).
+- **رد/defer:** `modules/index` (کمترین شدت، standalone، خارج از سقف ۲ صفحه) — تنها legacy باقی‌مانده.
+- **بدون `OWNER DECISION REQUIRED`:** هیچ ابهام معنایی‌ای پیدا نشد — همهٔ سطوح نوشتن POST با فیلدهای صریح بودند، هیچ وضعیت/متریکی بدون نگاشت مرجع نبود (برچسب‌های تأیید از قبل فارسی بودند و دست‌نخورده ماندند) و هیچ دکمه/اقدامی نیاز به حذف یا تغییر معنا نداشت.
+
+## Gate B — Migration
+- `modules/stages/show`: سربرگ h1+زیرعنوان+لینک بازگشت → توکن‌ها · نوار ۴ کارت وزن → `x-ui.key-val` (مقادیر عین محاسبات کنترلر؛ رنگ‌های قفل/آزاد با توکن warning/success) · سه پنل `x-ui.panel` با `x-slot:header` (h2ها عیناً سطحشان حفظ شد؛ سربرگ‌های قبلی `div` بودند و `div` ماندند) · نشان‌های تأیید → `x-ui.badge` با **همان متن قبلی** · حالت خالی → `x-ui.empty-state` · وضعیت وظایف → `BoardColumns::statusView` (نگاشت مرجع موجود) · دکمه‌ها → primary/success/danger/secondary + یک دکمهٔ warning توکنی برای «ثبت جایگزین» (رنگ amber قبلی) · `text-left` → `justify-end` (منطقی RTL، همان موقعیت بصری) · a11y: `for/id` + `aria-label` روی inputهای بدون label.
+- `modules/show`: همان الگو؛ فرم تعریف (شاخهٔ خالی) با h2 محلی · کارت‌های ماژول + چیپ مراحل (لینک/وزن عیناً) · فرم inline ویرایش داخل `<details>` · فرم بازتوازن · محاسبات `sum()`/آستانهٔ ۱۰۰٪ دست‌نخورده.
+- فهرست‌های legacy هر دو فایل به **صفر** رسید (grep تأیید: slate=0 · رنگ قدیمی=0).
+
+## Verification
+- `Phase5B6UiTest` (جدید، ۱۴ تست/۱۴۶ assertion): مرز authorization (302/403/200 هر دو صفحه) · h1/h2 سطح‌ها + لینک‌های بازگشت · نمایش مقادیر وزن عین کنترلر + قفل · قرارداد فرم بازتوازن (۹ `weights[id]` + step/min/max) · `disabled` شدن ورودی مرحلهٔ قفل‌شده پس از propose · قرارداد فرم پیشنهاد (max = وزن مرحله) · رندر فرم‌های تصمیمِ pending (decision مخفی approve/reject + اکشن adjust) · رندر فرم جایگزینیِ تصمیم‌گرفته (supersedes مخفی + مبلغ تأییدشده) · لینک tasks.show + نمایش وضعیت canonical · دو empty-state · قرارداد فرم تعریف ماژول (سه ردیف + project_id مخفی) · قرارداد صفحهٔ ساختار (لینک مراحل/فرم ویرایش/بازتوازن/مجموع وزن) · حذف کامل legacy + حضور توکن‌ها.
+- سوییت‌های موجود Module/Stage: **137 passed (379 assertions)**.
+- Full (PostgreSQL): **2 deprecated, 738 passed (2914 assertions), 0 failed** (بیس 724 + ۱۴ = صفر regression).
+- Pint PASS (`pint --test` روی فایل جدید) · `npm run build` PASS (app-Bnd3FIHE.css · 14.04s) · توکن‌های جدید (`bg-warning-500/600`، `ring-warning-500`، `hover\:bg-line`، `focus-visible\:ring-danger-500`) با `grep -F` در باندل تأیید شدند.
+- QA: `Browser QA NOT EXECUTED — valid authenticated credentials unavailable.`
+
+## ایمنی
+صفر DB/Migration · صفر Controller/Request/Service/Policy/Model/Route · صفر Domain/Auth/Permission/Lifecycle/Approval/SLA/Financial/WBS · Heading Architecture دست‌نخورده (app-header و h1 شش صفحه دست‌نخورده) · صفر RTL سراسری · FontAwesome/Select2/Datepicker/dark-mode دست‌نخورده · `template/`+`v19_out.txt` دست‌نخورده · صفر commit/push · HEAD `08b2629` · staged=0.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-7`** — باقی‌ماندهٔ legacy: `modules/index` (۱۰ slate/۴ رنگ) · `wbs-phases/show` (۲۳/۶) · `audit/index` (۳۰/۱) · صفحات خارج از scope (tasks/create و غیره).
+
+
+# Session 2026-10-07 — Phase 5B-5 Visual Migration (Users Create + Edit)
+
+## هدف جلسه
+- مهاجرت بصری دو فرم کاربران (`users/create` + `users/edit`) به Design System با **Evidence → Contract Inventory → Visual Migration → Contract Tests → Full Verification → Final Gate** — صفر تغییر در Controller/Request/Policy/Route/DB/روتین‌های authorization.
+
+## Discovery
+- هر دو صفحه ۱۹۹/۲۰۳ خط، ۲۷ `slate-*` + رنگ‌های قدیمی (blue/rose/purple/emerald)؛ route سمت `role:admin` (بدون Policy — فقط middleware + `authorize()` FormRequest).
+- **JS hook زنده:** `@push('scripts')` → `.role-checkbox` + `#contractor-wrapper` + `cb.value === 'contractor'`؛ مصرف‌کننده فقط همین بلوک inline است (grep صفر در `resources/js|css`)؛ `@stack('scripts')` در layout خط۱۰۷ ✓.
+- Validation contract: `@error` ×7 فیلد + `old()` همهٔ فیلدها + در edit `old(x, $user->x)` + منطق checked نقش‌ها (`old ? old : roles کاربر`) + نمایش wrapper (`old ? old : has contractor role`).
+- پین‌های موجود: `WebUserControllerTest` (ایندکس/کریت 200، 403 غیر ادمین، store/update هش+نقش‌ها) · `Phase5B3UiTest` (لینک users.create).
+
+## Migration
+- سربرگ (h1+zیرعنوان+بازگشت) → `x-ui.panel` با `x-slot:header` — **سطوح عنوان حفظ**.
+- فیلدها → `rounded-ui`/`border-line-strong`/`focus:ring-primary` + حالت خطا قطعی `$errors->has() ? 'border-danger-500'` · کارت نقش‌ها → نگاشت 5B-3 (primary/info/success) · toggle → رنگ توکنی + `peer-focus:ring` **بدون تغییر موقعیت/transform** · دکمه‌ها → primary + focus-visible · `mr/ml` → `ms/gap` · `aria-describedby` شرطی · `aria-hidden` آیکون‌ها · **بلوک JS عیناً کپی شد** · هیچ کامپوننت جدیدی ساخته نشد.
+
+## Verification
+- `Phase5B5UiTest` (جدید، ۱۳ تست/۱۳۵ assertion): رندر+h1 · قرارداد فرم (action/method/CSRF/فیلدها/required/maxlength/minlength/برچسب‌ها/بدون `href="#"`) · default نقش‌ها + wrapper hidden · **جریان واقعی POST نامعتبر → رندر خطا + بازگشت old() + صفر نوشتن در DB** · JS hooks · edit پرکردن مقادیر + انتخاب contractor + PUT + بدون value برای password · checked نقش‌ها (کاربر سپس old) · wrapper دو حالت · 403 غیر ادمین + 302 مهمان · حذف کامل legacy + حضور توکن‌ها. **دو بار اجرا، پایدار سبز.**
+- **ریشه‌یابی مهم:** شکست اولیهٔ تست اعتبارسنجی ← `assertSessionHasErrors` بعد از POST (session ذخیره‌شده با `started=false` و `serialization=json`) کیسه را به شیء برمی‌گرداند و `marshalErrorBag` در GET بعدی با `foreach` روی شیء (ویژگی protected نامرئی) کیسهٔ **خالی** می‌گذارد → رندر خطا می‌مرد. باگ تست/فریم‌ورک نه اپ؛ تست با اتکا به خروجی رندرشده بازنویسی شد و رَندوم‌بودن شبهه‌زدایی شد (بدون assert، جریان واقعی POST→GET خطاها رندر می‌شد ✓). فایل debug موقت حذف شد.
+- Focused (WebUserController + Phase5B3 + Phase5B4): **26 passed (232 assertions)** · Full: **2 deprecated, 724 passed (2768 assertions), 0 failed** (بیس 711+۱۳=صفر regression).
+- Pint PASS (بدون تغییر) · `npm run build` PASS (app-C3kpr45Z.css · 170.71 kB · توکن‌های جدید با `grep -F` تأیید شدند).
+- QA: `Browser QA NOT EXECUTED — valid authenticated credentials unavailable.`
+
+## ایمنی
+صفر DB/Migration · صفر Controller/Request/Service/Policy/Model/Route · صفر Domain/Auth/Permission/Lifecycle/Approval/SLA/Financial/WBS · Heading Architecture دست‌نخورده · صفر RTL سراسری · FontAwesome/Select2/Datepicker/dark-mode/sidebars/header دست‌نخورده · `template/`+`v19_out.txt` دست‌نخورده · صفر commit/push · HEAD `08b2629` · staged=0.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-6`** — صفحات باقی‌ماندهٔ legacy: `modules/stages/show` (۵۰ slate/۱۲ رنگ)، `audit/index` (۳۰/۱)، `wbs-phases/show` (۲۳/۶)، `modules/*`.
+
+
+# Session 2026-10-07 — Phase 5B-4 Visual Migration (Reports)
+
+## هدف جلسه
+- مهاجرت بصری **تک‌فایلی** `resources/views/reports/index.blade.php` (بالاترین تراکم legacy: ۵۲ slate + ۱۰ رنگ قدیمی) به Design System، **Evidence → Contract Inventory → Visual Migration → Contract Tests → Full Verification → Final Gate** — بدون هیچ تغییر در معنا/داده/query/filters/authorization/controller/route.
+
+## Discovery
+- ساختار: فرم GET فیلتر (project_id/from/to) +۳ KPI + جدول پیشرفت مراحل + ۳ کارت CSV + بنر DEC-040. Route: `reports.index` زیر `role:admin|management|employer|project_manager` · `reports.export` · `modules.stages.show`.
+- **صفر chart / صفر JS hook / صفر `id=` / صفر `<script>` / صفر `@can` درون Blade** — با grep اثبات شد؛ authorization کاملاً سمت route middleware.
+- پین‌های موجود: `ReportExportTest` · `V110/ReportEnhancementsTest` («وزن کل تسک‌ها»/«0.00»/«10.00»/«1 وظیفه بدون مرحله») · `V110/TaskStageAssignmentTest`.
+- Contract Inventory کامل (routes/forms/fields/ids/selected/query/auth/status/data/labels/headings) قبل از ویرایش ثبت شد؛ تنها تغییر idها **additive** (`report-project/report-from/report-to` برای label association) است.
+
+## Migration
+- چهار بخش + ۳ کارت KPI → `x-ui.panel`؛ برای حفظ سطح عنوان (h2×3 محتوا + h3×3 کارت‌ها) به‌جای `title` از `x-slot:header` استفاده شد ⇒ Heading Architecture/Option B دست‌نخورده؛ h1 صفحه **DEFER** (نیازمند app-header — گزارش شد، نه حدس زده شد).
+- KPI icon tiles: blue/green/red → `bg-primary/10` / `success-100/700` / `danger-100/700` · جدول: `divide-line-subtle` + `bg-surface-inset` + لینک `text-primary` + مقدار مثبت `text-success-700` + `tabular-nums` + `overflow-x-auto` · بنر amber → `warning-*` در `x-slot:footer` تمام‌عرض · empty state → `x-ui.empty-state` (همان متن) · فرم: توکن‌ها + `for=`/`id=` + focus-visible · `aria-hidden` روی ۵ آیکون تزئینی.
+- هیچ کامپوننت جدیدی ساخته نشد (reuse اثبات‌نشده = خودداری).
+
+## Verification
+- `Phase5B4UiTest` (جدید): **12 passed (87 assertions)** — رندر/مرز authorization (403/302 به login) / قرارداد فرم GET / selected-state / سطوح عنوان h2/h3 / برچسب‌های KPI / هدرهای جدول + لینک مرحله / empty state / بنر DEC-040 / سه لینک export + `array_filter` passthrough / حذف کامل امضاهای legacy.
+- سوییت‌های reports موجود: **31 passed (102 assertions)** · Full: **2 deprecated, 711 passed (2633 assertions), 0 failed** (بیس 699 + ۱۲ = صفر regression).
+- Pint ✅ (فایل تست بعد از fix سبز) · `npm run build` ✅ (app-i4r-HJ14.css · 171.72 kB · توکن‌های جدید با `grep -F` تأیید شدند).
+- QA: `NOT EXECUTED — environment limitation` (بدون credential؛ بدون user/seed/mutation).
+
+## ایمنی
+صفر DB/Migration/Domain/Policy/Auth/Lifecycle/Approval/SLA/Financial/WBS · صفر route/permission جدید · Heading untouched (Option B) · `template/`+`v19_out.txt` دست‌نخورده · صفر commit/push · HEAD `08b2629` · staged=0.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-5`** — صفحات باقی‌ماندهٔ legacy: `modules/stages/show` (۵۰ slate/۱۲ رنگ)، `users/create+edit`، `audit`، `wbs-phases/show`، `modules/*`.
+- یادداشت: ورودی CHANGELOG برای 5B-3 خالی بود ⇒ در همین جلسه backfill شد.
+
+
+# Session 2026-10-06 — Phase 5B-3 Visual Migration (Wave 2)
+
+## هدف جلسه
+- ادامهٔ Visual Migration صفحات Legacy باقی‌مانده به Design System، **Evidence → Scope → Migration → Verification**؛ بدون تغییر Business/Domain/Auth/Workflow/Data.
+
+## Discovery
+- سنجش legacy روی ۱۶ صفحه (تعداد `slate-*` + رنگ‌های قدیمی): بالاترین‌ها `reports/index` (52/10)، `modules/stages/show` (50/12)، `users/index` (20/6)، `wbs-phases/index` (21/4)، `settings/index` (17/4).
+- Primitive usage: `panel`×۳ · `badge`×۵ · `avatar`×۴ · `empty-state`×۵ · `key-val`×۲ · `status-indicator`×۱ · `progress/ring/chip/segmented`×۰.
+- **Scope:** خانوادهٔ «مدیریت/پیکربندی» — `users/index` + `wbs-phases/index` + `settings/index` (حداقل منطق دامنه، ریسک پایین، الگوی قابل‌تکرار برای فرم‌های جدولی/ایجاد/تنظیمات).
+
+## Migration
+- **users/index:** role badges → `x-ui.badge` (admin=primary, supervisor=info, contractor=success — همان برچسب‌ها)؛ فعال/غیرفعال → success/danger؛ avatar دستی → `x-ui.avatar`؛ empty → `x-ui.empty-state`؛ فرم حذف با `@method('DELETE')`+confirm+guard دست‌نخورده.
+- **wbs-phases/index:** فرم ایجاد ۵ فیلد → توکن‌ها + `for=`/`id` برای accessibility؛ وضعیت‌های چک‌لیست → warning/success/danger (همان برچسب‌ها).
+- **settings/index:** ۳ toggle `peer` → توکن‌ها + `rtl:` variant برای flip درست؛ select + defaults (`require_evidence_on_submit`/`lock_weight` checked) دست‌نخورده.
+
+## Verification
+- `Phase5B3UiTest` (جدید): **9 passed (120 assertions)** — شامل فرم‌ها/name/id/`@method`/confirm/guard/defaults/empty state/صفر placeholder link.
+- Focused: **135 passed (571 assertions)** · Full: **2 deprecated, 699 passed (2546 assertions), 0 failed** (بیس 690 + ۹ = صفر regression).
+- Pint ✅ · `npm run build` ✅ (app-CuLaWWO4.css · توکن‌های جدید کامپایل شدند).
+- QA: `NOT EXECUTED — environment limitation` (بدون credential؛ بدون user/seed/mutation).
+
+## ایمنی
+صفر DB/Migration/Domain/Policy/Auth/Lifecycle/Approval/SLA/Financial/WBS · صفر route/permission جدید · Heading untouched (Option B) · `template/`+`v19_out.txt` دست‌نخورده · صفر commit/push · HEAD `08b2629`.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-4`** — هیچ Owner Decision جدیدی لازم نیست؛ صفحات باقی‌مانده (reports, modules/stages/show, users/create+edit, audit, wbs-phases/show, modules/show) برای موج بعدی اولویت‌بندی شدند.
+
+
+# Session 2026-10-06 — Phase 5B-2 Final Review & Heading Architecture Gate
+
+## هدف جلسه
+- بازبینی معماری headingها، اثر `x-elements.app-header`، integrity فاز 5B-2 و تعیین وضعیت ورود به 5B-3. **Review > Refactor · Evidence > Preference · Minimal Change > Cleanup.**
+
+## یافته‌ها (Evidence)
+1. `app-header` عنوان را با `<h2>` ثابت رندر می‌کند (`@yield('header_title', 'داشبورد')`).
+2. از ۱۷ مصرف‌کنندهٔ shell: **۶ صفحه بدون h1** (dashboard, tasks/show, tasks/create, settings, reports, audit) · **۲ صفحه h1 تکراری همان‌متن** (tasks/index, tasks/board — هر دو h1 صفحه + h2 هدر با متن یکسان دارند) · ۹ صفحهٔ modules/users/wbs الگوی صحیح دارند · `settings` (h2→h4) و `reports` (h2→h3) skip-level دارند.
+3. **Options:** A (header→h1) ⇒ ۹ صفحه تکراری + شکستن ۵ تست (`LayoutShellTest`×۳، `Phase5B2UiTest` h1-index، `WebTaskStabilizationTest` SLA) ⇒ مردود. B (وضع موجود) ⇒ دو نقص باقی می‌ماند ولی الگوی اکثریت صحیح است. C (`app-header` با heading level قابل‌تنظیم) ⇒ تعمیم B؛ کوچک، ولی نیازمند تصمیم مالک روی ۶ صفحهٔ فاقد h1.
+4. **Recommendation: گزینهٔ B** — الگوی `board`/`index`/`users`/`wbs` (h1 صفحه) مرجع ریپ است؛ اصلاح فقط با بازنویسی ۶ صفحهٔ خارج از scope معنا دارد ⇒ تصمیم آینده، نه blocker.
+5. **Stat Card:** `No x-ui.stat required at this stage` — الگوی label+value+icon فقط در `dashboard.blade.php` (+ یک مورد legacy در `elements/header` خارج از shell)؛ reuse چندصفحه‌ای اثبات نشد.
+6. **Integrity 5B-2:** تأیید شد — Dashboard (متریک‌ها/شرط‌ها/متن‌ها/برچسب canonical از `BoardColumns`) · Index (۴ فیلتر GET/pagination/query string/`withQueryString`) · Detail (routes/فرم‌ها/name/id/`@can`/`hasRole`/شرط‌های وضعیت/`.datedown`/متادیتای سند).
+7. **تست‌ها:** Focused (`Ui/*` + `V111/*`) → **140 passed** · Pint/build لازم نشد (صفر تغییر فایل).
+8. **QA:** `NOT EXECUTED — environment limitation` (صفحات پشت `auth` → 302؛ بدون ساخت کاربر/seed/mutation طبق §9).
+
+## ایمنی
+صفر تغییر کد · صفر DB/Migration · صفر Domain/Policy/Auth/Lifecycle/Approval/SLA/Financial/WBS · صفر permission جدید · صفر commit/push · HEAD `08b2629`.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-3`** — با ثبت تصمیم آینده: «انتخاب معماری heading (گزینهٔ C پس از اصلاح ۶ صفحهٔ فاقد h1) نیازمند تأیید مالک است.»
+
+
+# Session 2026-10-06 — Phase 5B-2 Visual Migration (Dashboard + Task Index + Task Detail)
+
+## هدف جلسه
+- مهاجرت بصری سه صفحهٔ Legacy به Design System فعلی TMS، **بدون هیچ تغییر در Domain Semantics / Authorization / Business Rules / داده**.
+- **ممنوع:** شروع Phase 5C · قابلیت جدید · domain refactor · migration/schema/data · FontAwesome/dark mode/Select2/RTL سایر ماژول‌ها · commit/push.
+
+## آنچه اتفاق افتاد
+1. **مرحلهٔ ۱ (Dashboard):** کارت‌های آماری و پنل توزیع وضعیت → `x-ui.panel`؛ کاشی آیکون token-based؛ `x-ui.avatar` در بخش خوش‌آمد؛ EmptyState واقعی. متد/متن‌ها/متریک‌ها یکسان. تست مراحل: **60 passed**.
+2. **مرحلهٔ ۲ (Task Index):** هدر h1 توکنی + پیل تعداد (هم‌شکل با Board)، آیکون جستجو داخل input، جدول با توکن در `x-ui.panel body-class="p-0"`، EmptyState در سلول colspan، Pagination در فوتر. فرم فیلتر/GET/query string/scope **دست‌نخورده**.
+3. **مرحلهٔ ۳ (Task Detail):** همهٔ کارت‌ها → `x-ui.panel`؛ متادیتا → `x-ui.key-val` (۷ قلم، همان برچسب)؛ اولویت → `x-ui.badge` از `TaskPriority::viewOf()`؛ SLA/پیش‌نیاز → `x-ui.badge` با variant معنایی؛ دو کارتابل تأیید با `accent` + `x-slot:icon`. **همهٔ فرم‌ها/route/name-id/`@can`/`hasRole`/شرط‌ها/`.datedown` دست‌نخورده.** تست مراحل: **465 passed**.
+4. **مرحلهٔ ۴ (تست قراردادی):** `tests/Feature/Ui/Phase5B2UiTest.php` — ۱۷ تست شامل: بخش‌های واقعی هر صفحه، منبع واحد وضعیت/اولویت، حذف امضاهای بصری قدیمی، حفظ فیلترها/صفحه‌بندی/query string، حفظ hook تقویم و idهای فرم تأیید، EmptyState‌ها، صفر `href="#"`، صفر فلش تکراری، و **همگامی Drawer ↔ Detail**.
+5. **رگرسیون نهایی:** Full suite → **2 deprecated, 690 passed (2426 assertions), 0 failed** = بیس 673 + ۱۷ تست جدید ⇒ **صفر regression**. Pint ✅. `npm run build` ✅ (CSS از 171.12 به 171.47 kB ⇒ کلاس‌های جدید واقعاً کامپایل شدند؛ با `grep -F` روی باندل تأیید شد).
+6. **Manual QA:** `NOT EXECUTED — environment limitation`. `php artisan serve` روی 8123: `login` → 200، اما `/dashboard`, `/tasks`, `/tasks/board` → **302** (پشت `auth`). هیچ credential واقعی در محیط نیست و ساخت کاربر موقت = mutation داده در DB توسعه ⇒ مجاز نبود. فقط بارگذاری CSS/JS ساخته‌شده (200) تأیید شد.
+
+## ایمنی
+صفر Migration · صفر Schema Mutation · صفر تغییر داده · صفر تغییر route/policy/domain/lifecycle/approval/SLA/financial/WBS · صفر permission جدید · `template/` و `v19_out.txt` دست‌نخورده · صفر commit/push.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-3`** — با ثبت صریح `Manual browser QA: NOT EXECUTED — environment limitation`.
+
+
+# Session 2026-10-06 — Phase 5B-1 Final Review & Cleanup
+
+## هدف جلسه
+- تکمیل Review/Cleanup محدود Phase 5B-1 و آماده‌سازی Repository برای تصمیم دربارهٔ ورود به Phase 5B-2.
+- **ممنوع:** Phase 5B-2 · بازطراحی بصری · تغییر Domain/Policy/Auth/Scope/Lifecycle · Database/Schema/Migration · مالی/تأیید/SLA/WBS · بازگرداندن دانلود سند · Drag & Drop · commit/push.
+
+## آنچه اتفاق افتاد
+1. **سوی Select2 (Evidence First):** جست‌وجوی ریپ‌گریپ روی `package.json` + `package-lock.json` + `resources/js` + `resources/css` + کل `resources/views/**` + `tailwind.config.js` ⇒ کتابخانه در هیچ وابستگی نیست، در هیچ layout/entrypoint بارگذاری نمی‌شود، و **صفر ویو** کلاس/API آن را مصرف می‌کند. تنها اشاره‌ها: `resources/js/app.js:11` و `resources/css/app.css:10-11`.
+2. **حذف حداقلی:** فقط بلاک مردهٔ `$(document).ready(function () { $(".select2").select2({...}); });` از `resources/js/app.js` حذف شد. `Alpine.start()` و `window.Swal`/`window.Alpine` دست‌نخورده. دیف نهایی **دقیقاً همان بلاک** است (هیچ نوسان خط‌پایانی).
+3. **آنچه عمداً حذف نشد:** `public/js/select2/4.1.0/select2.min.js` (فایل **ردیابی‌شدهٔ git**) و CSS `.select2-container` — چون دستور فقط حذف initializer مرده را مجاز کرده است.
+4. **FontAwesome / Datepicker:** بدون هیچ تغییر؛ فقط ثبت وضعیت.
+5. **BoardColumns Review:** ۱۸ call site در ۸ فایل بررسی شد؛ کلاس فقط دو مسئولیت — **Board column grouping** و **status presentation** — را دارد و هیچ write surface یا قاعدهٔ کسب‌وکاری ندارد ⇒ cohesive.
+6. **Regression:** Focused (`Phase5B1UiTest` + `TaskBoardTest` + `TaskDrawerTest` + `UiFoundationTest` + `LayoutShellTest`) → **123 passed (580 assertions)** · Full suite → **2 deprecated · 673 passed (2279 assertions) · 0 failed** · Pint → passed · `npm run build` → ✓ built (باندل خروجی فاقد `select2`، حاوی Alpine).
+7. **Git Safety Audit:** `database/` پاک · صفر Migration جدید · build output در `.gitignore` و هیچ artefact ردیابی‌شده‌ای نیست · `template/` و `v19_out.txt` دست‌نخورده · صفر commit · صفر push.
+
+## ایمنی
+`tms` و `tms_testing` فقط read-only در سطح تست (بدون برنامهٔ destructive) · صفر Migration · صفر Schema Mutation · صفر تغییر داده · صفر تغییر route/policy/domain/approval/financial.
+
+## نتیجه جلسه
+- **حکم: `READY FOR PHASE 5B-2`** — با ثبت صریح `Manual browser QA: NOT EXECUTED — environment limitation`.
+
+
 # Session 2026-09-22 — V1.8 Remaining Hardening Implementation (R-3 + T-6)
 
 ## هدف جلسه
@@ -808,3 +1003,13 @@ BLOCKED — BUSINESS DECISION REQUIRED
 - **صفر بازگشت** از ۹ عنصر ممنوعه (Task Weight · WBS Phase Weight · جفت‌شدگی WBS↔Module · Support به‌عنوان Phase · درصد مستقل تسک · فرمول مالی · منبع وزن دوگانه · تأیید خودکار · فرمول پرداخت).
 - **صفر Migration · صفر تغییر کد · صفر Schema Mutation · صفر تغییر داده.**
 
+
+## Phase 5B-8 — WBS Decision UI Authorization Audit + Modules Index (۱۴۰۵/۰۷/۱۹)
+1. Ground truth: Phase5B7UiTest سبز (17/17) · audit/index و wbs-phases/show صفر slate/old — ادعای پذیرش 5B-7B (755 passed) تأیید شد.
+2. Part A ممیزی: فرم decide در HEAD بدون guard رندر می‌شد (بازبینی `git show HEAD:` تأیید کرد pre-existing است)؛ هیچ تستی به دیدن فرم برای Admin وابسته نبود. اصلاح: `@can('decide', $phase)`/`@endcan` دور پنل تصمیم — مطابق Blade authorization convention، بدون اختراع permission.
+3. Part B discovery: `modules/index` — GET نقش خواندن، کنترلر ProjectScope + `with(['activeModules.stages'])`، صفر فرم/JS/فیلتر/صفحه‌بندی، هیچ تستی به markup آن وابسته نبود؛ سپس مهاجرت کامل (0/0 legacy).
+4. `Phase5B8UiTest` نوشته شد (۹ تست)؛ Pint یک‌بار فایل تست را اصلاح کرد (unused import) و PASS شد.
+5. اجرا: WBS فوکوس 97 · Modules+Audit 70 · Suite کامل **764 passed/3035/0 failed/2 deprecated** · build با grep توکن.
+6. Browser QA با سشن Admin موجود (بدون ساخت credential): هر دو صفحه در 1440 و 390 سالم؛ فرم تصمیم برای Admin غایب (evaluate زنده: 0 رادیو). Supervisor QA به دلیل نبود `project_memberships` در `tms` انجام نشد (بدون migrate).
+7. نکتهٔ محیطی: یک ردیف چک‌لیست روی dev DB حین QA ظاهر شد که از مسیر این عامل (فقط GET) ایجاد نشده؛ راستی‌آزمایی شد phase pending و modules/activity_logs صفر است.
+8. **حکم: `READY FOR PHASE 5B-9`.**
